@@ -1,0 +1,74 @@
+/* ══════════════════════════════════════════════════════
+   Design tokens — kept IN SYNC with the public site's
+   src/styles/style.css :root block. admin.css is written
+   against these same variable names, so if you re-theme
+   the public site, mirror the change here too.
+   ══════════════════════════════════════════════════════ */
+:root {
+  --green:   #1e4d1a;
+  --green2:  #163814;
+  --green3:  #2a6624;
+  --gold:    #c8a84b;
+  --gold2:   #e8c96a;
+  --blue:    #1a3a6b;
+  --crimson: #8b1a1a;
+  --teal:    #1a6b5a;
+  --orange:  #b5611a;
+  --purple:  #4a1a6b;
+
+  --bg:      #0f1f0d;
+  --bg2:     #162a12;
+  --surface: rgba(255,255,255,0.06);
+  --surface2: rgba(255,255,255,0.10);
+  --glass:   rgba(255,255,255,0.07);
+  --glass-b: rgba(255,255,255,0.12);
+  --text:    #f0ebe0;
+  --text2:   #c8c0aa;
+  --muted:   #8a8270;
+  --border:  rgba(255,255,255,0.10);
+  --border2: rgba(200,168,75,0.25);
+
+  --accent:  var(--green3);
+  --accent2: var(--gold);
+
+  --sh:   0 4px 24px rgba(0,0,0,.4);
+  --sh2:  0 12px 48px rgba(0,0,0,.6);
+  --r:    14px;
+  --r2:   20px;
+  --r3:   28px;
+
+  --ff-h: 'DM Serif Display', Georgia, serif;
+  --ff-b: 'DM Sans', system-ui, sans-serif;
+  --nav-h: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-b);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════ Toast (shared shape with the public site) ══════ */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(10,21,9,0.95); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 11px 24px; border-radius: 99px;
+  font-size: 13px; font-weight: 500;
+  opacity: 0; transition: all .3s;
+  pointer-events: none; z-index: 9998;
+  white-space: nowrap; max-width: calc(100vw - 32px);
+  text-align: center; backdrop-filter: blur(14px);
+  box-shadow: var(--sh2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════ Scrollbar ══════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(200,168,75,0.2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(200,168,75,0.4); }
