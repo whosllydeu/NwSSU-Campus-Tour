@@ -88,6 +88,16 @@ export function saveCoord(key, lat, lng) {
   return all;
 }
 
+// Removes just this place's saved coordinate, so its AR screen goes
+// back to capture mode (falls through to the Supabase-managed spot,
+// if the admin has set one, otherwise to no destination at all).
+export function clearCoord(key) {
+  const all = loadSaved();
+  delete all[key];
+  try { localStorage.setItem(AR_LS_KEY, JSON.stringify(all)); } catch { /* ignore */ }
+  return all;
+}
+
 // Returns { lat, lng, name } for a place, or null if nothing recorded yet.
 export function resolveCoord(key) {
   const saved = loadSaved()[key];

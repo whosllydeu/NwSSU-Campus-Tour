@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BUILDINGS } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 
 // ============================================================
 // AR Navigate — walking-direction arrow overlaid on the camera
@@ -37,7 +37,8 @@ function distanceTo(lat1, lon1, lat2, lon2) {
 export default function ARNavigate() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const building = BUILDINGS.find((b) => b.id === id);
+  const { buildings } = useCampusData();
+  const building = buildings.find((b) => b.id === id);
 
   const [started, setStarted] = useState(false);
   const [error, setError] = useState('');

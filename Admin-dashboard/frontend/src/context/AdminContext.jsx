@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { seedBuildings, seedDepartments, seedOffices, seedOrganizations } from '../data/adminData.js';
+﻿import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import * as buildingsApi from '../services/buildings.service.js';
+import * as departmentsApi from '../services/departments.service.js';
+import * as officesApi from '../services/offices.service.js';
+import * as organizationsApi from '../services/organizations.service.js';
+import { listActivity } from '../services/activity.service.js';
 
 const AdminContext = createContext(null);
 
@@ -9,33 +13,21 @@ export function useAdmin() {
   return ctx;
 }
 
-const LS_PREFIX = 'nwssu_admin_v1_';
-const COLLECTIONS = {
-  buildings: seedBuildings,
-  departments: seedDepartments,
-  offices: seedOffices,
-  organizations: seedOrganizations,
+const API = {
+  buildings: buildingsApi,
+  departments: departmentsApi,
+  offices: officesApi,
+  organizations: organizationsApi,
 };
 
-function loadCollection(key) {
-  try {
-    const raw = localStorage.getItem(LS_PREFIX + key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // ignore corrupted storage, fall back to seed
-  }
-  return COLLECTIONS[key]();
-}
-
-function loadActivity() {
-  try {
-    const raw = localStorage.getItem(LS_PREFIX + 'activity');
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // ignore
-  }
-  return [];
-}
+// Maps a collection name to its service's function-name suffix,
+// e.g. 'buildings' -> createBuilding/updateBuilding/deleteBuilding.
+const SINGULAR = {
+  buildings: 'Building',
+  departments: 'Department',
+  offices: 'Office',
+  organizations: 'Organization',
+};
 
 export function AdminProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -45,89 +37,67 @@ export function AdminProvider({ children }) {
   const [organizations, setOrganizations] = useState([]);
   const [activity, setActivity] = useState([]);
 
-  // Simulate an initial fetch so the UI has a real loading state to show,
-  // matching the pattern the rest of the app expects from async data.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setBuildings(loadCollection('buildings'));
-      setDepartments(loadCollection('departments'));
-      setOffices(loadCollection('offices'));
-      setOrganizations(loadCollection('organizations'));
-      setActivity(loadActivity());
-      setIsLoading(false);
-    }, 450);
-    return () => clearTimeout(t);
+  const refetchAll = useCallback(async () => {
+    setIsLoading(true);
+    const [b, d, o, org, act] = await Promise.all([
+      buildingsApi.listBuildings(),
+      departmentsApi.listDepartments(),
+      officesApi.listOffices(),
+      organizationsApi.listOrganizations(),
+      listActivity(),
+    ]);
+    setBuildings(b);
+    setDepartments(d);
+    setOffices(o);
+    setOrganizations(org);
+    setActivity(act);
+    setIsLoading(false);
   }, []);
 
-  useEffect(() => { if (!isLoading) localStorage.setItem(LS_PREFIX + 'buildings', JSON.stringify(buildings)); }, [buildings, isLoading]);
-  useEffect(() => { if (!isLoading) localStorage.setItem(LS_PREFIX + 'departments', JSON.stringify(departments)); }, [departments, isLoading]);
-  useEffect(() => { if (!isLoading) localStorage.setItem(LS_PREFIX + 'offices', JSON.stringify(offices)); }, [offices, isLoading]);
-  useEffect(() => { if (!isLoading) localStorage.setItem(LS_PREFIX + 'organizations', JSON.stringify(organizations)); }, [organizations, isLoading]);
-  useEffect(() => { if (!isLoading) localStorage.setItem(LS_PREFIX + 'activity', JSON.stringify(activity)); }, [activity, isLoading]);
+  useEffect(() => { refetchAll(); }, [refetchAll]);
 
   const setters = { buildings: setBuildings, departments: setDepartments, offices: setOffices, organizations: setOrganizations };
 
-  const logActivity = useCallback((action, entityLabel, recordLabel) => {
-    setActivity((prev) => [
-      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: new Date().toISOString(), action, entity: entityLabel, label: recordLabel },
-      ...prev,
-    ].slice(0, 50));
+  const addRecord = useCallback(async (collection, _entityLabel, data) => {
+    const created = await API[collection][`create${SINGULAR[collection]}`](data);
+    setters[collection]((prev) => [...prev, created]);
+    listActivity().then(setActivity);
   }, []);
 
-  const addRecord = useCallback((collection, entityLabel, data) => {
-    const _id = data._id || `${collection}-${Date.now()}`;
-    setters[collection]((prev) => [...prev, { ...data, _id }]);
-    logActivity('created', entityLabel, data.name || _id);
-  }, [logActivity]);
+  const updateRecord = useCallback(async (collection, _entityLabel, _id, data) => {
+    const updated = await API[collection][`update${SINGULAR[collection]}`](_id, data);
+    setters[collection]((prev) => prev.map((r) => (r._id === _id ? updated : r)));
+    listActivity().then(setActivity);
+  }, []);
 
-  const updateRecord = useCallback((collection, entityLabel, _id, data) => {
-    setters[collection]((prev) => prev.map((r) => (r._id === _id ? { ...r, ...data, _id } : r)));
-    logActivity('updated', entityLabel, data.name || _id);
-  }, [logActivity]);
-
-  const deleteRecord = useCallback((collection, entityLabel, _id, label) => {
+  const deleteRecord = useCallback(async (collection, _entityLabel, _id) => {
+    await API[collection][`delete${SINGULAR[collection]}`](_id);
     setters[collection]((prev) => prev.filter((r) => r._id !== _id));
-    logActivity('deleted', entityLabel, label || _id);
-  }, [logActivity]);
-
-  const resetAllData = useCallback(() => {
-    Object.keys(COLLECTIONS).forEach((key) => localStorage.removeItem(LS_PREFIX + key));
-    localStorage.removeItem(LS_PREFIX + 'activity');
-    setBuildings(COLLECTIONS.buildings());
-    setDepartments(COLLECTIONS.departments());
-    setOffices(COLLECTIONS.offices());
-    setOrganizations(COLLECTIONS.organizations());
-    setActivity([]);
+    listActivity().then(setActivity);
   }, []);
+
+  // Real data now lives in Supabase, so "reset" re-syncs from the database
+  // instead of wiping it (see backend-architecture.md, section 7).
+  const resetAllData = useCallback(async () => { await refetchAll(); }, [refetchAll]);
 
   const stats = useMemo(() => {
-    const byType = buildings.reduce((acc, b) => {
-      acc[b.type] = (acc[b.type] || 0) + 1;
-      return acc;
-    }, {});
+    const byType = buildings.reduce((acc, b) => { acc[b.type] = (acc[b.type] || 0) + 1; return acc; }, {});
     const totalPrograms = departments.reduce((sum, d) => sum + (d.programs?.length || 0), 0);
     const totalFaculty = departments.reduce((sum, d) => sum + (d.faculty?.length || 0), 0);
-    const byCollege = organizations.reduce((acc, o) => {
-      acc[o.college] = (acc[o.college] || 0) + 1;
-      return acc;
-    }, {});
+    const byCollege = organizations.reduce((acc, o) => { acc[o.college] = (acc[o.college] || 0) + 1; return acc; }, {});
     return {
       totalBuildings: buildings.length,
       totalDepartments: departments.length,
       totalOffices: offices.length,
       totalOrganizations: organizations.length,
-      byType,
-      byCollege,
-      totalPrograms,
-      totalFaculty,
+      byType, byCollege, totalPrograms, totalFaculty,
     };
   }, [buildings, departments, offices, organizations]);
 
   const value = {
     isLoading,
     buildings, departments, offices, organizations,
-    activity,
-    stats,
+    activity, stats,
     addRecord, updateRecord, deleteRecord,
     resetAllData,
   };

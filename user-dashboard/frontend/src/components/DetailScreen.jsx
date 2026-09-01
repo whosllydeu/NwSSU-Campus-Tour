@@ -1,8 +1,7 @@
 import { useUI } from '../context/UIContext.jsx';
-import { BUILDINGS, DEPARTMENTS } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import { capitalize } from '../utils/helpers.js';
 import { hasTour } from '../data/ccisTour.js';
-import { hasAR } from '../data/arDestinations.js';
 import Photo from './Photo.jsx';
 
 const NBSP_DOT = '\u00A0·\u00A0';
@@ -47,10 +46,11 @@ function PhotoNote({ rawPhoto, id }) {
 // ── Building detail ──
 function BuildingDetail({ id }) {
   const { closeDetail, openTour, openAR } = useUI();
-  const b = BUILDINGS.find((x) => x.id === id);
+  const { buildings, departments } = useCampusData();
+  const b = buildings.find((x) => x.id === id);
   if (!b) return null;
 
-  const dept = DEPARTMENTS.find((d) => d.id === id || d.id === b.dept);
+  const dept = departments.find((d) => d.id === id || d.id === b.dept);
   const programs = b.programs || dept?.programs || [];
   const offices = b.offices || [];
   const rawPhoto = b.photo || dept?.photo || '';
@@ -127,10 +127,11 @@ function BuildingDetail({ id }) {
 // ── Department detail ──
 function DeptDetail({ id }) {
   const { closeDetail, openAR, openTour } = useUI();
-  const d = DEPARTMENTS.find((x) => x.id === id);
+  const { buildings, departments } = useCampusData();
+  const d = departments.find((x) => x.id === id);
   if (!d) return null;
 
-  const building = BUILDINGS.find((b) => b.id === id || b.dept === id);
+  const building = buildings.find((b) => b.id === id || b.dept === id);
   const emoji = building?.emoji || '🎓';
   const rawPhoto = d.photo || building?.photo || '';
   const tourId = hasTour(d.id) ? d.id : (building && hasTour(building.id) ? building.id : undefined);

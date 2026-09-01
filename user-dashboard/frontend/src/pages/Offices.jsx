@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { OFFICES } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import { useUI } from '../context/UIContext.jsx';
 
 export default function Offices() {
+  const { offices } = useCampusData();
   const { showOfficeModal } = useUI();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const shown = q ? OFFICES.filter((o) => o.name.toLowerCase().includes(q)) : OFFICES;
+  const shown = q ? offices.filter((o) => o.name.toLowerCase().includes(q)) : offices;
 
   return (
     <section className="page active" id="page-offices">
@@ -31,9 +32,9 @@ export default function Offices() {
         ) : (
           <div className="offices-grid" id="officesGrid">
             {shown.map((o) => {
-              const i = OFFICES.indexOf(o);
+              const i = offices.indexOf(o);
               return (
-                <div className="off-card" key={i} onClick={() => showOfficeModal(i)}>
+                <div className="off-card" key={o.id || i} onClick={() => showOfficeModal(i)}>
                   <div className="off-ico">{o.icon}</div>
                   <div className="off-name">{o.name}</div>
                   <div className="off-loc">📍 {o.location}</div>

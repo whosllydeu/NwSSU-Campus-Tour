@@ -1,6 +1,5 @@
 import { useUI } from '../context/UIContext.jsx';
-import { OFFICES, ORGANIZATIONS } from '../data/data.js';
-import { slugify } from '../data/arDestinations.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import { img } from '../utils/assets.js';
 
 // Local images (in src/assets/images) must go through img() so Vite bundles
@@ -12,9 +11,10 @@ function resolvePhoto(photo) {
 
 function OfficeContent({ index }) {
   const { openAR, closeModal } = useUI();
-  const o = OFFICES[index];
+  const { offices } = useCampusData();
+  const o = offices[index];
   if (!o) return null;
-  const arKey = slugify(o.name);
+  const arKey = o.slug;
   const photoUrl = resolvePhoto(o.photo);
   return (
     <>
@@ -28,7 +28,7 @@ function OfficeContent({ index }) {
           o.icon
         )}
         {/* Always visible. If this office has no coordinates yet in
-            arDestinations.js, tapping shows a "not measured yet" message. */}
+            ar_waypoints, tapping shows a "not measured yet" message. */}
         <button
           className="btn-primary ds-ar-btn m-banner-ar-pill"
           onClick={() => { closeModal(); openAR(arKey); }}
@@ -44,7 +44,8 @@ function OfficeContent({ index }) {
 }
 
 function OrgContent({ index }) {
-  const o = ORGANIZATIONS[index];
+  const { organizations } = useCampusData();
+  const o = organizations[index];
   if (!o) return null;
   return (
     <>

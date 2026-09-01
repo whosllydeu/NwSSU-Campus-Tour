@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useUI } from '../context/UIContext.jsx';
-import { BUILDINGS } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import { img } from '../utils/assets.js';
 
 export default function DeptCard({ d }) {
   const { openDept } = useUI();
-  const building = BUILDINGS.find((b) => b.id === d.id || b.dept === d.id);
+  const { buildings } = useCampusData();
+  const building = buildings.find((b) => b.id === d.id || b.dept === d.id);
   const emoji = building?.emoji || '🎓';
   const src = img(d.photo || building?.photo || '');
   const [errored, setErrored] = useState(false);

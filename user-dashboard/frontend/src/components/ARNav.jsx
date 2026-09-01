@@ -8,7 +8,9 @@
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
 import { useUI } from '../context/UIContext.jsx';
-import { resolveCoord, saveCoord, exportSavedText } from '../data/arDestinations.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
+import { saveCoord, clearCoord, exportSavedText } from '../data/arDestinations.js';
+import campusMapImg from '../assets/images/campus-schematic.png';
 
 const NEAR = 18;    // metres: show the pin instead of arrows
 const ARRIVE = 8;   // metres: "you have arrived"
@@ -31,6 +33,7 @@ const angleLerp = (a, b, t) => { const d = ((b - a + 540) % 360) - 180; return a
 
 export default function ARNav() {
   const { arTarget, closeAR } = useUI();
+  const { resolveCoord } = useCampusData();
   const videoRef = useRef(null);
   const S = useRef({ cur: null, heading: null, smooth: null, raf: 0, stream: null, dest: null });
   const [started, setStarted] = useState(false);
@@ -118,6 +121,21 @@ export default function ARNav() {
     setTimeout(() => setSavedMsg(false), 2500);
   };
 
+  // Wipes the device-local saved spot (not the admin-managed one in
+  // Supabase, if any) so this place goes back to capture mode — useful
+  // when re-testing GPS accuracy before locking in a "final" reading.
+  const clearHere = () => {
+    clearCoord(arTarget.key);
+    const fallback = resolveCoord(arTarget.key); // may still resolve via Supabase
+    S.current.dest = fallback;
+    setHasDest(Boolean(fallback));
+    setDist(null);
+    setShowPin(false);
+    setArrived(false);
+    setInfoOpen(false);
+  };
+
+
   const copyExport = async () => {
     const txt = exportSavedText();
     setExportTxt(txt);
@@ -167,7 +185,7 @@ export default function ARNav() {
           </div>
 
           {mm && mapOpen && (
-            <div className="arnav-map">
+            <div className="arnav-map" style={{ backgroundImage: `url(${campusMapImg})` }}>
               <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 {mm.length === 2 && <line x1={mm[0].x} y1={mm[0].y} x2={mm[1].x} y2={mm[1].y} stroke="#2b6cb0" strokeWidth="3" />}
                 {mm.map((p, i) => (
@@ -219,6 +237,9 @@ export default function ARNav() {
               <h3>{destName}</h3>
               <p>Start point uses your live GPS. Save each place's spot once by standing there and tapping the button below.</p>
               <button className="arnav-info-btn" onClick={saveHere}>📍 Save / update this spot (I'm here now)</button>
+              {hasDest && (
+                <button className="arnav-info-btn danger" onClick={clearHere}>🗑 Clear this spot (retest later)</button>
+              )}
               <button className="arnav-info-btn ghost" onClick={copyExport}>⧉ Copy all saved coordinates</button>
               {exportTxt && (
                 <>
@@ -259,7 +280,7 @@ const CSS = `
 .arnav-top{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:8;text-align:center;background:rgba(20,26,24,.55);backdrop-filter:blur(8px);padding:10px 26px;border-radius:16px;min-width:220px;}
 .arnav-dest{font-size:22px;font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.7);}
 .arnav-sub{font-size:15px;color:#e6ffe9;font-weight:600;margin-top:2px;}
-.arnav-map{position:absolute;top:150px;right:16px;z-index:8;width:132px;height:104px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.5);background:#cfe3c9;box-shadow:0 6px 18px rgba(0,0,0,.4);}
+.arnav-map{position:absolute;top:150px;right:16px;z-index:8;width:132px;height:104px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.5);background-color:#0c1a10;background-size:cover;background-position:center;box-shadow:0 6px 18px rgba(0,0,0,.4);}
 .arnav-map svg{width:100%;height:100%;display:block;}
 .arnav-arrows{position:absolute;left:50%;bottom:26%;transform-origin:50% 100%;z-index:7;display:flex;flex-direction:column;align-items:center;gap:4px;}
 .arnav-chev{width:120px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.45));}
@@ -282,6 +303,7 @@ const CSS = `
 .arnav-info-note{margin-top:10px;}
 .arnav-info-btn{display:block;width:100%;border:none;cursor:pointer;background:#12b76a;color:#04160d;font-weight:700;font-size:13.5px;padding:12px;border-radius:10px;margin-bottom:8px;font-family:inherit;}
 .arnav-info-btn.ghost{background:#eef1f4;color:#1a3a6b;}
+.arnav-info-btn.danger{background:#fdecea;color:#8b1a1a;}
 .arnav-export{width:100%;height:120px;border:1px solid #d0d4d9;border-radius:10px;padding:10px;font-family:monospace;font-size:11.5px;resize:vertical;color:#101417;background:#f7f8fa;}
 .arnav-info-x{position:absolute;top:10px;right:10px;width:26px;height:26px;border:none;border-radius:8px;background:#f1f3f4;cursor:pointer;font-size:15px;}
 .arnav-bar{position:absolute;left:0;right:0;bottom:0;z-index:10;display:flex;gap:10px;padding:12px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));background:rgba(6,10,8,.82);}

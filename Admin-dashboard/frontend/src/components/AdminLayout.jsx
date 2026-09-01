@@ -11,6 +11,8 @@ const TITLES = {
   '/admin/departments': { title: 'Departments', subtitle: 'Manage college & department records' },
   '/admin/offices': { title: 'Offices', subtitle: 'Manage administrative office records' },
   '/admin/organizations': { title: 'Organizations', subtitle: 'Manage student organizations' },
+  '/admin/locations': { title: 'AR Locations', subtitle: 'Set walking-AR coordinates for each place' },
+  '/admin/users': { title: 'Users', subtitle: 'Manage accounts & admin access' },
   '/admin/reports': { title: 'Reports & Analytics', subtitle: 'Insights across the campus dataset' },
   '/admin/settings': { title: 'Settings', subtitle: 'System information & data controls' },
 };

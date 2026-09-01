@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { CampusDataProvider, useCampusData } from './context/CampusDataContext.jsx';
 import { UIProvider } from './context/UIContext.jsx';
 
 import Splash from './components/Splash.jsx';
@@ -19,7 +20,20 @@ import Offices from './pages/Offices.jsx';
 import About from './pages/About.jsx';
 import ARNavigate from './pages/ARNavigate.jsx';
 
-export default function App() {
+function AppShell() {
+  const { isLoading, error } = useCampusData();
+
+  if (isLoading) {
+    return <div className="page-search-empty" style={{ padding: '4rem 1rem', textAlign: 'center' }}>Loading campus data…</div>;
+  }
+  if (error) {
+    return (
+      <div className="page-search-empty" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+        Couldn't reach the campus database. Please check your connection and refresh.
+      </div>
+    );
+  }
+
   return (
     <UIProvider>
       <Splash />
@@ -47,5 +61,13 @@ export default function App() {
       <Lightbox />
       <Toast />
     </UIProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <CampusDataProvider>
+      <AppShell />
+    </CampusDataProvider>
   );
 }

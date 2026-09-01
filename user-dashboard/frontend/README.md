@@ -32,3 +32,12 @@ Editing a record in the admin dashboard's CRUD UI only updates that
 app's own `localStorage` — it will not appear here. If both apps
 need to reflect the same live data, you'll want a shared backend/API
 instead of two static copies.
+
+
+## Share connection using cloudflare
+  cloudflared tunnel --url http://localhost:5173
+     server: 
+     host: true,
+     port: 5173,
+     allowedHosts: ['.trycloudflare.com'],
+## 

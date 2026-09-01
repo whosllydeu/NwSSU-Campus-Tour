@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BUILDINGS } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import BuildingCard from '../components/BuildingCard.jsx';
 
 const FILTERS = [
@@ -10,10 +10,11 @@ const FILTERS = [
 ];
 
 export default function Buildings() {
+  const { buildings } = useCampusData();
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
 
-  const byType = filter === 'all' ? BUILDINGS : BUILDINGS.filter((b) => b.type === filter);
+  const byType = filter === 'all' ? buildings : buildings.filter((b) => b.type === filter);
   const q = query.trim().toLowerCase();
   const shown = q
     ? byType.filter((b) =>

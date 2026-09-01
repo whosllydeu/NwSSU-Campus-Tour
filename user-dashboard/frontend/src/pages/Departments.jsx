@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { DEPARTMENTS } from '../data/data.js';
+import { useCampusData } from '../context/CampusDataContext.jsx';
 import DeptCard from '../components/DeptCard.jsx';
 
 export default function Departments() {
+  const { departments } = useCampusData();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const shown = q
-    ? DEPARTMENTS.filter((d) =>
+    ? departments.filter((d) =>
         d.name.toLowerCase().includes(q) || (d.abbr && d.abbr.toLowerCase().includes(q))
       )
-    : DEPARTMENTS;
+    : departments;
 
   return (
     <section className="page active" id="page-departments">

@@ -5,5 +5,9 @@ export default defineConfig({
   plugins: [react()],
   // Set base to './' so the build works when opened from a subfolder
   // (e.g. GitHub Pages or a campus intranet path). Change to '/' for root hosting.
-  base: './',
+ server: {
+    host: true,
+    port: 5173,
+    allowedHosts: ['.trycloudflare.com'],
+  }
 });
