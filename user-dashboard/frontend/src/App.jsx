@@ -22,6 +22,9 @@ import Offices from './pages/Offices.jsx';
 import About from './pages/About.jsx';
 import ARNavigate from './pages/ARNavigate.jsx';
 
+// 👇 new import
+import AdminApp from './admin/AdminApp.jsx';
+
 function AppShell() {
   const { isLoading, error } = useCampusData();
 
@@ -56,7 +59,6 @@ function AppShell() {
         </Routes>
       </main>
 
-      {/* Global overlays — rendered once, driven by UIContext. */}
       <DetailScreen />
       <PanoramaTour />
       <ARNav />
@@ -68,10 +70,21 @@ function AppShell() {
   );
 }
 
-export default function App() {
+// 👇 the actual public site, unchanged, just pulled into its own component
+function PublicSite() {
   return (
     <CampusDataProvider>
       <AppShell />
     </CampusDataProvider>
+  );
+}
+
+// 👇 this is the only real change: split BEFORE CampusDataProvider ever mounts
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/admin/*" element={<AdminApp />} />
+      <Route path="/*" element={<PublicSite />} />
+    </Routes>
   );
 }
