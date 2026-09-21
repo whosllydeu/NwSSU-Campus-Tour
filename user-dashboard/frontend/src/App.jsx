@@ -8,7 +8,6 @@ import Drawer from './components/Drawer.jsx';
 import SearchPanel from './components/SearchPanel.jsx';
 import DetailScreen from './components/DetailScreen.jsx';
 import PanoramaTour from './components/PanoramaTour.jsx';
-import ARNav from './components/ARNav.jsx';
 import Unavailable from './components/Unavailable.jsx';
 import Lightbox from './components/Lightbox.jsx';
 import Modal from './components/Modal.jsx';
@@ -20,7 +19,6 @@ import Map from './pages/Map.jsx';
 import Departments from './pages/Departments.jsx';
 import Offices from './pages/Offices.jsx';
 import About from './pages/About.jsx';
-import ARNavigate from './pages/ARNavigate.jsx';
 
 // 👇 new import
 import AdminApp from './admin/AdminApp.jsx';
@@ -54,14 +52,12 @@ function AppShell() {
           <Route path="/departments" element={<Departments />} />
           <Route path="/offices" element={<Offices />} />
           <Route path="/about" element={<About />} />
-          <Route path="/ar/:id" element={<ARNavigate />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
       <DetailScreen />
       <PanoramaTour />
-      <ARNav />
       <Unavailable />
       <Modal />
       <Lightbox />

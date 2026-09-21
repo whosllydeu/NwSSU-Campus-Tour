@@ -7,7 +7,7 @@
 // never mutate the original arrays.
 // ============================================================
 import { BUILDINGS, DEPARTMENTS, OFFICES, ORGANIZATIONS } from './data.js';
-import { slugify } from './arDestinations.js';
+import { slugify } from '../lib/slugify.js';
 
 function withIds(list) {
   const seen = new Map();

@@ -6,7 +6,6 @@ const LINKS = [
   { to: '/admin/departments', label: 'Departments', icon: '🎓' },
   { to: '/admin/offices', label: 'Offices', icon: '🏢' },
   { to: '/admin/organizations', label: 'Organizations', icon: '👥' },
-  { to: '/admin/locations', label: 'AR Locations', icon: '🧭' },
   { to: '/admin/users', label: 'Users', icon: '🔐' },
   { to: '/admin/reports', label: 'Reports & Analytics', icon: '📈' },
   { to: '/admin/settings', label: 'Settings', icon: '⚙️' },

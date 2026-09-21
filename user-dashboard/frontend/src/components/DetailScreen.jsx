@@ -45,7 +45,7 @@ function PhotoNote({ rawPhoto, id }) {
 
 // ── Building detail ──
 function BuildingDetail({ id }) {
-  const { closeDetail, openTour, openAR, openUnavailable } = useUI();
+  const { closeDetail, openTour, openUnavailable } = useUI();
   const { buildings, departments } = useCampusData();
   const b = buildings.find((x) => x.id === id);
   if (!b) return null;
@@ -91,7 +91,6 @@ function BuildingDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
-          <button className="btn-primary ds-ar-btn" onClick={() => openAR(b.id)}>🧭 Walk There (AR)</button>
         </div>
 
         <div className="ds-photo-row">
@@ -129,7 +128,7 @@ function BuildingDetail({ id }) {
 
 // ── Department detail ──
 function DeptDetail({ id }) {
-  const { closeDetail, openAR, openTour, openUnavailable } = useUI();
+  const { closeDetail, openTour, openUnavailable } = useUI();
   const { buildings, departments } = useCampusData();
   const d = departments.find((x) => x.id === id);
   if (!d) return null;
@@ -176,7 +175,6 @@ function DeptDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
-          <button className="btn-primary ds-ar-btn" onClick={() => openAR(d.id)}>🧭 Walk There (AR)</button>
         </div>
 
         <div className="ds-photo-row">

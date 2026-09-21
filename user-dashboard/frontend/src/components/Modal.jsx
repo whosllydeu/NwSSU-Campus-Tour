@@ -11,14 +11,13 @@ function resolvePhoto(photo) {
 }
 
 function OfficeContent({ index }) {
-  const { openAR, openTour, closeModal, showToast } = useUI();
+  const { openTour, closeModal, showToast } = useUI();
   const { offices } = useCampusData();
   const o = offices[index];
   if (!o) return null;
-  const arKey = o.slug;
   // No office has a 360° tour yet (only the CCIS building does) — the
   // button stays visible everywhere, but tapping it just explains that
-  // for now, same as an unconfigured AR spot.
+  // for now.
   const tourId = hasTour(o.slug) ? o.slug : undefined;
   const photoUrl = resolvePhoto(o.photo);
   const startTour = () => {
@@ -37,14 +36,6 @@ function OfficeContent({ index }) {
         ) : (
           o.icon
         )}
-        {/* Always visible. If this office has no coordinates yet in
-            ar_waypoints, tapping shows a "not measured yet" message. */}
-        <button
-          className="btn-primary ds-ar-btn m-banner-ar-pill"
-          onClick={() => { closeModal(); openAR(arKey); }}
-        >
-          🧭 Walk There (AR)
-        </button>
         <button
           className="btn-primary ds-tour-btn m-banner-tour-pill"
           onClick={startTour}

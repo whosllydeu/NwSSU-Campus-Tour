@@ -28,8 +28,8 @@ const COLOR_FALLBACK = '#445566';
 
 export default function Map() {
   const navigate = useNavigate();
-  const { buildings, hasAR } = useCampusData();
-  const { openBuilding, openAR, openTour, openUnavailable } = useUI();
+  const { buildings } = useCampusData();
+  const { openBuilding, openTour, openUnavailable } = useUI();
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -96,13 +96,11 @@ export default function Map() {
 
   const details = (id) => openBuilding(id);
   const navigateHere = (id) => {
-    // Prefer the 360° virtual tour when one exists for this place (only
-    // CCIS has one right now) — it's ready to view with no GPS setup.
-    // Fall back to AR walking directions, then to a toast if neither
-    // has been configured yet.
+    // Show the 360° virtual tour when one exists for this place (only
+    // CCIS has one right now); otherwise let the person know it isn't
+    // set up yet.
     if (hasTour(id)) openTour(id);
-    else if (hasAR(id)) openAR(id);
-    else openUnavailable('Navigation is not configured for this location yet.');
+    else openUnavailable('A virtual tour is not available for this location yet.');
   };
 
   return (

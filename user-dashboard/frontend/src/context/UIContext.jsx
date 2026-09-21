@@ -12,12 +12,11 @@ export function useUI() {
 
 export function UIProvider({ children }) {
   const navigate = useNavigate();
-  const { departments, waypoints } = useCampusData();
+  const { departments } = useCampusData();
 
   // ── Overlay state ──
   const [detail, setDetail] = useState(null);   // { kind:'building'|'dept', id }
   const [tour, setTour] = useState(null);         // building id with a 360 tour, e.g. 'ccis'
-  const [arTarget, setArTarget] = useState(null); // { name, lat, lng } for AR navigation
   const [lightbox, setLightbox] = useState(null); // { src, caption }
   const [modal, setModal] = useState(null);       // { kind:'office'|'org', index }
   const [unavailable, setUnavailable] = useState(null); // { message } — full-screen "not ready yet" state
@@ -54,20 +53,9 @@ export function UIProvider({ children }) {
   const openTour = useCallback((id) => setTour(id), []);
   const closeTour = useCallback(() => setTour(null), []);
 
-  // ── AR navigation overlay ──
-  // Name is looked up regardless of whether coordinates exist yet (mirrors
-  // the original getAR() name lookup); resolveCoord separately gates
-  // whether ARNav.jsx actually has something to point toward.
-  const openAR = useCallback((key) => {
-    const name = waypoints.find((w) => w.destination_key === key)?.display_name || 'Destination';
-    setArTarget({ key, name });
-  }, [waypoints]);
-  const closeAR = useCallback(() => setArTarget(null), []);
-
   // ── "Currently unavailable" full-screen overlay ──
-  // Used instead of a toast whenever the person taps something (Navigate
-  // Here, Start Virtual Tour, etc.) that has no tour/AR data configured
-  // for that place yet.
+  // Used instead of a toast whenever the person taps something (Start
+  // Virtual Tour, etc.) that has no tour data configured for that place yet.
   const openUnavailable = useCallback((message) => {
     setUnavailable({ message: message || 'This feature is not available for this location yet.' });
   }, []);
@@ -91,12 +79,12 @@ export function UIProvider({ children }) {
 
   // ── Body scroll lock while a full-screen overlay is open ──
   useEffect(() => {
-    const locked = Boolean(detail || lightbox || modal || tour || arTarget || unavailable);
+    const locked = Boolean(detail || lightbox || modal || tour || unavailable);
     document.body.style.overflow = locked ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [detail, lightbox, modal, tour, arTarget, unavailable]);
+  }, [detail, lightbox, modal, tour, unavailable]);
 
   // ── Close overlays on Escape (mirrors the original keydown handlers) ──
   useEffect(() => {
@@ -113,9 +101,9 @@ export function UIProvider({ children }) {
 
   // ── Trap the device/browser back button so it closes the topmost
   // overlay instead of leaving the app or changing pages. Overlays can
-  // nest (e.g. AR is opened from inside a Detail screen, or from inside
-  // an Office/Org modal), so this tracks the REAL order things were
-  // opened in — a true stack — rather than a fixed priority guess.
+  // nest (e.g. a modal opened from inside a Detail screen), so this
+  // tracks the REAL order things were opened in — a true stack —
+  // rather than a fixed priority guess.
   // Each nested open pushes one history entry (same URL, just a
   // marker); back pops exactly one layer at a time, so a single
   // overlay closes in one press and reveals the actual previous page
@@ -130,7 +118,6 @@ export function UIProvider({ children }) {
     modal: Boolean(modal),
     detail: Boolean(detail),
     tour: Boolean(tour),
-    arTarget: Boolean(arTarget),
     unavailable: Boolean(unavailable),
     drawerOpen,
   };
@@ -169,7 +156,7 @@ export function UIProvider({ children }) {
   useEffect(() => {
     const closers = {
       lightbox: closeLightbox, modal: closeModal, detail: closeDetail,
-      tour: closeTour, arTarget: closeAR, unavailable: closeUnavailable, drawerOpen: closeDrawer,
+      tour: closeTour, unavailable: closeUnavailable, drawerOpen: closeDrawer,
     };
     const onPopState = () => {
       if (skipPopRef.current > 0) {
@@ -186,12 +173,11 @@ export function UIProvider({ children }) {
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [closeLightbox, closeModal, closeDetail, closeTour, closeAR, closeUnavailable, closeDrawer]);
+  }, [closeLightbox, closeModal, closeDetail, closeTour, closeUnavailable, closeDrawer]);
 
   const value = {
     detail, lightbox, modal, toast,
     tour, openTour, closeTour,
-    arTarget, openAR, closeAR,
     unavailable, openUnavailable, closeUnavailable,
     searchQuery, setSearchQuery,
     drawerOpen, openDrawer, closeDrawer, toggleDrawer,

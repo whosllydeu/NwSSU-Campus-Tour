@@ -13,7 +13,6 @@ import BuildingsAdmin from './pages/BuildingsAdmin.jsx';
 import DepartmentsAdmin from './pages/DepartmentsAdmin.jsx';
 import OfficesAdmin from './pages/OfficesAdmin.jsx';
 import OrganizationsAdmin from './pages/OrganizationsAdmin.jsx';
-import Locations from './pages/Locations.jsx';
 import Users from './pages/Users.jsx';
 import Reports from './pages/Reports.jsx';
 import Settings from './pages/Settings.jsx';
@@ -24,11 +23,11 @@ export default function App() {
       <ToastProvider>
         <Routes>
           {/* Public — the only route reachable without a session. */}
-          <Route path="login" element={<Login />} />
+          <Route path="/admin/login" element={<Login />} />
 
           {/* Everything else under /admin requires an authenticated admin. */}
           <Route
-            path="/"
+            path="/admin"
             element={
               <ProtectedRoute>
                 <AdminLayout />
@@ -40,13 +39,12 @@ export default function App() {
             <Route path="departments" element={<DepartmentsAdmin />} />
             <Route path="offices" element={<OfficesAdmin />} />
             <Route path="organizations" element={<OrganizationsAdmin />} />
-            <Route path="locations" element={<Locations />} />
             <Route path="users" element={<Users />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* This app is admin-only now — anything else (including "/admin")
+          {/* This app is admin-only now — anything else (including "/")
               lands on the dashboard, which itself redirects to login
               if there's no authenticated admin session. */}
           <Route path="*" element={<Navigate to="/admin" replace />} />

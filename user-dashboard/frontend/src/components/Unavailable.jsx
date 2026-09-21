@@ -3,8 +3,8 @@ import { useUI } from '../context/UIContext.jsx';
 // ============================================================
 // Unavailable — full-screen "not ready yet" placeholder screen.
 // Shown (instead of a toast) whenever the person taps something —
-// Navigate Here, Start Virtual Tour, Walk There (AR) — that has no
-// tour/coordinate data set up for that place yet.
+// Navigate Here, Start Virtual Tour — that has no tour data set up
+// for that place yet.
 // ============================================================
 export default function Unavailable() {
   const { unavailable, closeUnavailable } = useUI();
