@@ -1,203 +1,352 @@
-import { useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCampusData } from '../context/CampusDataContext.jsx';
-import { useUI } from '../context/UIContext.jsx';
-import { hasTour } from '../data/ccisTour.js';
-import campusMap from '../assets/images/nwssu_map.png';
+import { useMemo, useState } from "react";
+import "../styles/map.css";
+import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { getWalkingRoute, RouteFitter, TILELAYER_ATTRIBUTION, TILELAYER_URL, userLocationIcon } from "../utils/map-leaflet";
+import { LocateFixed, Road, SendHorizonal, SendHorizontal } from "lucide-react";
 
-const MAP_COORDS = {
-  gate: { x: 36, y: 82 }, cat: { x: 58, y: 29 }, ccjs: { x: 9, y: 43 },
-  coed: { x: 5, y: 49 }, ccis: { x: 24, y: 62 }, con: { x: 37, y: 63 },
-  com: { x: 81, y: 64 }, cea: { x: 64, y: 75 }, president: { x: 63, y: 38 },
-  registrar: { x: 73, y: 33 }, cashier: { x: 66, y: 48 }, alumni: { x: 26, y: 24 },
-  canteen: { x: 46, y: 65 }, sociocultural: { x: 54, y: 67 },
-  studentcouncil: { x: 62, y: 68 }, library: { x: 62, y: 60 }, hotel: { x: 76, y: 61 },
-  sports: { x: 34, y: 43 },
-};
+/* 
+  Mock data la ine pero an position property dapat sugad an implementation 
+  para dire marubat sa map or mag error 
 
-const LABELS = {
-  gate: 'Main Gate', cat: 'CAT Building', ccis: 'CCIS Building', library: 'University Library',
-  coed: 'COED Building', cea: 'CEA Building', con: 'CON Building', com: 'COM Building',
-  president: "Admin / President's Office", ccjs: 'CCJS Building', registrar: "Registrar's Office",
-  cashier: "Cashier's Office", alumni: 'Alumni Building', sociocultural: 'Socio-Cultural Building',
-  studentcouncil: 'Student Council Building', hotel: 'NWSSU Hotel & Restaurant', canteen: 'University Canteen',
-  sports: 'Sports Complex',
-};
+  pwede liwat an implementation is sugadsine
+  position: [buildings.lat, buildings.long] 
+  from useCampusData() na hook
+*/
+const campusBuildings = [
+  {
+    abbr: "OVL",
+    name: "NwSSU Oval",
+    position: [12.071099, 124.596009]
+  },
+  {
+    abbr: "COM-DO",
+    name: "COM Dean's Office",
+    position: [12.072248, 124.597205]
+  },
+  {
+    abbr: "REG",
+    name: "University Registrar",
+    position: [12.071146, 124.596655]
+  },
+  {
+    abbr: "SAS",
+    name: "Student Affairs and Services",
+    position: [12.071836, 124.595805]
+  },
+  {
+    abbr: "COE",
+    name: "College of Engineering",
+    position: [12.071865, 124.597009],
+  },
+  {
+    abbr: "COM",
+    name: "College of Management",
+    position: [12.072298, 124.59667],
+  },
+  {
+    abbr: "CCJS",
+    name: "College of Criminal Justice and Sciences",
+    position: [12.070170, 124.595760],
+  },
+  {
+    abbr: "COED",
+    name: "College of Education",
+    position: [12.069968, 124.595813],
+  },
+  {
+    abbr: "CAT",
+    name: "College of Agriculture and Technology",
+    position: [12.071484, 124.595574],
+  },
+  {
+    abbr: "CON",
+    name: "College of Nursing",
+    position: [12.071007, 124.596618],
+  },
+  {
+    abbr: "CCIS",
+    name: "College of Computing and Information Sciences",
+    position: [12.070532, 124.59643],
+  },
+];
 
-const COLOR_FALLBACK = '#445566';
+const Map = () => {
 
-export default function Map() {
-  const navigate = useNavigate();
-  const { buildings, hasAR } = useCampusData();
-  const { openBuilding, openAR, openTour, openUnavailable } = useUI();
-  const [selectedId, setSelectedId] = useState(null);
-  const [query, setQuery] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [scale, setScale] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const drag = useRef(null);
-  const lastDragMoved = useRef(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [loader, setLoader] = useState(null);
+  const [alertMsg, setAlertMsg] = useState({
+    success: false,
+    message: ""
+  });
+  const [route, setRoute] = useState({
+    coordinates: null,
+    distance: null,
+    duration: null
+  });
 
-  const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return buildings;
-    return buildings.filter((b) =>
-      b.name.toLowerCase().includes(q) || (b.abbr || '').toLowerCase().includes(q)
+  const filteredBuildings = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return campusBuildings;
+    }
+
+    return campusBuildings.filter(
+      (building) =>
+        building.abbr.toLowerCase().includes(query) ||
+        building.name.toLowerCase().includes(query)
     );
-  }, [buildings, query]);
+  }, [search]);
 
-  const selected = buildings.find((b) => b.id === selectedId) || null;
-
-  const select = (id) => {
-    if (!buildings.some((b) => b.id === id)) return;
-    setSelectedId(id);
+  const handleBuildingClick = (building) => {
+    setSelectedBuilding(building);
   };
 
-  const zoom = (delta) => setScale((v) => Math.min(2.25, Math.max(0.65, +(v + delta).toFixed(2))));
-  const reset = () => { setScale(1); setOffset({ x: 0, y: 0 }); };
+  const getCurrentLocation = () => {
+    try {
+      setLoader("location");
+      if (!navigator.geolocation) {
+        return alert("Geolocation is not supported by this browser");
+      }
 
-  const onPointerDown = (e) => {
-    if (e.button !== 0) return;
-    lastDragMoved.current = false;
-    drag.current = { id: e.pointerId, startX: e.clientX, startY: e.clientY, ox: offset.x, oy: offset.y, moved: false };
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  };
+      navigator.geolocation.getCurrentPosition(
+        // Success getting location
+        (position) => {
+          const location = [
+            position.coords.latitude,
+            position.coords.longitude
+          ];
+          setUserLocation(location);
+          setAlertMsg({
+            success: true,
+            message: "Your location has been detected"
+          });
+          setLoader(null);
+        },
+        // Error
+        (err) => {
+          switch (err.code) {
+            case err.PERMISSION_DENIED:
+              alert("Location permission was denied.");
+              break;
 
-  const onPointerMove = (e) => {
-    if (!drag.current) return;
-    const dx = e.clientX - drag.current.startX;
-    const dy = e.clientY - drag.current.startY;
-    if (Math.abs(dx) + Math.abs(dy) > 5) {
-      drag.current.moved = true;
-      lastDragMoved.current = true;
+            case err.POSITION_UNAVAILABLE:
+              alert("Your location could not be determined.");
+              break;
+
+            case err.TIMEOUT:
+              alert("Getting your location timed out.");
+              break;
+
+            default:
+              alert("Unable to get your location.");
+          }
+          setLoader(null);
+        },
+        // Gps Options
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        },
+      );
+    } 
+    catch (error) {
+      alert(error);  
     }
-    setOffset({ x: drag.current.ox + dx, y: drag.current.oy + dy });
-  };
+  }
 
-  const onPointerUp = () => { drag.current = null; };
+  const handleGetRoute = async () => {
+    setLoader("destination");
+    try {
+      if (!userLocation) {
+        setAlertMsg({ message: "Please get your current location first" });
+        setLoader(null);
+        return;
+      }
 
-  const onWheel = (e) => {
-    e.preventDefault();
-    zoom(e.deltaY < 0 ? 0.1 : -0.1);
-  };
+      if (!selectedBuilding) {
+        setAlertMsg({ message: "Please select a destination building." });
+        setLoader(null);
+        return;
+      }
 
-  const handleBuildingPointerDown = (e) => {
-    e.stopPropagation();
-  };
-
-  const handleBuildingClick = (e, id) => {
-    e.stopPropagation();
-    if (lastDragMoved.current) {
-      lastDragMoved.current = false;
-      return;
+      const result = await getWalkingRoute(userLocation, selectedBuilding.position);
+      setRoute(result);
+      setLoader(null);
+    } 
+    catch (error) {
+      setLoader(null);
+      alert(error);  
     }
-    select(id);
-  };
-
-  const details = (id) => openBuilding(id);
-  const navigateHere = (id) => {
-    // Prefer the 360° virtual tour when one exists for this place (only
-    // CCIS has one right now) — it's ready to view with no GPS setup.
-    // Fall back to AR walking directions, then to a toast if neither
-    // has been configured yet.
-    if (hasTour(id)) openTour(id);
-    else if (hasAR(id)) openAR(id);
-    else openUnavailable('Navigation is not configured for this location yet.');
-  };
+  }
 
   return (
-    <section className="page active" id="page-map">
-      <div className="map-layout">
-        <aside className={`map-sidebar${sidebarOpen ? ' open' : ' collapsed'}`}>
-          <div className="msb-head">
-            <h2>Campus Map</h2>
-            <button className="msb-close" onClick={() => setSidebarOpen(false)} aria-label="Close locations">✕</button>
-          </div>
-          <div className="msb-search">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search building…" />
-          </div>
-          <div className="msb-block">
-            <div className="msb-label">Locations</div>
-            <div className="msb-list">
-              {shown.map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  className={`msb-item${selectedId === b.id ? ' active' : ''}`}
-                  onClick={() => select(b.id)}
-                >
-                  <span className="msb-dot" style={{ background: b.color || COLOR_FALLBACK }} />
-                  <span>{b.abbr ? `${b.abbr} – ` : ''}{b.name}</span>
-                </button>
-              ))}
+    <main className={`container ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <aside className="map-sidebar">
+        <div className="sidebar-header">
+          {isSidebarOpen && (
+            <div className="sidebar-title">
+              <span>Campus Buildings</span>
+              <small>{campusBuildings.length} buildings</small>
             </div>
-          </div>
-        </aside>
-
-        <div className="map-canvas-area">
-          {!sidebarOpen && (
-            <button className="map-fab" onClick={() => setSidebarOpen(true)}>☰ Locations</button>
           )}
 
-          <div className="map-tools">
-            <button className="mtool" onClick={() => zoom(0.15)} aria-label="Zoom in">＋</button>
-            <button className="mtool" onClick={() => zoom(-0.15)} aria-label="Zoom out">－</button>
-            <button className="mtool" onClick={reset} aria-label="Reset map">⊙</button>
-            <button className="mtool" onClick={() => navigate('/')} aria-label="Back to home">⌂</button>
-          </div>
-
-          <div
-            className="map-viewport"
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onWheel={onWheel}
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setIsSidebarOpen((prev) => !prev)}
+            aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <div
-              className="map-world"
-              style={{
-                left: '50%',
-                top: '50%',
-                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale})`,
-              }}
-            >
-              <img className="campus-map-bg" src={campusMap} alt="NWSSU campus map" draggable="false" />
+            {isSidebarOpen ? "x" : "≡"}
+          </button>
+        </div>
 
-              {buildings.map((b) => {
-                const pos = MAP_COORDS[b.id];
-                if (!pos) return null;
-                return (
-                  <button
-                    key={b.id}
-                    type="button"
-                    className={`mw-bldg${b.id === selectedId ? ' selected' : ''}${b.id === 'sports' ? ' sports' : ''}`}
-                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, background: `${b.color || COLOR_FALLBACK}e8` }}
-                    onPointerDown={(e) => handleBuildingPointerDown(e, b.id)}
-                    onClick={(e) => handleBuildingClick(e, b.id)}
-                    title={LABELS[b.id] || b.name}
-                  >
-                    <span>{b.abbr || LABELS[b.id] || b.name}</span>
-                  </button>
-                );
-              })}
+        {isSidebarOpen && (
+          <>
+            <div className="building-search">
+              <span className="search-icon">⌕</span>
+
+              <input
+                type="text"
+                placeholder="Search buildings..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+
+              {search && (
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              )}
             </div>
-          </div>
 
-          {selected && (
-            <div className="bldg-popup show" role="dialog" aria-label={`${selected.name} information`}>
-              <button className="popup-x" onClick={() => setSelectedId(null)} aria-label="Close">✕</button>
-              <div className="popup-name">{selected.name}</div>
-              <div className="popup-loc">📍 {selected.location}</div>
-              <div className="popup-desc">{selected.desc?.slice(0, 150)}{selected.desc?.length > 150 ? '…' : ''}</div>
-              <div className="popup-actions">
-                <button className="btn-primary" onClick={() => details(selected.id)}>Details</button>
-                <button className="btn-ghost" onClick={() => navigateHere(selected.id)}>Navigate Here</button>
-              </div>
+            <div className="building-list">
+              {filteredBuildings.length > 0 ? (
+                filteredBuildings.map((building) => (
+                  <button
+                    type="button"
+                    key={building.abbr}
+                    className={`building-item ${
+                      selectedBuilding?.abbr === building.abbr
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() => handleBuildingClick(building)}
+                  >
+                    <span className="building-abbr">{building.abbr}</span>
+
+                    <span className="building-info">
+                      <strong>{building.name}</strong>
+                      <small>{String(building.position)}</small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="no-results">
+                  <span>⌕</span>
+                  <strong>No buildings found</strong>
+                  <small>Try a different search.</small>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </aside>
+
+      <section className="map-content">
+        <div className="map-placeholder">
+          <MapContainer
+            center={[12.07113, 124.59621]}
+            zoom={18}
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              attribution={TILELAYER_ATTRIBUTION}
+              url={TILELAYER_URL}
+            />
+
+            {selectedBuilding && (
+              <Marker position={selectedBuilding.position}>
+                <Popup>
+                  <strong>{selectedBuilding.name}</strong>
+                </Popup>
+              </Marker>
+            )}
+
+            {userLocation && (
+              <Marker position={userLocation} icon={userLocationIcon}>
+                <Popup>Your Current Location</Popup>
+              </Marker>
+            )}
+
+            {route.coordinates && (
+              <>
+                <Polyline
+                  positions={route.coordinates}
+                  pathOptions={{
+                    color: "#2563eb",
+                    weight: 6,
+                    opacity: 0.85,
+                  }}
+                />
+                
+                <RouteFitter route={route.coordinates}/>
+              </>
+            )}
+          </MapContainer>
+        </div>
+
+        <figure className="map-action-card">
+          {alertMsg.message && (
+            <div
+              className={`map-alert ${
+                alertMsg.success ? "map-alert-success" : "map-alert-error"
+              }`}
+            >
+              {alertMsg.message}
             </div>
           )}
-        </div>
-      </div>
-    </section>
+
+          <button
+            type="button"
+            className={loader === "location" ? "get-location-btn-loader" : "get-location-btn"}
+            onClick={getCurrentLocation}
+            disabled={loader === "location"}
+          ><LocateFixed style={{ marginRight: 6 }} size={18}/> {loader === "location" ? "Locating..." : `Get My Location`}</button>
+
+          <button
+            type="button"
+            className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
+            onClick={handleGetRoute}
+            disabled={loader === "destination"}
+          ><Road size={18} style={{ marginRight: 6 }}/> {loader === "destination" ? "Getting Destination Route" : "Get Destination Route"}</button>
+
+          <button
+            type="button"
+            className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
+            disabled={loader === "destination"}
+          ><SendHorizontal size={18} style={{ marginRight: 6 }}/>Navigate Here</button>
+
+          {route.coordinates && (
+            <div className="route-info">
+              <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
+              <p><strong>Time:</strong> {Math.ceil(route.duration / 60)} minutes</p>
+            </div>
+          )}
+        </figure>
+      </section>
+    </main>
   );
-}
+};
+
+export default Map;

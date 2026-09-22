@@ -141,11 +141,11 @@ export default function ARNavigate() {
           <code>data.js</code>, e.g.:
         </p>
         <pre style={styles.codeBlock}>{`{
-  id: '${building.id}',
-  ...
-  lat: 12.066055,
-  lng: 124.584651,
-}`}</pre>
+          id: '${building.id}',
+          ...
+          lat: 12.066055,
+          lng: 124.584651,
+        }`}</pre>
         <button style={styles.backBtn} onClick={() => navigate(-1)}>← Back</button>
       </div>
     );

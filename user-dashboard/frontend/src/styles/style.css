@@ -494,7 +494,7 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .nav-result-box strong { color: var(--gold); }
 .nav-result-box .nav-steps { margin-top: 8px; color: var(--text2); }
 
-.msb-list { display: flex; flex-direction: column; }
+.msb-list { display: flex; flex-direction: column; gap: 10; }
 .msb-item {
   display: flex; align-items: center; gap: 9px;
   padding: 9px 4px; font-size: 12px; font-weight: 500;

@@ -12,13 +12,15 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "leaflet": "^1.9.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2",
+    "lucide-react": "^1.47.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.18.4",
     "three": "^0.160.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.8"
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.0"
   }
 }
