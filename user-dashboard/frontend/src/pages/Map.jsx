@@ -4,6 +4,9 @@ import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet"
 import "leaflet/dist/leaflet.css";
 import { getWalkingRoute, RouteFitter, TILELAYER_ATTRIBUTION, TILELAYER_URL, userLocationIcon } from "../utils/map-leaflet";
 import { LocateFixed, Road, SendHorizontal } from "lucide-react";
+import { useUI } from "../context/UIContext.jsx";
+import { useCampusData } from "../context/CampusDataContext.jsx";
+import { hasTour } from '../data/nwssuTour.js';
 
 /* 
   Mock data la ine pero an position property dapat sugad an implementation 
@@ -72,6 +75,9 @@ const campusBuildings = [
 ];
 
 const Map = () => {
+
+  const { openTour, openUnavailable } = useUI();
+  const { buildings } = useCampusData();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
@@ -159,6 +165,24 @@ const Map = () => {
       alert(error);  
     }
   }
+
+  const handleNavigateHere = () => {
+    if (!selectedBuilding) {
+      setAlertMsg({ message: "Please select a destination building first." });
+      return;
+    }
+
+    // campusBuildings above is mock data keyed by abbr only; look up the
+    // matching real building record (from useCampusData) to get its real
+    // id, since that's what the tour data (ccisTour.js) is keyed by.
+    const match = buildings.find((b) => b.abbr === selectedBuilding.abbr);
+
+    if (match && hasTour(match.id)) {
+      openTour(match.id);
+    } else {
+      openUnavailable("Virtual tour is currently not available for this location yet.");
+    }
+  };
 
   const handleGetRoute = async () => {
     setLoader("destination");
@@ -334,6 +358,7 @@ const Map = () => {
           <button
             type="button"
             className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
+            onClick={handleNavigateHere}
             disabled={loader === "destination"}
           ><SendHorizontal size={18} style={{ marginRight: 6 }}/>Navigate Here</button>
 

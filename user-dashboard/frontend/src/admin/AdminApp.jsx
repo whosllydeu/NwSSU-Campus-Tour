@@ -22,12 +22,16 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <Routes>
-          {/* Public — the only route reachable without a session. */}
-          <Route path="/admin/login" element={<Login />} />
+          {/* Public — the only route reachable without a session.
+              NOTE: paths here are relative to this <Routes>' mount point
+              (this component is itself rendered at "/admin/*" in App.jsx),
+              so they must NOT repeat the "/admin" prefix — doing so made
+              every route fail to match and rendered nothing at all. */}
+          <Route path="login" element={<Login />} />
 
           {/* Everything else under /admin requires an authenticated admin. */}
           <Route
-            path="/admin"
+            path="/"
             element={
               <ProtectedRoute>
                 <AdminLayout />

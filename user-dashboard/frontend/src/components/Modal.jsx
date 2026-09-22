@@ -1,6 +1,6 @@
 import { useUI } from '../context/UIContext.jsx';
 import { useCampusData } from '../context/CampusDataContext.jsx';
-import { hasTour } from '../data/ccisTour.js';
+import { hasTour } from '../data/nwssuTour.js';
 import { img } from '../utils/assets.js';
 
 // Local images (in src/assets/images) must go through img() so Vite bundles

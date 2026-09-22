@@ -1,11 +1,11 @@
 // ============================================================
 // PanoramaTour — full-screen 360° tour, Google Street View style.
-// Pure Three.js (dependency: `three`). On-floor chevron arrows,
+// Pure Three.js (dependency: `three`). Fixed-position chevron arrows,
 // attribution chip, round controls, street-name label.
 // ============================================================
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { TOURS } from '../data/ccisTour.js';
+import { TOURS } from '../data/nwssuTour.js';
 import { useUI } from '../context/UIContext.jsx';
 
 export default function PanoramaTour() {
@@ -18,10 +18,16 @@ export default function PanoramaTour() {
   const [loading, setLoading] = useState(true);
   const [card, setCard] = useState(null);
   const [menu, setMenu] = useState(false);
-  const [nav, setNav] = useState({ next: null, prev: null });
+  const [compass, setCompass] = useState(false);   // toggle the heading readout
+  const [lonReadout, setLonReadout] = useState(0);  // live camera lon, for tuning `heading`
 
   const nodes = data?.nodes || [];
   const base = (import.meta.env.BASE_URL || '/') + (data?.basePath || '');
+
+  // Direction (in degrees) that "forward" faces in a given node's photo.
+  // Defaults to 0 when a node has no `heading` set, so untouched nodes
+  // behave exactly as before.
+  const heading = (node) => node?.heading ?? 0;
 
   useEffect(() => {
     if (!data) return;
@@ -43,26 +49,19 @@ export default function PanoramaTour() {
 
     Object.assign(S, { scene, camera, renderer, sphere, cache: {}, lon: 0, lat: 0, drag: false, px: 0, py: 0, raf: 0, idx: 0 });
 
-    const dirVec = (lonD, latD, R) => {
-      const phi = THREE.MathUtils.degToRad(90 - latD), th = THREE.MathUtils.degToRad(lonD);
-      return new THREE.Vector3(R * Math.sin(phi) * Math.cos(th), R * Math.cos(phi), R * Math.sin(phi) * Math.sin(th));
-    };
-    const project = (lonD, latD) => {
-      const fwd = dirVec(S.lon, S.lat, 1).normalize();
-      const p = dirVec(lonD, latD, 480);
-      const d = p.clone().normalize().dot(fwd);
-      if (d < 0.15) return null;
-      const v = p.clone().project(camera);
-      if (v.z > 1) return null;
-      return { x: (v.x * 0.5 + 0.5) * mount.clientWidth, y: (-v.y * 0.5 + 0.5) * mount.clientHeight, o: Math.min(1, (d - 0.15) * 4) };
-    };
+    let readoutTick = 0;
     const animate = () => {
       S.raf = requestAnimationFrame(animate);
       const phi = THREE.MathUtils.degToRad(90 - S.lat), th = THREE.MathUtils.degToRad(S.lon);
       camera.lookAt(500 * Math.sin(phi) * Math.cos(th), 500 * Math.cos(phi), 500 * Math.sin(phi) * Math.sin(th));
       renderer.render(scene, camera);
-      // arrows sit low on the "floor": lat -32, forward lon 0 / back lon 180
-      setNav({ next: project(0, -32), prev: project(180, -32) });
+      // throttle the compass readout so it doesn't re-render every frame
+      readoutTick = (readoutTick + 1) % 6;
+      if (readoutTick === 0) {
+        let norm = Math.round(S.lon) % 360;
+        if (norm < 0) norm += 360;
+        setLonReadout(norm);
+      }
     };
     animate();
 
@@ -89,6 +88,7 @@ export default function PanoramaTour() {
     });
 
     setIdx(0); S.idx = 0; setLoading(true);
+    S.lon = heading(nodes[0]); S.lat = 0;
     S.loadInto(0).then((t) => { sphere.material.map = t; sphere.material.needsUpdate = true; setLoading(false); if (nodes[1]) S.loadInto(1); });
 
     return () => {
@@ -112,7 +112,7 @@ export default function PanoramaTour() {
     setCard(null); setMenu(false); setLoading(true);
     S.loadInto(i).then((t) => {
       S.sphere.material.map = t; S.sphere.material.needsUpdate = true;
-      S.lon = 0; S.lat = 0; S.idx = i; setIdx(i); setLoading(false);
+      S.lon = heading(nodes[i]); S.lat = 0; S.idx = i; setIdx(i); setLoading(false);
       if (nodes[i + 1]) S.loadInto(i + 1);
       if (nodes[i - 1]) S.loadInto(i - 1);
     });
@@ -151,9 +151,18 @@ export default function PanoramaTour() {
 
       {/* round controls */}
       <div className="gsv-controls">
+        <button className="gsv-round" onClick={() => setCompass((c) => !c)} aria-label="Toggle heading readout">🧭</button>
         <button className="gsv-round" onClick={() => setMenu((m) => !m)} aria-label="Menu">⋮</button>
         <button className="gsv-round" onClick={closeTour} aria-label="Close">✕</button>
       </div>
+
+      {/* live heading readout — drag to face the true forward direction,
+          then copy this number into this node's `heading` in nwssuTour.js */}
+      {compass && (
+        <div className="gsv-attrib" style={{ top: 60 }}>
+          <span className="gsv-attrib-txt">Node #{idx + 1} · heading: <b>{lonReadout}°</b></span>
+        </div>
+      )}
 
       {/* menu panel (stops + fullscreen) */}
       {menu && (
@@ -175,22 +184,22 @@ export default function PanoramaTour() {
       {card && (
         <div className="gsv-card">
           <button className="gsv-card-x" onClick={() => setCard(null)}>×</button>
-          <div className="gsv-card-tag">CCIS · Office</div>
+          <div className="gsv-card-tag">{data.title}</div>
           <h3>{card.name}</h3>
           <p>{card.text}</p>
         </div>
       )}
 
-      {/* on-floor chevron arrows */}
-      {nav.prev && idx > 0 && (
-        <button className="gsv-nav back" style={{ left: nav.prev.x, top: nav.prev.y, opacity: nav.prev.o }} onClick={() => goTo(idx - 1)} aria-label="Back">
+      {/* fixed-position chevron arrows — always on screen, no camera-direction dependency */}
+      {idx > 0 && (
+        <button className="gsv-nav back" onClick={() => goTo(idx - 1)} aria-label="Back">
           <span className="gsv-chev">
             <svg viewBox="0 0 120 70"><path d="M12 20 L60 56 L108 20" /></svg>
           </span>
         </button>
       )}
-      {nav.next && idx < nodes.length - 1 && (
-        <button className="gsv-nav fwd" style={{ left: nav.next.x, top: nav.next.y, opacity: nav.next.o }} onClick={() => goTo(idx + 1)} aria-label="Forward">
+      {idx < nodes.length - 1 && (
+        <button className="gsv-nav fwd" onClick={() => goTo(idx + 1)} aria-label="Forward">
           <span className="gsv-chev">
             <svg viewBox="0 0 120 70"><path d="M12 50 L60 14 L108 50" /></svg>
           </span>
@@ -202,4 +211,3 @@ export default function PanoramaTour() {
     </div>
   );
 }
-``
