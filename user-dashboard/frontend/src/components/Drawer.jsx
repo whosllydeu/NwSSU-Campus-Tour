@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useUI } from '../context/UIContext.jsx';
 
 const LINKS = [
@@ -10,7 +10,14 @@ const LINKS = [
 ];
 
 export default function Drawer() {
-  const { drawerOpen, closeDrawer, searchQuery, setSearchQuery } = useUI();
+  const { drawerOpen, closeDrawer, closeDrawerAndGo, searchQuery, setSearchQuery } = useUI();
+  const { pathname } = useLocation();
+
+  const handleLinkClick = (e, to) => {
+    e.preventDefault(); // we navigate ourselves (with replace) — see UIContext
+    if (to === pathname) closeDrawer();
+    else closeDrawerAndGo(to);
+  };
 
   return (
     <>
@@ -42,7 +49,7 @@ export default function Drawer() {
               to={l.to}
               end={l.end}
               className="dl"
-              onClick={closeDrawer}
+              onClick={(e) => handleLinkClick(e, l.to)}
             >
               {l.label}
             </NavLink>

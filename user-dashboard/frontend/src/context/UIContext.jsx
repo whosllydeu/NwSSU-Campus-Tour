@@ -25,11 +25,26 @@ export function UIProvider({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const toastTimer = useRef(null);
+  // Set when an overlay closes BECAUSE we navigated (e.g. drawer link).
+  // In that case we must NOT call history.back(), or it undoes the navigation.
+  const closedByNavRef = useRef(false);
 
   // ── Mobile drawer ──
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const toggleDrawer = useCallback(() => setDrawerOpen((o) => !o), []);
+
+  // Close the drawer and go to a page in one step. The drawer's history
+  // marker entry is REPLACED by the new page instead of being popped with
+  // history.back() — popping it after navigating is what sent users home.
+  const closeDrawerAndGo = useCallback(
+    (to) => {
+      closedByNavRef.current = true;
+      setDrawerOpen(false);
+      navigate(to, { replace: true });
+    },
+    [navigate]
+  );
 
   // ── Detail screen ──
   const openBuilding = useCallback((id) => setDetail({ kind: 'building', id }), []);
@@ -54,8 +69,6 @@ export function UIProvider({ children }) {
   const closeTour = useCallback(() => setTour(null), []);
 
   // ── "Currently unavailable" full-screen overlay ──
-  // Used instead of a toast whenever the person taps something (Start
-  // Virtual Tour, etc.) that has no tour data configured for that place yet.
   const openUnavailable = useCallback((message) => {
     setUnavailable({ message: message || 'This feature is not available for this location yet.' });
   }, []);
@@ -86,7 +99,7 @@ export function UIProvider({ children }) {
     };
   }, [detail, lightbox, modal, tour, unavailable]);
 
-  // ── Close overlays on Escape (mirrors the original keydown handlers) ──
+  // ── Close overlays on Escape ──
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
@@ -100,14 +113,7 @@ export function UIProvider({ children }) {
   }, [lightbox, detail, modal, unavailable, closeLightbox, closeDetail, closeModal, closeUnavailable]);
 
   // ── Trap the device/browser back button so it closes the topmost
-  // overlay instead of leaving the app or changing pages. Overlays can
-  // nest (e.g. a modal opened from inside a Detail screen), so this
-  // tracks the REAL order things were opened in — a true stack —
-  // rather than a fixed priority guess.
-  // Each nested open pushes one history entry (same URL, just a
-  // marker); back pops exactly one layer at a time, so a single
-  // overlay closes in one press and reveals the actual previous page
-  // immediately, since the route underneath never changed.
+  // overlay instead of leaving the app or changing pages.
   const overlayOrderRef = useRef([]);
   const prevOverlaysRef = useRef({});
   const fromPopRef = useRef(false);
@@ -141,15 +147,14 @@ export function UIProvider({ children }) {
     prevOverlaysRef.current = overlays;
 
     for (let i = 0; i < pushed; i++) window.history.pushState({ appOverlay: true }, '');
-    if (popped > 0 && pushed === 0 && !fromPopRef.current) {
-      // A close button/gesture removed an overlay that owns one or more
-      // history entries. Move the browser history back to remove those
-      // marker entries, but do not close the overlay underneath it when
-      // the resulting popstate event fires.
+    if (popped > 0 && pushed === 0 && !fromPopRef.current && !closedByNavRef.current) {
+      // A close button removed an overlay that owns history entries.
+      // Go back to remove those marker entries, and skip the resulting popstate.
       skipPopRef.current += popped;
       for (let i = 0; i < popped; i++) window.history.back();
     }
     fromPopRef.current = false;
+    closedByNavRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overlaysKey]);
 
@@ -163,13 +168,11 @@ export function UIProvider({ children }) {
         skipPopRef.current -= 1;
         return;
       }
-
       fromPopRef.current = true;
       const order = overlayOrderRef.current;
       const topKey = order[order.length - 1];
       if (topKey && closers[topKey]) closers[topKey]();
-      // Nothing open — this is a normal route/history Back and React
-      // Router is allowed to handle it.
+      // Nothing open — normal route Back, React Router handles it.
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -180,7 +183,7 @@ export function UIProvider({ children }) {
     tour, openTour, closeTour,
     unavailable, openUnavailable, closeUnavailable,
     searchQuery, setSearchQuery,
-    drawerOpen, openDrawer, closeDrawer, toggleDrawer,
+    drawerOpen, openDrawer, closeDrawer, toggleDrawer, closeDrawerAndGo,
     openBuilding, openDept, closeDetail,
     openLightbox, closeLightbox,
     showOfficeModal, showOrgModal, closeModal,
