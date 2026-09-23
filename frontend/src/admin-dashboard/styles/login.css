@@ -1,0 +1,126 @@
+/* ══════════════════════════════════════════════════════
+   Login screen — self-contained styling. Login.jsx renders
+   outside <AdminLayout>, so it can't rely on admin.css (that's
+   only loaded inside the authenticated shell) or on btn-primary /
+   brand-mark, which aren't defined anywhere in this project.
+   Only depends on the CSS variables from tokens.css, which IS
+   loaded globally in main.jsx.
+   ══════════════════════════════════════════════════════ */
+
+.ad-login-screen {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(200,168,75,0.08), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(42,102,36,0.25), transparent 50%),
+    var(--bg);
+}
+
+.ad-login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--glass);
+  border: 1px solid var(--glass-b);
+  border-radius: var(--r2);
+  box-shadow: var(--sh2);
+  backdrop-filter: blur(14px);
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ad-login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.ad-login-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green3), var(--green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-h);
+  font-size: 22px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(42,102,36,0.4);
+}
+
+.ad-login-card h1 {
+  font-family: var(--ff-h);
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.ad-login-sub {
+  font-size: 13px;
+  color: var(--text2);
+  text-align: center;
+  margin-top: -8px;
+}
+
+.ad-login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.ad-login-card input {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--ff-b);
+  transition: border-color .2s;
+}
+
+.ad-login-card input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.ad-login-error {
+  background: rgba(139,26,26,0.18);
+  border: 1px solid rgba(139,26,26,0.4);
+  color: #f3b9b9;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: var(--r);
+}
+
+.ad-login-submit {
+  margin-top: 6px;
+  background: linear-gradient(135deg, var(--green3), var(--green));
+  color: #fff;
+  border: none;
+  border-radius: var(--r);
+  padding: 13px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--ff-b);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(42,102,36,0.35);
+  transition: filter .2s, transform .15s;
+}
+
+.ad-login-submit:hover:not(:disabled) { filter: brightness(1.1); }
+.ad-login-submit:active:not(:disabled) { transform: translateY(1px); }
+.ad-login-submit:disabled { opacity: 0.6; cursor: not-allowed; }
