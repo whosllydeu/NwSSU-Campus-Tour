@@ -1,7 +1,7 @@
 import { useUI } from '../context/UIContext';
 import { useCampusData } from '../context/DataContext';
 import { capitalize } from '../utils/helpers';
-import { hasTour } from '../static/ccisTour';
+import { hasTour } from '../static/nwssuTour';
 import Photo from './Photo';
 
 const NBSP_DOT = '\u00A0·\u00A0';

@@ -6,7 +6,7 @@ import { allLocationIcon, getWalkingRoute, RouteFitter, TILELAYER_ATTRIBUTION, T
 import { LocateFixed, Road, SendHorizontal } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
-import { hasTour } from "../static/ccisTour";
+import { hasTour } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 
 /* 
@@ -174,7 +174,7 @@ export default function Map() {
     /*
      campusBuildings above is mock data keyed by abbr only; look up the
      matching real building record (from useCampusData) to get its real 
-     id, since that's what the tour data (ccisTour.js) is keyed by.
+     id, since that's what the tour data (nwssuTour.js) is keyed by.
     */
     const match = buildings.find((b) => b.abbr === selectedBuilding.abbr);
 

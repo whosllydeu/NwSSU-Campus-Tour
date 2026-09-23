@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
-import { TOURS } from "../static/ccisTour";
+import { TOURS } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 
 export default function PanoramaTour() {
