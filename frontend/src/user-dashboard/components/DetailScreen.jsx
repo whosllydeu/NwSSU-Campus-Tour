@@ -46,8 +46,8 @@ function PhotoNote({ rawPhoto, id }) {
 // ── Building detail ──
 function BuildingDetail({ id }) {
   const { closeDetail, openTour, openUnavailable } = useUI();
-  const { data } = useCampusData();
-  const b = data.buildings.find((x) => x.id === id);
+  const { buildings, departments } = useCampusData();
+  const b = buildings.find((x) => x.id === id);
   if (!b) return null;
 
   const startTour = () => {
@@ -55,7 +55,7 @@ function BuildingDetail({ id }) {
     else openUnavailable('Virtual tour is currently not available for this location yet.');
   };
 
-  const dept = data.departments.find((d) => d.id === id || d.id === b.dept);
+  const dept = departments.find((d) => d.id === id || d.id === b.dept);
   const programs = b.programs || dept?.programs || [];
   const offices = b.offices || [];
   const rawPhoto = b.photo || dept?.photo || '';
@@ -129,11 +129,11 @@ function BuildingDetail({ id }) {
 // ── Department detail ──
 function DeptDetail({ id }) {
   const { closeDetail, openTour, openUnavailable } = useUI();
-  const { data } = useCampusData();
-  const d = data.departments.find((x) => x.id === id);
+  const { buildings, departments } = useCampusData();
+  const d = departments.find((x) => x.id === id);
   if (!d) return null;
 
-  const building = data.buildings.find((b) => b.id === id || b.dept === id);
+  const building = buildings.find((b) => b.id === id || b.dept === id);
   const emoji = building?.emoji || '🎓';
   const rawPhoto = d.photo || building?.photo || '';
   const tourId = hasTour(d.id) ? d.id : (building && hasTour(building.id) ? building.id : undefined);

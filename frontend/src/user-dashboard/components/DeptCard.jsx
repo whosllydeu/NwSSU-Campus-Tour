@@ -6,8 +6,8 @@ import { ChevronRight } from 'lucide-react';
 
 export default function DeptCard({ d }) {
   const { openDept } = useUI();
-  const { data } = useCampusData();
-  const building = data.buildings.find((b) => b.id === d.id || b.dept === d.id);
+  const { buildings } = useCampusData();
+  const building = buildings.find((b) => b.id === d.id || b.dept === d.id);
   const emoji = building?.emoji || '🎓';
   const src = img(d.photo || building?.photo || '');
   const [errored, setErrored] = useState(false);

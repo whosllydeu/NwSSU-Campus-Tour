@@ -12,7 +12,7 @@ export function useUI() {
 
 export function UIProvider({ children }) {
   const navigate = useNavigate();
-  const { data } = useCampusData();
+  const { departments } = useCampusData();
 
   // ── Overlay state ──
   const [detail, setDetail] = useState(null); // { kind:'building'|'dept', id }
@@ -36,7 +36,7 @@ export function UIProvider({ children }) {
 
   const openDept = useCallback(
     (id) => {
-      const exists = data.departments.some((d) => d.id === id);
+      const exists = departments.some((d) => d.id === id);
       if (exists) {
         setDetail({ kind: 'dept', id });
       } else {
@@ -44,7 +44,7 @@ export function UIProvider({ children }) {
         navigate('/departments');
       }
     },
-    [navigate, data.departments]
+    [navigate, departments]
   );
 
   const closeDetail = useCallback(() => setDetail(null), []);

@@ -12,8 +12,8 @@ function resolvePhoto(photo) {
 
 function OfficeContent({ index }) {
   const { openTour, closeModal, showToast } = useUI();
-  const { data } = useCampusData();
-  const o = data.offices[index];
+  const { offices } = useCampusData();
+  const o = offices[index];
   if (!o) return null;
   // No office has a 360° tour yet (only the CCIS building does) — the
   // button stays visible everywhere, but tapping it just explains that

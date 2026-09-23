@@ -28,37 +28,30 @@ export const useCampusData = () => {
 export const DataProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [data, setData] = useState({
-    buildings: [],
-    departments: [],
-    offices: [],
-    organizations: [],
-  });
+  const [buildings, setBuildings] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [offices, setOffices] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
 
   useEffect(() => {
     const initialData = async () => {
         setIsLoading(true);
-
         try {
         const [
-            buildings,
-            departments,
-            offices,
-            organizations,
+          buildings,
+          departments,
+          offices,
+          organizations,
         ] = await Promise.all([
             listBuildings(),
             listDepartments(),
             listOffices(),
             listOrganizations(),
         ]);
-
-        setData({
-            buildings,
-            departments,
-            offices,
-            organizations,
-        });
+        setBuildings(buildings);
+        setDepartments(departments);
+        setOffices(offices);
+        setOrganizations(organizations);
 
         setError(null);
         } catch (err) {
@@ -74,7 +67,7 @@ export const DataProvider = ({ children }) => {
   const value = {
     isLoading,
     error,
-    data
+    buildings, departments, offices, organizations
   };
 
   return (

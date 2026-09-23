@@ -4,14 +4,14 @@ import DeptCard from '../components/DeptCard';
 import { Navbar } from "../components";
 
 export default function Departments() {
-  const { data } = useCampusData();
+  const { departments } = useCampusData();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const shown = q
-    ? data.departments.filter((d) =>
+    ? departments.filter((d) =>
         d.name.toLowerCase().includes(q) || (d.abbr && d.abbr.toLowerCase().includes(q))
       )
-    : data.departments
+    : departments
   ;
 
   return (

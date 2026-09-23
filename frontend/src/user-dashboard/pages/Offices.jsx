@@ -4,11 +4,11 @@ import { useUI } from '../context/UIContext';
 import { Navbar } from '../components';
 
 export default function Offices() {
-  const { data } = useCampusData();
+  const { offices } = useCampusData();
   const { showOfficeModal } = useUI();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const shown = q ? data.offices.filter((o) => o.name.toLowerCase().includes(q)) : data.offices;
+  const shown = q ? offices.filter((o) => o.name.toLowerCase().includes(q)) : offices;
 
   return (
     <>
@@ -35,7 +35,7 @@ export default function Offices() {
           ) : (
             <div className="offices-grid" id="officesGrid">
               {shown.map((o) => {
-                const i = data.offices.indexOf(o);
+                const i = offices.indexOf(o);
                 return (
                   <div className="off-card" key={o.id || i} onClick={() => showOfficeModal(i)}>
                     <div className="off-ico">{o.icon}</div>

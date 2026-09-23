@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "../stylesheets/map.css";
 import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -6,6 +6,8 @@ import { allLocationIcon, getWalkingRoute, RouteFitter, TILELAYER_ATTRIBUTION, T
 import { LocateFixed, Road, SendHorizontal } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
+import { hasTour } from "../static/ccisTour";
+import { useUI } from "../context/UIContext";
 
 /* 
   Mock data la ine pero an position property dapat sugad an implementation 
@@ -74,7 +76,9 @@ const campusBuildings = [
 ];
 
 export default function Map() {
-  const { data } = useCampusData();
+  const { buildings } = useCampusData();
+  const { openTour, openUnavailable } = useUI();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -103,10 +107,6 @@ export default function Map() {
         building.name.toLowerCase().includes(query)
     );
   }, [search]);
-
-  useEffect(() => {
-    console.log(data.buildings);
-  }, [data.buildings]);
 
   const handleBuildingClick = (building) => {
     setSelectedBuilding(building);
@@ -163,6 +163,25 @@ export default function Map() {
     } 
     catch (error) {
       alert(error);  
+    }
+  }
+
+  const handleNavigateHere = () => {
+    if (!selectedBuilding) {
+      setAlertMsg({ message: "Please check a destination building first." });
+      return;
+    }
+    /*
+     campusBuildings above is mock data keyed by abbr only; look up the
+     matching real building record (from useCampusData) to get its real 
+     id, since that's what the tour data (ccisTour.js) is keyed by.
+    */
+    const match = buildings.find((b) => b.abbr === selectedBuilding.abbr);
+
+    if (match && hasTour(match.id)) {
+      openTour(match.id);
+    } else {
+      openUnavailable("Virtual Tour is currently not available for this location yet.");
     }
   }
 
@@ -357,6 +376,7 @@ export default function Map() {
               type="button"
               className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
               disabled={loader === "destination"}
+              onClick={handleNavigateHere}
             ><SendHorizontal size={18} style={{ marginRight: 6 }}/>Navigate Here</button>
 
             {route.coordinates && (

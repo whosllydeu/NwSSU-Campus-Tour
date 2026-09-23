@@ -11,11 +11,11 @@ const FILTERS = [
 ];
 
 export default function Buildings() {
-  const { data } = useCampusData();
+  const { buildings } = useCampusData();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState('all');
 
-  const byType = filter === 'all' ? data.buildings : data.buildings.filter((b) => b.type === filter);
+  const byType = filter === 'all' ? buildings : buildings.filter((b) => b.type === filter);
   const q = query.trim().toLowerCase();
   const shown = q
     ? byType.filter((b) =>

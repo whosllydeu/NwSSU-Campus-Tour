@@ -7,28 +7,28 @@ export default function SearchPanel() {
     searchQuery, setSearchQuery,
     openBuilding, openDept, showOfficeModal, showOrgModal,
   } = useUI();
-  const { data } = useCampusData();
+  const { buildings, departments, offices, organizations } = useCampusData();
   const panelRef = useRef(null);
 
   // Combined search index (mirrors SEARCH_INDEX from the original data.js).
   const index = useMemo(() => [
-    ...data.buildings.map((b) => ({
+    ...buildings.map((b) => ({
       key: `b-${b.id}`, name: b.name, type: 'Building', icon: b.emoji,
       run: () => openBuilding(b.id),
     })),
-    ...data.departments.map((d) => ({
+    ...departments.map((d) => ({
       key: `d-${d.id}`, name: `${d.name} (${d.abbr})`, type: 'Department', icon: '🎓',
       run: () => openDept(d.id),
     })),
-    ...data.offices.map((o, i) => ({
+    ...offices.map((o, i) => ({
       key: `o-${i}`, name: o.name, type: 'Office', icon: o.icon,
       run: () => showOfficeModal(i),
     })),
-    ...data.organizations.map((o, i) => ({
+    ...organizations.map((o, i) => ({
       key: `g-${i}`, name: `${o.name} (${o.abbr})`, type: 'Organization', icon: '👥',
       run: () => showOrgModal(i),
     })),
-  ], [data.buildings, data.departments, data.offices, data.organizations, openBuilding, openDept, showOfficeModal, showOrgModal]);
+  ], [buildings, departments, offices, organizations, openBuilding, openDept, showOfficeModal, showOrgModal]);
 
   const q = searchQuery.trim().toLowerCase();
   const show = q.length > 0;
