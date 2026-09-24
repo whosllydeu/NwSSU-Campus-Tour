@@ -30,3 +30,69 @@ export const MINI_MAP = [
   { code: 'ADM',  left: '47%', top: '40%', bg: '#2c3e50', big: true },
   { code: 'CCJS', left: '83%', top: '42%', bg: '#8b1a1a' },
 ];
+
+/* 
+  Mock data la ine pero an position property dapat sugad an implementation 
+  para dire marubat sa map or mag error 
+
+  pwede liwat an implementation is sugadsine
+  position: [buildings.lat, buildings.long] 
+  from useCampusData() na hook
+*/
+export const CAMPUS_BUILDING = [
+  {
+    abbr: "OVL",
+    name: "NwSSU Oval",
+    position: [12.071099, 124.596009]
+  },
+  {
+    abbr: "COM-DO",
+    name: "COM Dean's Office",
+    position: [12.072248, 124.597205]
+  },
+  {
+    abbr: "REG",
+    name: "University Registrar",
+    position: [12.071146, 124.596655]
+  },
+  {
+    abbr: "SAS",
+    name: "Student Affairs and Services",
+    position: [12.071836, 124.595805]
+  },
+  {
+    abbr: "COE",
+    name: "College of Engineering",
+    position: [12.071865, 124.597009],
+  },
+  {
+    abbr: "COM",
+    name: "College of Management",
+    position: [12.072298, 124.59667],
+  },
+  {
+    abbr: "CCJS",
+    name: "College of Criminal Justice and Sciences",
+    position: [12.070170, 124.595760],
+  },
+  {
+    abbr: "COED",
+    name: "College of Education",
+    position: [12.069968, 124.595813],
+  },
+  {
+    abbr: "CAT",
+    name: "College of Agriculture and Technology",
+    position: [12.071484, 124.595574],
+  },
+  {
+    abbr: "CON",
+    name: "College of Nursing",
+    position: [12.071007, 124.596618],
+  },
+  {
+    abbr: "CCIS",
+    name: "College of Computing and Information Sciences",
+    position: [12.070532, 124.59643],
+  },
+];

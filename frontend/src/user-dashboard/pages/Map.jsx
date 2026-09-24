@@ -2,84 +2,21 @@ import { useMemo, useState } from "react";
 import "../stylesheets/map.css";
 import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { allLocationIcon, getWalkingRoute, RouteFitter, TILELAYER_ATTRIBUTION, TILELAYER_URL, userLocationIcon } from "../utils/map-leaflet";
-import { LocateFixed, Road, SendHorizontal } from "lucide-react";
+import { allLocationIcon, getWalkingRoute, RouteFitter, selectedLocationIcon, TILELAYER_ATTRIBUTION, TILELAYER_URL, userLocationIcon } from "../utils/map-leaflet";
+import { Globe, LocateFixed, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
 import { hasTour } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
-
-/* 
-  Mock data la ine pero an position property dapat sugad an implementation 
-  para dire marubat sa map or mag error 
-
-  pwede liwat an implementation is sugadsine
-  position: [buildings.lat, buildings.long] 
-  from useCampusData() na hook
-*/
-const campusBuildings = [
-  {
-    abbr: "OVL",
-    name: "NwSSU Oval",
-    position: [12.071099, 124.596009]
-  },
-  {
-    abbr: "COM-DO",
-    name: "COM Dean's Office",
-    position: [12.072248, 124.597205]
-  },
-  {
-    abbr: "REG",
-    name: "University Registrar",
-    position: [12.071146, 124.596655]
-  },
-  {
-    abbr: "SAS",
-    name: "Student Affairs and Services",
-    position: [12.071836, 124.595805]
-  },
-  {
-    abbr: "COE",
-    name: "College of Engineering",
-    position: [12.071865, 124.597009],
-  },
-  {
-    abbr: "COM",
-    name: "College of Management",
-    position: [12.072298, 124.59667],
-  },
-  {
-    abbr: "CCJS",
-    name: "College of Criminal Justice and Sciences",
-    position: [12.070170, 124.595760],
-  },
-  {
-    abbr: "COED",
-    name: "College of Education",
-    position: [12.069968, 124.595813],
-  },
-  {
-    abbr: "CAT",
-    name: "College of Agriculture and Technology",
-    position: [12.071484, 124.595574],
-  },
-  {
-    abbr: "CON",
-    name: "College of Nursing",
-    position: [12.071007, 124.596618],
-  },
-  {
-    abbr: "CCIS",
-    name: "College of Computing and Information Sciences",
-    position: [12.070532, 124.59643],
-  },
-];
+import { CAMPUS_BUILDING } from "../static/campusData";
+import BuildingInfoModal from "../components/BuildingInfoModal";
 
 export default function Map() {
   const { buildings } = useCampusData();
   const { openTour, openUnavailable } = useUI();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [modalBuilding, setModalBuilding] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -98,10 +35,10 @@ export default function Map() {
     const query = search.trim().toLowerCase();
 
     if (!query) {
-      return campusBuildings;
+      return CAMPUS_BUILDING;
     }
 
-    return campusBuildings.filter(
+    return CAMPUS_BUILDING.filter(
       (building) =>
         building.abbr.toLowerCase().includes(query) ||
         building.name.toLowerCase().includes(query)
@@ -219,7 +156,7 @@ export default function Map() {
             {isSidebarOpen && (
               <div className="sidebar-title">
                 <span>Campus Buildings</span>
-                <small>{campusBuildings.length} buildings</small>
+                <small>{CAMPUS_BUILDING.length} buildings</small>
               </div>
             )}
 
@@ -303,26 +240,27 @@ export default function Map() {
               />
 
               {filteredBuildings.map((building) => {
+                const isSelected = selectedBuilding?.abbr === building.abbr;
+
                 return (
                   <Marker
                     key={building.abbr}
                     position={building.position}
-                    icon={allLocationIcon}
-                  >
-                    <Popup>
-                      <strong>{building.name}</strong>
-                    </Popup>
-                  </Marker>
+                    icon={isSelected ? selectedLocationIcon : allLocationIcon}
+                    eventHandlers={{
+                      click: () => {
+                        const campusBuilding = buildings.find(
+                          (item) => item.abbr === building.abbr
+                        );
+
+                        if (campusBuilding) {
+                          setModalBuilding(campusBuilding);
+                        }
+                      },
+                    }}
+                  />
                 );
               })}
-
-              {selectedBuilding && (
-                <Marker position={selectedBuilding.position}>
-                  <Popup>
-                    <strong>{selectedBuilding.name}</strong>
-                  </Popup>
-                </Marker>
-              )}
 
               {userLocation && (
                 <Marker position={userLocation} icon={userLocationIcon}>
@@ -358,26 +296,28 @@ export default function Map() {
               </div>
             )}
 
+            <div style={{ display: 'flex', alignItems: 'center', columnGap: 6 }}>
             <button
               type="button"
               className={loader === "location" ? "get-location-btn-loader" : "get-location-btn"}
               onClick={getCurrentLocation}
               disabled={loader === "location"}
-            ><LocateFixed style={{ marginRight: 6 }} size={18}/> {loader === "location" ? "Locating..." : `Get My Location`}</button>
+              ><LocateFixed style={{ marginRight: 6 }} size={18}/> {loader === "location" ? "Locating..." : `My Location`}</button>
 
             <button
               type="button"
               className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
               onClick={handleGetRoute}
               disabled={loader === "destination"}
-            ><Road size={18} style={{ marginRight: 6 }}/> {loader === "destination" ? "Getting Destination Route" : "Get Destination Route"}</button>
+              ><Road size={18} style={{ marginRight: 6 }}/> {loader === "destination" ? "Getting Route" : "Get Route"}</button>
+            </div>
 
             <button
               type="button"
-              className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
+              className={loader === "destination" ? "navigate-btn-loader" : "navigate-btn"}
               disabled={loader === "destination"}
               onClick={handleNavigateHere}
-            ><SendHorizontal size={18} style={{ marginRight: 6 }}/>Navigate Here</button>
+            ><Globe size={18} style={{ marginRight: 6 }}/>Open 360 Tour</button>
 
             {route.coordinates && (
               <div className="route-info">
@@ -388,6 +328,18 @@ export default function Map() {
           </figure>
         </section>
       </main>
+      {modalBuilding && (
+        <BuildingInfoModal
+          building={modalBuilding}
+          onClose={() => setModalBuilding(null)}
+          onRoute={() => {
+            setSelectedBuilding(modalBuilding);
+          }}
+          onNavigate={handleNavigateHere}
+          routeLoading={loader === "destination"}
+          navigateLoading={loader === "navigation"}
+        />
+      )}
     </>
   );
 };
