@@ -5,7 +5,7 @@
 // Vite rewrites these to hashed, build-safe URLs.
 // ============================================================
 
-const files = import.meta.glob('../assets/images/*', {
+const files = import.meta.glob('../../assets/images/*', {
   eager: true,
   query: '?url',
   import: 'default',

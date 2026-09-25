@@ -1379,13 +1379,12 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .gsv-card p{margin:0;font-size:13.5px;line-height:1.55;color:#3c4043;}
 
 /* on-floor chevron arrows */
-.gsv-nav{position:absolute;z-index:9;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;padding:0;
+.gsv-nav{position:absolute;left:50%;z-index:9;transform:translateX(-50%);border:none;background:transparent;cursor:pointer;padding:0;
   filter:drop-shadow(0 3px 5px rgba(0,0,0,.5));transition:transform .12s;}
-.gsv-nav:hover{transform:translate(-50%,-50%) scale(1.12);}
-.gsv-chev{display:block;width:78px;transform:perspective(340px) rotateX(52deg);}
-.gsv-chev svg{width:100%;height:auto;display:block;}
-.gsv-chev path{fill:none;stroke:#fff;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;opacity:.92;}
-.gsv-nav:hover .gsv-chev path{stroke:#fff;opacity:1;}
+.gsv-nav.fwd{ bottom: 150px; }
+.gsv-nav.back{ bottom: 60px; }
+.gsv-nav:hover{transform:translateX(-50%) scale(1.12);}
+.gsv-chev{display:block;width:130px;transform:perspective(340px) rotateX(52deg);}
 
 /* street-name label */
 .gsv-street{position:absolute;right:20px;bottom:26px;z-index:8;color:#fff;font-weight:800;font-size:20px;
