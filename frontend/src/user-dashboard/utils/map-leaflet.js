@@ -1,12 +1,47 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
+import { CAMPUS_BUILDING } from "../static/campusData";
 
 // OSRM walking routing service api
 const OSRM_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/driving";
 
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+export const findBuildingAtLocation = (location) => {
+  let detectedBuilding = null;
+  let shortestDistance = Infinity;
+
+  for (const building of CAMPUS_BUILDING) {
+    const distance = getDistanceInMeters(location, building.position);
+    const radius = building.detectionRadius ?? 35;
+
+    if (distance <= radius && distance < shortestDistance) {
+      detectedBuilding = building;
+      shortestDistance = distance;
+    }
+
+  }
+
+  return {
+    building: detectedBuilding,
+    distance: detectedBuilding !== null ? shortestDistance : null
+  };
+}
+
+const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
+  const EARTH_RADIUS = 6371000;
+
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+
+  const dLat = toRadians(lat2 - lat1);
+  const dLong = toRadians(long2 - long1);
+
+  const distanceRatio = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLong / 2) ** 2;
+  const distanceAngle = 2 * Math.atan2(Math.sqrt(distanceRatio), Math.sqrt(1 - distanceRatio));
+  return EARTH_RADIUS * distanceAngle;
+}
 
 export const getWalkingRoute = async (start, destination) => {
   const [startLat, startLng] = start;

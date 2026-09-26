@@ -2,7 +2,16 @@ import { useMemo, useState } from "react";
 import "../stylesheets/map.css";
 import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { allLocationIcon, getWalkingRoute, RouteFitter, selectedLocationIcon, TILELAYER_ATTRIBUTION, TILELAYER_URL, userLocationIcon } from "../utils/map-leaflet";
+import { 
+  allLocationIcon, 
+  findBuildingAtLocation, 
+  getWalkingRoute, 
+  RouteFitter, 
+  selectedLocationIcon, 
+  TILELAYER_ATTRIBUTION, 
+  TILELAYER_URL, 
+  userLocationIcon
+} from "../utils/map-leaflet";
 import { Globe, LocateFixed, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
@@ -63,10 +72,16 @@ export default function Map() {
             position.coords.latitude,
             position.coords.longitude
           ];
+          const { building } = findBuildingAtLocation(location);
           setUserLocation(location);
           setAlertMsg({
             success: true,
-            message: "Your location has been detected"
+            message: `
+              📍Location Detected: ${building 
+                ? `You are at ${building.name}.`  
+                : "But you are not currently inside or near a recognized campus building."
+              }
+            `
           });
           setLoader(null);
         },
@@ -104,8 +119,14 @@ export default function Map() {
   }
 
   const handleNavigateHere = () => {
-    if (!selectedBuilding) {
-      setAlertMsg({ message: "Please check a destination building first." });
+    if (!userLocation) {
+      setAlertMsg({ message: "Please get your current location first" });
+      return;
+    }
+
+    const { building } = findBuildingAtLocation(userLocation);
+    if (!building) {
+      setAlertMsg({ message: "Make sure you are on the university campus." });
       return;
     }
     /*
@@ -113,7 +134,7 @@ export default function Map() {
      matching real building record (from useCampusData) to get its real 
      id, since that's what the tour data (nwssuTour.js) is keyed by.
     */
-    const match = buildings.find((b) => b.abbr === selectedBuilding.abbr);
+    const match = buildings.find((b) => b.abbr === building.abbr);
 
     if (match && hasTour(match.id)) {
       openTour(match.id);
@@ -297,18 +318,18 @@ export default function Map() {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', columnGap: 6 }}>
-            <button
-              type="button"
-              className={loader === "location" ? "get-location-btn-loader" : "get-location-btn"}
-              onClick={getCurrentLocation}
-              disabled={loader === "location"}
+              <button
+                type="button"
+                className={loader === "location" ? "get-location-btn-loader" : "get-location-btn"}
+                onClick={getCurrentLocation}
+                disabled={loader === "location"}
               ><LocateFixed style={{ marginRight: 6 }} size={18}/> {loader === "location" ? "Locating..." : `My Location`}</button>
 
-            <button
-              type="button"
-              className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
-              onClick={handleGetRoute}
-              disabled={loader === "destination"}
+              <button
+                type="button"
+                className={loader === "destination" ? "destination-route-btn-loader" : "destination-route-btn"}
+                onClick={handleGetRoute}
+                disabled={loader === "destination"}
               ><Road size={18} style={{ marginRight: 6 }}/> {loader === "destination" ? "Getting Route" : "Get Route"}</button>
             </div>
 
