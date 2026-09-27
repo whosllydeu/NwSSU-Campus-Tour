@@ -249,9 +249,9 @@
 ========================= */
 
 .building-modal-footer {
-  display: grid;
+  /* display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 10px; */
   padding: 16px 22px;
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
@@ -289,6 +289,7 @@
 .building-modal-navigate-btn {
   background: #111827;
   color: #ffffff;
+  width: 100%;
 }
 
 /* =========================
@@ -898,4 +899,64 @@
 
     max-width: none;
   }
+}
+
+/**/
+.ad-location-picker {
+  width: 100%;
+}
+
+.ad-location-map {
+  width: 100%;
+  height: 360px;
+  overflow: hidden;
+  border: 1px solid #dcdcdc;
+  border-radius: 12px;
+}
+
+.ad-location-map .leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}
+
+.ad-location-coordinates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.ad-location-coordinates > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: #f7f7f7;
+  border-radius: 8px;
+}
+
+.ad-location-coordinates span {
+  font-size: 12px;
+  color: #595858;
+}
+
+.ad-location-coordinates strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #070a0c;
+  font-variant-numeric: tabular-nums;
+}
+
+.ad-location-help {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #777;
+}
+
+.ad-error {
+  display: block;
+  margin-top: 5px;
+  color: #d32f2f;
+  font-size: 12px;
 }

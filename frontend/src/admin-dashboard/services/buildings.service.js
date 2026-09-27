@@ -10,7 +10,7 @@ function fromDb(row) {
 }
 
 function toDb(data) {
-  const { desc, dept, _id, id, ...rest } = data;
+  const { desc, dept, ...rest } = data;
   return {
     ...rest,
     ...(desc !== undefined ? { description: desc } : {}),

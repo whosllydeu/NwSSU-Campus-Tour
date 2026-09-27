@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../stylesheets/map.css";
 import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -7,22 +7,22 @@ import {
   findBuildingAtLocation, 
   getWalkingRoute, 
   RouteFitter, 
-  selectedLocationIcon, 
-  TILELAYER_ATTRIBUTION, 
+  selectedLocationIcon,
   TILELAYER_URL, 
-  userLocationIcon
+  userLocationIcon,
+  transformedObjectBuilding
 } from "../utils/map-leaflet";
 import { Globe, LocateFixed, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
 import { hasTour } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
-import { CAMPUS_BUILDING } from "../static/campusData";
 import BuildingInfoModal from "../components/BuildingInfoModal";
 
 export default function Map() {
   const { buildings } = useCampusData();
   const { openTour, openUnavailable } = useUI();
+  const CAMPUS_BUILDING = transformedObjectBuilding(buildings);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [modalBuilding, setModalBuilding] = useState(null);
@@ -52,7 +52,11 @@ export default function Map() {
         building.abbr.toLowerCase().includes(query) ||
         building.name.toLowerCase().includes(query)
     );
-  }, [search]);
+  }, [CAMPUS_BUILDING, search]);
+
+  useEffect(() => {
+    console.log(selectedBuilding);
+  }, [selectedBuilding]);
 
   const handleBuildingClick = (building) => {
     setSelectedBuilding(building);
@@ -72,7 +76,7 @@ export default function Map() {
             position.coords.latitude,
             position.coords.longitude
           ];
-          const { building } = findBuildingAtLocation(location);
+          const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
           setUserLocation(location);
           setAlertMsg({
             success: true,
@@ -124,7 +128,7 @@ export default function Map() {
       return;
     }
 
-    const { building } = findBuildingAtLocation(userLocation);
+    const { building } = findBuildingAtLocation(userLocation, CAMPUS_BUILDING);
     if (!building) {
       setAlertMsg({ message: "Make sure you are on the university campus." });
       return;
@@ -134,7 +138,7 @@ export default function Map() {
      matching real building record (from useCampusData) to get its real 
      id, since that's what the tour data (nwssuTour.js) is keyed by.
     */
-    const match = buildings.find((b) => b.abbr === building.abbr);
+    const match = buildings.find((b) => b.id === building.id);
 
     if (match && hasTour(match.id)) {
       openTour(match.id);
@@ -200,14 +204,23 @@ export default function Map() {
                   type="text"
                   placeholder="Search buildings..."
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) => {
+                    const inputValue = event.target.value;
+                    setSearch(inputValue);
+                    if (!inputValue.trim()) {
+                      setSelectedBuilding(null);
+                    }
+                  }}
                 />
 
                 {search && (
                   <button
                     type="button"
                     className="clear-search"
-                    onClick={() => setSearch("")}
+                    onClick={() => {
+                      setSearch("");
+                      setSelectedBuilding(null);
+                    }}
                     aria-label="Clear search"
                   >
                     ×
@@ -220,9 +233,9 @@ export default function Map() {
                   filteredBuildings.map((building) => (
                     <button
                       type="button"
-                      key={building.abbr}
+                      key={building.id}
                       className={`building-item ${
-                        selectedBuilding?.abbr === building.abbr
+                        selectedBuilding?.id === building.id
                           ? "active"
                           : ""
                       }`}
@@ -256,22 +269,21 @@ export default function Map() {
               scrollWheelZoom={true}
             >
               <TileLayer
-                attribution={TILELAYER_ATTRIBUTION}
                 url={TILELAYER_URL}
               />
 
               {filteredBuildings.map((building) => {
-                const isSelected = selectedBuilding?.abbr === building.abbr;
+                const isSelected = selectedBuilding?.id === building.id;
 
                 return (
                   <Marker
-                    key={building.abbr}
+                    key={building.id}
                     position={building.position}
                     icon={isSelected ? selectedLocationIcon : allLocationIcon}
                     eventHandlers={{
                       click: () => {
                         const campusBuilding = buildings.find(
-                          (item) => item.abbr === building.abbr
+                          (item) => item.id === building.id
                         );
 
                         if (campusBuilding) {
@@ -353,11 +365,7 @@ export default function Map() {
         <BuildingInfoModal
           building={modalBuilding}
           onClose={() => setModalBuilding(null)}
-          onRoute={() => {
-            setSelectedBuilding(modalBuilding);
-          }}
-          onNavigate={handleNavigateHere}
-          routeLoading={loader === "destination"}
+          // onNavigate={handleNavigateHere}
           navigateLoading={loader === "navigation"}
         />
       )}

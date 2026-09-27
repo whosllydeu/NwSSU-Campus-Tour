@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
-import { CAMPUS_BUILDING } from "../static/campusData";
 
 // OSRM walking routing service api
 const OSRM_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/driving";
@@ -9,11 +8,22 @@ const OSRM_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/driving"
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-export const findBuildingAtLocation = (location) => {
+// Transformed object building list from database
+export const transformedObjectBuilding = (buildings) => {
+  const campBuildings = buildings.map((b) => ({
+    id: b.id,
+    abbr: b.abbr,
+    name: b.name,
+    position: [b.lat, b.lng]
+  }));
+  return campBuildings;
+}
+
+export const findBuildingAtLocation = (location, campusBuilding) => {
   let detectedBuilding = null;
   let shortestDistance = Infinity;
 
-  for (const building of CAMPUS_BUILDING) {
+  for (const building of campusBuilding) {
     const distance = getDistanceInMeters(location, building.position);
     const radius = building.detectionRadius ?? 35;
 

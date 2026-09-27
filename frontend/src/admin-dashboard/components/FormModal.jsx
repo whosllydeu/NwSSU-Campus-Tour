@@ -1,46 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from "react";
+import LocationPicker from "./LocationPicker.jsx";
+import { fromEditableValue, isValidCoordinate, toEditableValue } from "../utils/admin-map-leaflet.js";
 
-function toEditableValue(field, raw) {
-  if (field.type === 'list') return Array.isArray(raw) ? raw.join('\n') : '';
-  return raw ?? '';
-}
+const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose }) => {
+  const [values, setValues] = useState(() => {
+    const next = {};
+    fields.forEach((field) => {
+      if (field.type === 'map') return;
+      next[field.key] = toEditableValue(field, initialValues?.[field.key]);
+    });
+    next.lat = initialValues?.lat ?? '';
+    next.lng = initialValues?.lng ?? '';
+    return next;
+  });
 
-function fromEditableValue(field, raw) {
-  if (field.type === 'list') return String(raw).split('\n').map((s) => s.trim()).filter(Boolean);
-  if (field.type === 'number') return raw === '' ? '' : Number(raw);
-  return raw;
-}
-
-export default function FormModal({ open, title, fields, initialValues, onSubmit, onClose }) {
-  const [values, setValues] = useState({});
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (!open) return;
-    const next = {};
-    fields.forEach((f) => { next[f.key] = toEditableValue(f, initialValues?.[f.key]); });
-    setValues(next);
-    setErrors({});
-  }, [open, initialValues, fields]);
+  const handleChange = useCallback((key, value) => {
+    setValues((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+  }, []);
+
+  const handleLocationChange = useCallback(({ lat, lng }) => {
+    setValues((current) => ({ ...current, lat, lng }));
+    setErrors((current) => ({ ...current, coordinates: undefined }));
+  }, []);
 
   if (!open) return null;
 
-  function handleChange(key, val) {
-    setValues((v) => ({ ...v, [key]: val }));
-  }
-
-  function handleSubmit(e) {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const nextErrors = {};
-    fields.forEach((f) => {
-      if (f.required && !String(values[f.key] ?? '').trim()) nextErrors[f.key] = 'Required';
+
+    fields.forEach((field) => {
+      if (field.type === 'map') return;
+      if (field.required && !String(values[field.key] ?? '').trim()) {
+        nextErrors[field.key] = 'Required';
+      }
     });
-    if (Object.keys(nextErrors).length) {
+
+    const mapField = fields.find((field) => field.type === 'map');
+    if (mapField && (!isValidCoordinate(values.lat) || !isValidCoordinate(values.lng))) {
+      nextErrors[mapField.key] = 'Please select a location on the map';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       return;
     }
+
     const out = {};
-    fields.forEach((f) => { out[f.key] = fromEditableValue(f, values[f.key]); });
+    fields.forEach((field) => {
+      if (field.type === 'map') return;
+      out[field.key] = fromEditableValue(field, values[field.key]);
+    });
+
+    out.lat = Number(values.lat);
+    out.lng = Number(values.lng);
     onSubmit(out);
   }
 
@@ -51,34 +67,50 @@ export default function FormModal({ open, title, fields, initialValues, onSubmit
           <h3>{title}</h3>
           <button type="button" className="ad-icon-btn" onClick={onClose}>✕</button>
         </div>
+
         <div className="ad-form-grid">
-          {fields.map((f) => (
-            <div key={f.key} className={`ad-field${f.wide ? ' wide' : ''}`}>
-              <label>{f.label}{f.required && <span className="ad-req">*</span>}</label>
-              {f.type === 'textarea' || f.type === 'list' ? (
-                <textarea
-                  rows={f.type === 'list' ? 4 : 3}
-                  value={values[f.key] ?? ''}
-                  placeholder={f.type === 'list' ? 'One item per line' : ''}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                />
-              ) : f.type === 'select' ? (
-                <select value={values[f.key] ?? ''} onChange={(e) => handleChange(f.key, e.target.value)}>
-                  <option value="" disabled>Select…</option>
-                  {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              ) : (
-                <input
-                  type={f.type === 'number' ? 'number' : f.type === 'color' ? 'color' : 'text'}
-                  value={values[f.key] ?? ''}
-                  onChange={(e) => handleChange(f.key, e.target.value)}
-                  step={f.type === 'number' ? 'any' : undefined}
-                />
-              )}
-              {errors[f.key] && <span className="ad-error">{errors[f.key]}</span>}
-            </div>
-          ))}
+          {fields.map((field) => {
+            if (field.type === 'map') {
+              return (
+                <div key={field.key} className={`ad-field wide${errors[field.key] ? ' has-error' : ''}`}>
+                  <label>{field.label}{field.required && <span className="ad-req">*</span>}</label>
+                  <LocationPicker latitude={values.lat} longitude={values.lng} onChange={handleLocationChange} />
+                  {errors[field.key] && <span className="ad-error">{errors[field.key]}</span>}
+                </div>
+              );
+            }
+
+            return (
+              <div key={field.key} className={`ad-field${field.wide ? ' wide' : ''}`}>
+                <label>{field.label}{field.required && <span className="ad-req">*</span>}</label>
+
+                {field.type === 'textarea' || field.type === 'list' ? (
+                  <textarea
+                    rows={field.type === 'list' ? 4 : 3}
+                    value={values[field.key] ?? ''}
+                    placeholder={field.type === 'list' ? 'One item per line' : ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                  />
+                ) : field.type === 'select' ? (
+                  <select value={values[field.key] ?? ''} onChange={(e) => handleChange(field.key, e.target.value)}>
+                    <option value="" disabled>Select…</option>
+                    {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type === 'number' ? 'number' : field.type === 'color' ? 'color' : 'text'}
+                    value={values[field.key] ?? ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    step={field.type === 'number' ? 'any' : undefined}
+                  />
+                )}
+
+                {errors[field.key] && <span className="ad-error">{errors[field.key]}</span>}
+              </div>
+            );
+          })}
         </div>
+
         <div className="ad-form-actions">
           <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
           <button type="submit" className="btn-primary">Save</button>
@@ -87,3 +119,5 @@ export default function FormModal({ open, title, fields, initialValues, onSubmit
     </div>
   );
 }
+
+export default FormModal;

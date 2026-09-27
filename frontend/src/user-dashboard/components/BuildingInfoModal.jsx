@@ -1,10 +1,24 @@
-import { Building2, Clock, MapPin, Road, SendHorizontal, X } from "lucide-react";
+import { Building2, Clock, Globe, MapPin, X } from "lucide-react";
 import "../stylesheets/map.css";
+import { hasTour } from "../static/nwssuTour";
+import { useUI } from "../context/UIContext";
 
-const BuildingInfoModal = ({ building, onClose, onRoute, onNavigate, routeLoading, navigateLoading }) => {
+const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
+
+  const { openTour, openUnavailable } = useUI();
 
   if (!building) {
     return null;
+  }
+
+  const inTour = () => {
+    if (hasTour(building.id)) {
+      onClose();
+      openTour(building.id)
+    } else {
+      onClose();
+      openUnavailable("Virtual Tour is currently not available for this location yet.");
+    }
   }
 
   return (
@@ -132,8 +146,9 @@ const BuildingInfoModal = ({ building, onClose, onRoute, onNavigate, routeLoadin
           }
         </div>
         {/* FOOTER */}
+        {/* <div className="building-modal-footer"></div> */}
         <div className="building-modal-footer">
-          <button
+          {/* <button
             type="button"
             className="building-modal-route-btn"
             onClick={onRoute}
@@ -141,15 +156,15 @@ const BuildingInfoModal = ({ building, onClose, onRoute, onNavigate, routeLoadin
           >
             <Road size={18} />
             {routeLoading ? "Getting Route..." : "Get Destination Route"}
-          </button>
+          </button> */}
           <button
             type="button"
             className="building-modal-navigate-btn"
-            onClick={onNavigate}
+            onClick={inTour}
             disabled={navigateLoading}
           >
-            <SendHorizontal size={18} />
-            {navigateLoading ? "Opening..." : "Navigate Here"}
+            <Globe size={18}/>
+            {navigateLoading ? "Opening..." : "Open 360 Tour"}
           </button>
         </div>
       </div>
