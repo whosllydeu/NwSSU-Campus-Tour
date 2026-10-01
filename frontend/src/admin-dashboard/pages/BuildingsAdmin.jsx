@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAdmin } from '../context/AdminContext.jsx';
 import { useUI } from '../context/ToastContext.jsx';
 import DataTable from '../components/DataTable.jsx';
@@ -12,8 +12,7 @@ const FIELDS = [
   { key: 'type', label: 'Type', type: 'select', options: BUILDING_TYPES, required: true },
   { key: 'emoji', label: 'Icon (emoji)', type: 'text' },
   { key: 'color', label: 'Accent Color', type: 'color' },
-  { key: 'lat', label: 'Latitude', type: 'number' },
-  { key: 'lng', label: 'Longitude', type: 'number' },
+  { key: 'coordinates', label: 'Building Location', type: 'map', required: true, wide: true },
   { key: 'location', label: 'Location on Campus', type: 'text', wide: true },
   { key: 'photo', label: 'Photo (filename or URL)', type: 'text', wide: true },
   { key: 'desc', label: 'Description', type: 'textarea', wide: true },
@@ -24,21 +23,37 @@ const FIELDS = [
 const COLUMNS = [
   { key: 'abbr', label: 'Abbr' },
   { key: 'name', label: 'Name' },
-  { key: 'type', label: 'Type', render: (r) => <span className={`ad-chip type-${r.type}`}>{r.type}</span> },
-  { key: 'programs', label: 'Programs', sortable: false, render: (r) => (r.programs?.length ?? 0) },
+  {
+    key: 'type',
+    label: 'Type',
+    render: (row) => (
+      <span className={`ad-chip type-${row.type}`}>
+        {row.type}
+      </span>
+    ),
+  },
+  { key: 'programs', label: 'Programs', sortable: false, render: (row) => row.programs?.length ?? 0 },
 ];
 
 export default function BuildingsAdmin() {
   const { isLoading, buildings, addRecord, updateRecord, deleteRecord } = useAdmin();
   const { showToast } = useUI();
+
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toDelete, setToDelete] = useState(null);
 
-  function openCreate() { setEditing(null); setFormOpen(true); }
-  function openEdit(row) { setEditing(row); setFormOpen(true); }
+  const openCreate = useCallback(() => {
+    setEditing(null);
+    setFormOpen(true);
+  }, []);
 
-  function handleSubmit(data) {
+  const openEdit = useCallback((row) => {
+    setEditing(row);
+    setFormOpen(true);
+  }, []);
+
+  const handleSubmit = useCallback((data) => {
     if (editing) {
       updateRecord('buildings', 'Building', editing._id, data);
       showToast(`"${data.name}" updated`);
@@ -47,22 +62,35 @@ export default function BuildingsAdmin() {
       showToast(`"${data.name}" added`);
     }
     setFormOpen(false);
-  }
+  }, [editing, updateRecord, addRecord, showToast]);
 
-  function handleDeleteConfirm() {
+  const handleDeleteConfirm = useCallback(() => {
     deleteRecord('buildings', 'Building', toDelete._id, toDelete.name);
     showToast(`"${toDelete.name}" deleted`);
     setToDelete(null);
-  }
+  }, [toDelete, deleteRecord, showToast]);
 
-  if (isLoading) return <div className="ad-loading">Loading buildings…</div>;
+  if (isLoading) {
+    return (
+      <div className="ad-loading">
+        Loading buildings…
+      </div>
+    );
+  }
 
   return (
     <div className="ad-panel">
       <div className="ad-panel-header">
         <h2>All Buildings</h2>
-        <button className="btn-primary" onClick={openCreate}>+ Add Building</button>
+
+        <button
+          className="btn-primary"
+          onClick={openCreate}
+        >
+          + Add Building
+        </button>
       </div>
+
       <DataTable
         columns={COLUMNS}
         rows={buildings}
@@ -71,7 +99,9 @@ export default function BuildingsAdmin() {
         searchPlaceholder="Search buildings…"
         emptyLabel="No buildings yet. Add one to get started."
       />
+
       <FormModal
+        key={editing ? editing.id : 'new'}
         open={formOpen}
         title={editing ? 'Edit Building' : 'Add Building'}
         fields={FIELDS}
@@ -79,6 +109,7 @@ export default function BuildingsAdmin() {
         onSubmit={handleSubmit}
         onClose={() => setFormOpen(false)}
       />
+
       <ConfirmDialog
         open={Boolean(toDelete)}
         title="Delete building?"

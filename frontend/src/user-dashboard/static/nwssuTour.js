@@ -181,6 +181,63 @@ export const COED_TOUR = {
 };
 
 // ============================================================
+// College of Criminal Justice & Science (CCJS)
+// Ground Floor → 2nd Floor → 3rd Floor. Headings not set yet —
+// use the 🧭 readout in PanoramaTour.jsx to tune each node once
+// this is live.
+// ============================================================
+export const CCJS_TOUR = {
+  buildingId: 'ccjs',
+  title: 'College of Criminal Justice & Science Building',
+  subtitle: 'Ground to 3rd Floor',
+  basePath: 'panoramas/ccjs/',
+  nodes: [
+    { file: 'ccjs-01.jpg', title: 'Quadrangle (Between Wings)',       sub: 'CCJS · Ground Floor' },
+    { file: 'ccjs-02.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor' },
+    { file: 'ccjs-03.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor' },
+    { file: 'ccjs-04.jpg', title: 'CAS Faculty Room',                 sub: 'CCJS · Ground Floor', star: true,
+      office: { name: 'CAS Faculty Room', text: 'Faculty room located along the ground-floor walkway of the building.' } },
+    { file: 'ccjs-05.jpg', title: 'Stairwell Landing',                sub: 'CCJS · Ground Floor' },
+    { file: 'ccjs-06.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor' },
+    { file: 'ccjs-07.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor → 2nd Floor' },
+
+    { file: 'ccjs-08.jpg', title: 'Stairwell (Going Up to 2nd Floor)', sub: 'CCJS · Ground Floor → 2nd Floor' },
+    { file: 'ccjs-09.jpg', title: '2nd Floor Hallway',                 sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-10.jpg', title: 'Criminology Laboratory',            sub: 'CCJS · 2nd Floor', star: true,
+      office: { name: 'Criminology Laboratory', text: 'Laboratory used for Criminology program classes and practicals.' } },
+    { file: 'ccjs-11.jpg', title: 'ACAD 03',                           sub: 'CCJS · 2nd Floor', star: true,
+      office: { name: 'ACAD 03', text: 'Faculty/academic room on the 2nd floor of the CCJS building.' } },
+    { file: 'ccjs-12.jpg', title: 'ACAD 01 / DEVCOM Lab (Campus Radio)', sub: 'CCJS · 2nd Floor', star: true,
+      office: { name: 'ACAD 01 / DEVCOM Lab', text: 'Academic room that also houses the campus radio station, DYNW 89.5 Kauswagan Radio.' } },
+    { file: 'ccjs-13.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-14.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-15.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-16.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-17.jpg', title: 'Wash Area (2nd Floor, Other Side)', sub: 'CCJS · 2nd Floor' },
+    { file: 'ccjs-18.jpg', title: 'Stairwell to 3rd Floor',            sub: 'CCJS · 2nd Floor → 3rd Floor' },
+
+    { file: 'ccjs-19.jpg', title: 'Stairwell Landing (3rd Floor Arrival)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-20.jpg', title: 'ACAD 301',                             sub: 'CCJS · 3rd Floor', star: true,
+      office: { name: 'ACAD 301', text: 'Academic room on the 3rd floor of the CCJS building.' } },
+    { file: 'ccjs-21.jpg', title: 'ACAD 302',                             sub: 'CCJS · 3rd Floor', star: true,
+      office: { name: 'ACAD 302', text: 'Academic room on the 3rd floor of the CCJS building.' } },
+    { file: 'ccjs-22.jpg', title: 'ACAD 303',                             sub: 'CCJS · 3rd Floor', star: true,
+      office: { name: 'ACAD 303', text: 'Academic room on the 3rd floor, with crime-scene investigation exhibit boards displayed outside the door.' } },
+    { file: 'ccjs-23.jpg', title: 'ACAD 304',                             sub: 'CCJS · 3rd Floor', star: true,
+      office: { name: 'ACAD 304', text: 'Academic room on the 3rd floor of the CCJS building.' } },
+    { file: 'ccjs-24.jpg', title: 'ACAD 305',                             sub: 'CCJS · 3rd Floor', star: true,
+      office: { name: 'ACAD 305', text: 'Academic room on the 3rd floor of the CCJS building.' } },
+    { file: 'ccjs-25.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-26.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-27.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-28.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-29.jpg', title: '3rd Floor Hallway (End, Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-30.jpg', title: 'Stairwell Landing (Near Toilets)',  sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-31.jpg', title: 'Toilets',                            sub: 'CCJS · 3rd Floor' },
+  ],
+};
+
+// ============================================================
 // Auxiliary Building (Student Council Building) Virtual Tour
 // Same structure as CON_TOUR above. Only one panorama was
 // provided for this building, so the viewer will show it with
@@ -190,5 +247,5 @@ export const COED_TOUR = {
 // ============================================================
 
 // Lookup table so more buildings can register tours later.
-export const TOURS = { ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR, coed: COED_TOUR};
+export const TOURS = { ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR, coed: COED_TOUR, ccjs: CCJS_TOUR};
 export const hasTour = (id) => Boolean(TOURS[id]);
