@@ -192,48 +192,183 @@ export const CCJS_TOUR = {
   subtitle: 'Ground to 3rd Floor',
   basePath: 'panoramas/ccjs/',
   nodes: [
-    { file: 'ccjs-01.jpg', title: 'Quadrangle (Between Wings)',       sub: 'CCJS · Ground Floor' },
-    { file: 'ccjs-02.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor' },
-    { file: 'ccjs-03.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor' },
-    { file: 'ccjs-04.jpg', title: 'CAS Faculty Room',                 sub: 'CCJS · Ground Floor', star: true,
+    { file: 'ccjs-01.jpg', title: 'Quadrangle (Between Wings)',       sub: 'CCJS · Ground Floor', heading: 149},
+    { file: 'ccjs-02.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor', heading: 149},
+    { file: 'ccjs-03.jpg', title: 'Covered Parking Walkway',          sub: 'CCJS · Ground Floor', heading: 179},
+    { file: 'ccjs-04.jpg', title: 'CAS Faculty Room',                 sub: 'CCJS · Ground Floor', heading: 179, star: true,
       office: { name: 'CAS Faculty Room', text: 'Faculty room located along the ground-floor walkway of the building.' } },
-    { file: 'ccjs-05.jpg', title: 'Stairwell Landing',                sub: 'CCJS · Ground Floor' },
-    { file: 'ccjs-06.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor' },
-    { file: 'ccjs-07.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor → 2nd Floor' },
+    { file: 'ccjs-05.jpg', title: 'Stairwell Landing',                sub: 'CCJS · Ground Floor', heading: 265 },
+    { file: 'ccjs-06.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor', heading: 266 },
+    //{ file: 'ccjs-07.jpg', title: 'Ground Floor (Utility Room Area)', sub: 'CCJS · Ground Floor → 2nd Floor' },
 
-    { file: 'ccjs-08.jpg', title: 'Stairwell (Going Up to 2nd Floor)', sub: 'CCJS · Ground Floor → 2nd Floor' },
-    { file: 'ccjs-09.jpg', title: '2nd Floor Hallway',                 sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-10.jpg', title: 'Criminology Laboratory',            sub: 'CCJS · 2nd Floor', star: true,
+    { file: 'ccjs-08.jpg', title: 'Stairwell (Going Up to 2nd Floor)', sub: 'CCJS · Ground Floor → 2nd Floor', heading: 194 },
+    { file: 'ccjs-09.jpg', title: '2nd Floor Hallway',                 sub: 'CCJS · 2nd Floor',heading: 88 },
+    { file: 'ccjs-10.jpg', title: 'Criminology Laboratory',            sub: 'CCJS · 2nd Floor',heading: 87, star: true,
       office: { name: 'Criminology Laboratory', text: 'Laboratory used for Criminology program classes and practicals.' } },
-    { file: 'ccjs-11.jpg', title: 'ACAD 03',                           sub: 'CCJS · 2nd Floor', star: true,
+    { file: 'ccjs-11.jpg', title: 'ACAD 03',                           sub: 'CCJS · 2nd Floor',heading: 89, star: true,
       office: { name: 'ACAD 03', text: 'Faculty/academic room on the 2nd floor of the CCJS building.' } },
-    { file: 'ccjs-12.jpg', title: 'ACAD 01 / DEVCOM Lab (Campus Radio)', sub: 'CCJS · 2nd Floor', star: true,
+    { file: 'ccjs-12.jpg', title: 'ACAD 01 / DEVCOM Lab (Campus Radio)', sub: 'CCJS · 2nd Floor', heading: 85, star: true,
       office: { name: 'ACAD 01 / DEVCOM Lab', text: 'Academic room that also houses the campus radio station, DYNW 89.5 Kauswagan Radio.' } },
-    { file: 'ccjs-13.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-14.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-15.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-16.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-17.jpg', title: 'Wash Area (2nd Floor, Other Side)', sub: 'CCJS · 2nd Floor' },
-    { file: 'ccjs-18.jpg', title: 'Stairwell to 3rd Floor',            sub: 'CCJS · 2nd Floor → 3rd Floor' },
+    { file: 'ccjs-13.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor',heading: 180 },
+    { file: 'ccjs-14.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor',heading: 174 },
+    { file: 'ccjs-15.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor',heading: 180 },
+    { file: 'ccjs-16.jpg', title: '2nd Floor Hallway (Other Side)',    sub: 'CCJS · 2nd Floor',heading: 178 },
+    { file: 'ccjs-17.jpg', title: 'Wash Area (2nd Floor, Other Side)', sub: 'CCJS · 2nd Floor',heading: 274 },
+    { file: 'ccjs-18.jpg', title: 'Stairwell to 3rd Floor',            sub: 'CCJS · 2nd Floor → 3rd Floor',heading: 196 },
 
     { file: 'ccjs-19.jpg', title: 'Stairwell Landing (3rd Floor Arrival)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-20.jpg', title: 'ACAD 301',                             sub: 'CCJS · 3rd Floor', star: true,
+    { file: 'ccjs-20.jpg', title: 'ACAD 301',                             sub: 'CCJS · 3rd Floor', heading: 92, star: true,
       office: { name: 'ACAD 301', text: 'Academic room on the 3rd floor of the CCJS building.' } },
-    { file: 'ccjs-21.jpg', title: 'ACAD 302',                             sub: 'CCJS · 3rd Floor', star: true,
+    { file: 'ccjs-21.jpg', title: 'ACAD 302',                             sub: 'CCJS · 3rd Floor', heading: 89, star: true,
       office: { name: 'ACAD 302', text: 'Academic room on the 3rd floor of the CCJS building.' } },
-    { file: 'ccjs-22.jpg', title: 'ACAD 303',                             sub: 'CCJS · 3rd Floor', star: true,
+    { file: 'ccjs-22.jpg', title: 'ACAD 303',                             sub: 'CCJS · 3rd Floor', heading: 90, star: true,
       office: { name: 'ACAD 303', text: 'Academic room on the 3rd floor, with crime-scene investigation exhibit boards displayed outside the door.' } },
-    { file: 'ccjs-23.jpg', title: 'ACAD 304',                             sub: 'CCJS · 3rd Floor', star: true,
-      office: { name: 'ACAD 304', text: 'Academic room on the 3rd floor of the CCJS building.' } },
-    { file: 'ccjs-24.jpg', title: 'ACAD 305',                             sub: 'CCJS · 3rd Floor', star: true,
+    { file: 'ccjs-23.jpg', title: 'ACAD 304',                             sub: 'CCJS · 3rd Floor',  heading: 88, star: true,
+      office: { name: 'ACAD 304', text: 'Academic room on the 3rd floor of the CCJS building.'  } },
+    { file: 'ccjs-24.jpg', title: 'ACAD 305',                             sub: 'CCJS · 3rd Floor', heading: 84, star: true,
       office: { name: 'ACAD 305', text: 'Academic room on the 3rd floor of the CCJS building.' } },
-    { file: 'ccjs-25.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-26.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-27.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-28.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-29.jpg', title: '3rd Floor Hallway (End, Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-30.jpg', title: 'Stairwell Landing (Near Toilets)',  sub: 'CCJS · 3rd Floor' },
-    { file: 'ccjs-31.jpg', title: 'Toilets',                            sub: 'CCJS · 3rd Floor' },
+    { file: 'ccjs-25.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor',  heading: 87 },
+    { file: 'ccjs-26.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor', heading: 176 },
+    { file: 'ccjs-27.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor', heading: 176 },
+    { file: 'ccjs-28.jpg', title: '3rd Floor Hallway (Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor', heading: 178 },
+    { file: 'ccjs-29.jpg', title: '3rd Floor Hallway (End, Facing Teacher Education Building)', sub: 'CCJS · 3rd Floor',  heading: 177 },
+    { file: 'ccjs-30.jpg', title: 'Stairwell Landing (Near Toilets)',  sub: 'CCJS · 3rd Floor', heading: 88 },
+    { file: 'ccjs-31.jpg', title: 'Toilets',                            sub: 'CCJS · 3rd Floor',  heading: 0 },
+  ],
+};
+
+// ============================================================
+// College of Engineering & Architecture (CEA) Virtual Tour
+// Two physical buildings, walked as one continuous sequence:
+// Building 1 (ground -> 2nd -> 3rd floor) then Building 2
+// (ground -> 2nd floor -> back down to ground -> parking exit).
+// Source photos numbered 9-60 continuously (1-8 not provided/
+// not part of this set). Renumbered here to cea-01..cea-52 in
+// that same order. Headings not set yet — use the 🧭 readout in
+// PanoramaTour.jsx to tune each node once this is live.
+//
+// Branching notes:
+// - cea-02 is the tour's entry point (forward skips straight to
+//   Building 2 at cea-24; right branches into the old ground-floor
+//   hallway chain starting at cea-09).
+// - cea-11 gains a right turn into the stairwell at cea-18; cea-18's
+//   back returns to cea-11 (not the node before it in array order).
+// - cea-14 and cea-22 are dead-end hallways (forward disabled).
+// - cea-24's back returns to cea-02 (the branch point), not cea-22.
+// - cea-31 is a left/right fork (no default forward); cea-33 (left
+//   branch) has its back pointed at the fork itself; cea-32 (right
+//   branch) and cea-36 (end of left branch) are dead ends.
+// ============================================================
+export const CEA_TOUR = {
+  buildingId: 'cea',
+  title: 'College of Engineering & Architecture Building',
+  subtitle: 'Building 1 & 2, Ground to 3rd Floor',
+  basePath: 'panoramas/cea/', // resolved against import.meta.env.BASE_URL
+  nodes: [
+    { file: 'cea-02.jpg', title: 'Entrance Hallway',                    sub: 'CEA Building 1 · Ground Floor', heading: 92,
+      exits: { forward: 'cea-24.jpg', right: 'cea-09.jpg' } },
+    /*{ file: 'cea-03.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · Ground Floor' },
+    { file: 'cea-04.jpg', title: 'Hallway (Back to Center)',            sub: 'CEA Building 1 · Ground Floor', heading: 92 },
+    { file: 'cea-05.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · Ground Floor' },
+    { file: 'cea-06.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · Ground Floor' },
+    { file: 'cea-07.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · Ground Floor' },
+    { file: 'cea-08.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · Ground Floor' },*/
+    { file: 'cea-09.jpg', title: 'Hallway (Back to Center)',            sub: 'CEA Building 1 · Ground Floor', heading: 93 },
+    { file: 'cea-10.jpg', title: 'Stairwell to 2nd Floor',              sub: 'CEA Building 1 · Ground Floor → 2nd Floor', heading: 245 },
+    { file: 'cea-11.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 2nd Floor', heading: 247,
+      exits: { right: 'cea-18.jpg' } },
+    { file: 'cea-12.jpg', title: 'Classrooms Hallway',                  sub: 'CEA Building 1 · 2nd Floor', heading: 180 },
+    { file: 'cea-13.jpg', title: 'Classrooms Hallway',                  sub: 'CEA Building 1 · 2nd Floor', heading: 271 },
+    { file: 'cea-14.jpg', title: 'Classrooms Hallway (End)',            sub: 'CEA Building 1 · 2nd Floor', heading: 354,
+      exits: { forward: null } },
+    /*{ file: 'cea-15.jpg', title: 'Classrooms Hallway (Other Side)',     sub: 'CEA Building 1 · 2nd Floor' },
+    { file: 'cea-16.jpg', title: 'Classrooms Hallway (Other Side)',     sub: 'CEA Building 1 · 2nd Floor' },
+    { file: 'cea-17.jpg', title: 'Classrooms Hallway (Other Side End)', sub: 'CEA Building 1 · 2nd Floor' },*/
+    { file: 'cea-18.jpg', title: 'Stairwell to 3rd Floor',              sub: 'CEA Building 1 · 2nd Floor → 3rd Floor', heading: 141,
+      exits: { back: 'cea-11.jpg' } },
+    { file: 'cea-19.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 3rd Floor', heading: 118 },
+    { file: 'cea-20.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 3rd Floor', heading: 309 },
+    { file: 'cea-21.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 3rd Floor', heading: 355 },
+    { file: 'cea-22.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 3rd Floor', heading: 174,
+      exits: { back: 'cea-20.jpg', forward: null } },
+    //{ file: 'cea-23.jpg', title: 'Hallway',                             sub: 'CEA Building 1 · 3rd Floor' },
+    { file: 'cea-24.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor', heading: 134,
+      exits: { back: 'cea-02.jpg' } },
+    { file: 'cea-25.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor', heading: 180 },
+    //{ file: 'cea-26.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-27.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor', heading: 181 },
+    { file: 'cea-28.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor', heading: 148 },
+    { file: 'cea-29.jpg', title: 'Stairwell to 2nd Floor',              sub: 'CEA Building 2 · Ground Floor → 2nd Floor', heading: 175 },
+    { file: 'cea-30.jpg', title: 'Stairwell to 2nd Floor',              sub: 'CEA Building 2 · Ground Floor → 2nd Floor', heading: 140 },
+    { file: 'cea-31.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor',
+      exits: { forward: null, left: 'cea-33.jpg', right: 'cea-32.jpg' } },
+    { file: 'cea-32.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor', heading: 182,
+      exits: { forward: null } },
+    { file: 'cea-33.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor', heading: 89,
+      exits: { back: 'cea-31.jpg' } },
+    { file: 'cea-34.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor', heading: 272 },
+    { file: 'cea-35.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor', heading: 175 },
+    { file: 'cea-36.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor', heading: 182,
+      exits: { forward: null } },
+    { file: 'cea-37.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor' },
+    { file: 'cea-38.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor' },
+    { file: 'cea-39.jpg', title: 'Hallway',                             sub: 'CEA Building 2 · 2nd Floor' },
+    { file: 'cea-40.jpg', title: 'Stairwell Going Down',                sub: 'CEA Building 2 · 2nd Floor → Ground Floor' },
+    { file: 'cea-41.jpg', title: 'Stairwell Going Down',                sub: 'CEA Building 2 · 2nd Floor → Ground Floor' },
+    { file: 'cea-42.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-43.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-44.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-45.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-46.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-47.jpg', title: 'Hallway Toward COM Building',         sub: 'CEA Building 2 → College of Management (COM)' },
+    { file: 'cea-48.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-49.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-50.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-51.jpg', title: 'Ground Floor Area',                   sub: 'CEA Building 2 · Ground Floor' },
+    { file: 'cea-52.jpg', title: 'Parking Area',                        sub: 'CEA Building 2 · Exterior / Parking' },
+  ],
+};
+
+// ============================================================
+// College of Management (COM) Virtual Tour
+// Two physical buildings, walked as one continuous sequence:
+// Building 1 (ground -> 2nd floor -> back down to ground ->
+// toward Building 2) then Building 2 (ground -> 2nd -> 3rd floor).
+// Source photos were a sparser capture than other buildings —
+// numbered 2-36 with real gaps (not every frame kept), but still
+// one clean ascending walk. Renumbered here to com-01..com-19.
+// Because a few connecting shots (e.g. the stairwell between
+// Building 2's ground and 2nd floor) weren't captured, some
+// consecutive nodes may feel like a visual jump — that's a
+// missing-photo gap, not a numbering error. Headings default to
+// 0 below — use the 🧭 readout in PanoramaTour.jsx to tune each
+// node once this is live.
+// ============================================================
+export const COM_TOUR = {
+  buildingId: 'com',
+  title: 'College of Management Building',
+  subtitle: 'Building 1 & 2, Ground to 3rd Floor',
+  basePath: 'panoramas/com/',
+  nodes: [
+    { file: 'com-01.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-02.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-03.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-04.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-05.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-06.jpg', title: 'Faculty Area',                sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-07.jpg', title: 'Hallway',                     sub: 'COM Building 1 · 2nd Floor', heading: 0 },
+    { file: 'com-08.jpg', title: 'Hallway',                     sub: 'COM Building 1 · 2nd Floor', heading: 0 },
+    { file: 'com-09.jpg', title: 'Stairwell Going Down',        sub: 'COM Building 1 · 2nd Floor → Ground Floor', heading: 0 },
+    { file: 'com-10.jpg', title: 'Stairwell Going Down',        sub: 'COM Building 1 · 2nd Floor → Ground Floor', heading: 0 },
+    { file: 'com-11.jpg', title: 'Ground Floor Area',           sub: 'COM Building 1 · Ground Floor', heading: 0 },
+    { file: 'com-12.jpg', title: 'Hallway Toward Building 2',   sub: 'COM Building 1 → COM Building 2', heading: 0 },
+    { file: 'com-13.jpg', title: 'Hallway Toward Building 2',   sub: 'COM Building 1 → COM Building 2', heading: 0 },
+    { file: 'com-14.jpg', title: 'Ground Floor Area',           sub: 'COM Building 2 · Ground Floor', heading: 0 },
+    { file: 'com-15.jpg', title: 'Hallway',                     sub: 'COM Building 2 · 2nd Floor', heading: 0 },
+    { file: 'com-16.jpg', title: 'Hallway',                     sub: 'COM Building 2 · 2nd Floor', heading: 0 },
+    { file: 'com-17.jpg', title: 'Hallway',                     sub: 'COM Building 2 · 3rd Floor', heading: 0 },
+    { file: 'com-18.jpg', title: 'Hallway',                     sub: 'COM Building 2 · 3rd Floor', heading: 0 },
+    { file: 'com-19.jpg', title: 'Hallway',                     sub: 'COM Building 2 · 3rd Floor', heading: 0 },
   ],
 };
 
@@ -247,5 +382,5 @@ export const CCJS_TOUR = {
 // ============================================================
 
 // Lookup table so more buildings can register tours later.
-export const TOURS = { ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR, coed: COED_TOUR, ccjs: CCJS_TOUR};
+export const TOURS = { ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR, coed: COED_TOUR, ccjs: CCJS_TOUR, cea: CEA_TOUR, com: COM_TOUR};
 export const hasTour = (id) => Boolean(TOURS[id]);

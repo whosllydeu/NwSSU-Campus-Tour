@@ -1335,8 +1335,13 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
    PanoramaTour — Google Street View style
    ============================================================ */
 .gsv-root{position:fixed;inset:0;z-index:1000;background:#0a0d10;overflow:hidden;font-family:inherit;}
-.gsv-stage{position:absolute;inset:0;touch-action:none;}
-.gsv-stage canvas{display:block;}
+.gsv-stage{position:absolute;inset:0;touch-action:none;
+  transition:filter 260ms ease-out, transform 260ms ease-out;
+  filter:blur(0px) brightness(1); transform:scale(1);}
+.gsv-stage.gsv-traveling{
+  filter:blur(10px) brightness(1.12); transform:scale(1.035);
+  transition:filter 140ms ease-in, transform 140ms ease-in;}
+  .gsv-stage canvas{display:block;}
 .gsv-loader{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,13,16,.35);z-index:5;pointer-events:none;}
 .gsv-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:gsv-spin 1s linear infinite;}
 @keyframes gsv-spin{to{transform:rotate(360deg);}}
@@ -1378,18 +1383,29 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .gsv-card h3{margin:5px 0 7px;font-size:19px;color:#202124;}
 .gsv-card p{margin:0;font-size:13.5px;line-height:1.55;color:#3c4043;}
 
-/* on-floor chevron arrows */
-.gsv-nav{position:absolute;left:50%;z-index:9;transform:translateX(-50%);border:none;background:transparent;cursor:pointer;padding:0;
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,.5));transition:transform .12s;}
-.gsv-nav.fwd{ bottom: 150px; }
-.gsv-nav.back{ bottom: 60px; }
-.gsv-nav:hover{transform:translateX(-50%) scale(1.12);}
+/* left-side stacked chips */
+.gsv-left-stack{
+  position:absolute;top:14px;left:14px;z-index:12;
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+}
+.gsv-left-stack .gsv-attrib,
+.gsv-left-stack .gsv-info{ position:static; }
+/* direction-aware chevron arrows — positioned via inline left/top from
+   project(), anchored to each exit's real compass bearing. CSS
+   transitions interpolate between the throttled position/opacity
+   updates, producing the Street-View slide-and-fade feel. */
+.gsv-nav{position:absolute;z-index:9;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;padding:0;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.5));
+  transition:left .18s linear, top .18s linear, opacity .25s ease, transform .12s ease;}
+.gsv-nav:hover{transform:translate(-50%,-50%) scale(1.12);}
 .gsv-chev{display:block;width:130px;transform:perspective(340px) rotateX(52deg);}
-
+.gsv-chev.side{width:70px;transform:none;}
+.nav-arrow-wrap { position: relative; pointer-events: none; will-change: transform; }
 /* street-name label */
 .gsv-street{position:absolute;right:20px;bottom:26px;z-index:8;color:#fff;font-weight:800;font-size:20px;
   letter-spacing:.02em;transform:rotate(-6deg);text-shadow:0 2px 6px rgba(0,0,0,.6);pointer-events:none;
   max-width:60vw;text-align:right;}
+  
 
 /* launch-tour overlay on the CCIS photo */
 .photo-tour-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
