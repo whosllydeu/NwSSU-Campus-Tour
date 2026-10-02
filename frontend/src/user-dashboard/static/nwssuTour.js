@@ -1,4 +1,132 @@
 // ============================================================
+// Maps a building/department id to the pathway tour(s) that lead
+// to or from it, each with a short label for the "Walk here"
+// button on that building's detail screen.
+// ============================================================
+export const PATH_LINKS = {
+  coed: [
+    { id: 'path-gate-coed', label: 'Walk from the Gate' },
+    { id: 'path-coed-alumni', label: 'Walk to Alumni Building' }, // TODO: confirm this path starts at COED, not CCIS
+  ],
+  alumni: [
+    { id: 'path-coed-alumni', label: 'Walk from COED' }, // TODO: same confirmation as above
+  ],
+  cea: [
+    { id: 'path-gate-cea', label: 'Walk from the Gate' },
+  ],
+  library: [
+    { id: 'path-library-registrar', label: 'Walk to Registrar' },
+  ],
+  registrar: [
+    { id: 'path-library-registrar', label: 'Walk from Library' },
+  ],
+  com: [
+    { id: 'path-com-sas', label: 'Walk to SAS' }, // TODO: confirm which building id SAS refers to
+  ],
+  // TODO: add an entry here for whichever id SAS maps to, e.g.:
+  // studentcouncil: [{ id: 'path-com-sas', label: 'Walk from COM' }],
+};
+
+// ============================================================
+// Pathway connections — for each outdoor pathway tour, describes
+// its two physical endpoints: which building (if any) sits at
+// each end, and which node of that building's OWN indoor tour to
+// jump into when the user reaches that end of the path. Endpoint
+// "a" is the pathway's node[0]; endpoint "b" is its last node.
+// enterTour/enterNode stay null where no indoor tour exists yet
+// (the Gate, or a building without a 360 tour) — that end then has
+// no exit past the pathway's edge, same as any other dead end.
+//
+// NOTE: b.enterTour on gate-coed/gate-cea, and a.enterTour on
+// com-sas, are intentionally left null here — those specific
+// connections are now wired at an EXPLICIT mid-path node instead
+// (see NODE_OVERRIDES below), not at the first/last node.
+// ============================================================
+export const PATHWAY_CONNECTIONS = {
+  'path-gate-coed': {
+    a: { label: 'Gate', buildingId: 'gate', enterTour: null, enterNode: null },
+    b: { label: 'COED', buildingId: 'coed', enterTour: null, enterNode: null },
+  },
+  'path-coed-alumni': {
+    a: { label: 'COED', buildingId: 'coed', enterTour: 'coed', enterNode: 'coed-01.jpg' }, // TODO: confirm COED vs CCIS
+    b: { label: 'Alumni Building', buildingId: 'alumni', enterTour: null, enterNode: null },
+  },
+   'path-gate-cea': {
+    a: { label: 'Gate', buildingId: 'gate', enterTour: null, enterNode: null },
+    b: { label: 'CEA', buildingId: 'cea', enterTour: null, enterNode: null },
+  },
+  'path-library-registrar': {
+    a: { label: 'Library', buildingId: 'library', enterTour: null, enterNode: null },
+    b: { label: 'Registrar', buildingId: 'registrar', enterTour: null, enterNode: null },
+  },
+  'path-com-sas': {
+    a: { label: 'COM', buildingId: 'com', enterTour: null, enterNode: null },
+    b: { label: 'SAS', buildingId: null, enterTour: null, enterNode: null }, // TODO: confirm SAS building id
+  },
+};
+
+// Patches a pathway tour's first/last node with a cross-tour exit
+// wherever PATHWAY_CONNECTIONS defines one for that end. Call this
+// once, right after building a pathway tour's `nodes` array — see
+// the PATH_* exports below.
+function withPathwayConnections(tour, pathwayId) {
+  const conn = PATHWAY_CONNECTIONS[pathwayId];
+  if (!conn) return tour;
+  const nodes = tour.nodes;
+  const first = nodes[0];
+  const last = nodes[nodes.length - 1];
+  if (conn.a?.enterTour) {
+    first.exits = { ...(first.exits || {}), back: { tour: conn.a.enterTour, node: conn.a.enterNode, label: `Enter ${conn.a.label}` } };
+  }
+  if (conn.b?.enterTour) {
+    last.exits = { ...(last.exits || {}), forward: { tour: conn.b.enterTour, node: conn.b.enterNode, label: `Enter ${conn.b.label}` } };
+  }
+  return tour;
+}
+
+// Explicit, exactly-specified cross-tour connections at a SPECIFIC
+// node of a pathway (not just its first/last node). `node` is the
+// 1-based number shown in the 🧭 readout / Stops menu (Node #N).
+// `dir` is left/right by default throughout, to avoid overriding a
+// pathway's own forward/back walk-through at a mid-route node —
+// swap any of these to 'forward'/'back' later if that's actually
+// the correct physical direction once you've seen the photos.
+const NODE_OVERRIDES = [
+  { pathwayId: 'path-library-registrar', node: 10, dir: 'left',
+    target: { tour: 'con', node: 'con-01.jpg', label: 'Enter College of Nursing' } },
+
+  { pathwayId: 'path-com-sas', node: 7, dir: 'right',
+    target: { tour: 'path-library-registrar', node: 'pathway-library-registrar-01.jpg', label: 'Walk to Library' } },
+  { pathwayId: 'path-com-sas', node: 7, dir: 'left',
+    target: { tour: 'path-library-registrar', node: 'pathway-library-registrar-01.jpg', label: 'Walk to Library' } },
+
+  { pathwayId: 'path-com-sas', node: 3, dir: 'left',
+    target: { tour: 'com', node: 'com-01.jpg', label: 'Enter College of Management' } },
+
+  { pathwayId: 'path-coed-alumni', node: 3, dir: 'left',
+    target: { tour: 'ccis', node: 'ccis-01.jpg', label: 'Enter CCIS' } },
+  { pathwayId: 'path-coed-alumni', node: 21, dir: 'left',
+    target: { tour: 'ccjs', node: 'ccjs-01.jpg', label: 'Enter CCJS' } },
+
+  { pathwayId: 'path-gate-cea', node: 10, dir: 'right',
+    target: { tour: 'cea', node: 'cea-02.jpg', label: 'Enter CEA' } },
+  { pathwayId: 'path-gate-cea', node: 12, dir: 'left',
+    target: { tour: 'path-com-sas', node: 'pathway-com-sas-01.jpg', label: 'Walk toward COM / SAS' } },
+
+  { pathwayId: 'path-gate-coed', node: 14, dir: 'left',
+    target: { tour: 'coed', node: 'coed-01.jpg', label: 'Enter COED' } },
+];
+
+function applyNodeOverrides(tour, pathwayId) {
+  NODE_OVERRIDES.filter((o) => o.pathwayId === pathwayId).forEach((o) => {
+    const node = tour.nodes[o.node - 1];
+    if (!node) return;
+    node.exits = { ...(node.exits || {}), [o.dir]: { ...o.target } };
+  });
+  return tour;
+}
+
+// ============================================================
 // CCIS Ground-Floor Virtual Tour — node graph
 // Each node = one 360° panorama (equirectangular JPEG in
 // public/panoramas/ccis/). Nodes are walked in order; the
@@ -373,6 +501,81 @@ export const COM_TOUR = {
 };
 
 // ============================================================
+// Outdoor Pathway Tours — walking connections between buildings.
+// Same node/heading/exits structure as building tours, just not
+// tied to a single buildingId. Keyed in TOURS by a path-* id and
+// opened via a "Walk here" button (PATH_LINKS, above), the Map's
+// "Walk There" button (findDirectPathway, below), or the mid-path
+// cross-tour pins (NODE_OVERRIDES, above). Headings default to 0
+// below — use the 🧭 readout in PanoramaTour.jsx to tune each node
+// once these are live.
+// ============================================================
+export const PATH_GATE_COED = applyNodeOverrides(withPathwayConnections({
+  buildingId: 'path-gate-coed',
+  title: 'Gate → College of Education',
+  subtitle: 'Outdoor Pathway',
+  basePath: 'panoramas/pathways/gate-coed/',
+  nodes: Array.from({ length: 25 }, (_, i) => ({
+    file: `pathway-gate-coed-${String(i + 1).padStart(2, '0')}.JPG`,
+    title: 'Pathway',
+    sub: 'Gate → College of Education',
+    heading: 0,
+  })),
+}, 'path-gate-coed'), 'path-gate-coed');
+
+export const PATH_COED_ALUMNI = applyNodeOverrides(withPathwayConnections({
+  buildingId: 'path-coed-alumni',
+  title: 'College of Education → Alumni Building',
+  subtitle: 'Outdoor Pathway',
+  basePath: 'panoramas/pathways/coed-alumni/',
+  nodes: Array.from({ length: 29 }, (_, i) => ({
+    file: `pathway-coed-alumni-${String(i + 1).padStart(2, '0')}.JPG`,
+    title: 'Pathway',
+    sub: 'College of Education → Alumni Building',
+    heading: 0,
+  })),
+}, 'path-coed-alumni'), 'path-coed-alumni');
+
+export const PATH_GATE_CEA = applyNodeOverrides(withPathwayConnections({
+  buildingId: 'path-gate-cea',
+  title: 'Gate → College of Engineering & Architecture',
+  subtitle: 'Outdoor Pathway',
+  basePath: 'panoramas/pathways/gate-cea/',
+  nodes: Array.from({ length: 14 }, (_, i) => ({
+    file: `pathway-gate-cea-${String(i + 1).padStart(2, '0')}.jpg`,
+    title: 'Pathway',
+    sub: 'Gate → College of Engineering & Architecture',
+    heading: 171,
+  })),
+}, 'path-gate-cea'), 'path-gate-cea');
+
+export const PATH_LIBRARY_REGISTRAR = applyNodeOverrides(withPathwayConnections({
+  buildingId: 'path-library-registrar',
+  title: 'Library → Registrar',
+  subtitle: 'Outdoor Pathway',
+  basePath: 'panoramas/pathways/library-registrar/',
+  nodes: Array.from({ length: 11 }, (_, i) => ({
+    file: `pathway-library-registrar-${String(i + 1).padStart(2, '0')}.jpg`,
+    title: 'Pathway',
+    sub: 'Library → Registrar',
+    heading: 0,
+  })),
+}, 'path-library-registrar'), 'path-library-registrar');
+
+export const PATH_COM_SAS = applyNodeOverrides(withPathwayConnections({
+  buildingId: 'path-com-sas',
+  title: 'College of Management → SAS',
+  subtitle: 'Outdoor Pathway',
+  basePath: 'panoramas/pathways/com-sas/',
+  nodes: Array.from({ length: 14 }, (_, i) => ({
+    file: `pathway-com-sas-${String(i + 1).padStart(2, '0')}.jpg`,
+    title: 'Pathway',
+    sub: 'College of Management → SAS',
+    heading: 0,
+  })),
+}, 'path-com-sas'), 'path-com-sas');
+
+// ============================================================
 // Auxiliary Building (Student Council Building) Virtual Tour
 // Same structure as CON_TOUR above. Only one panorama was
 // provided for this building, so the viewer will show it with
@@ -382,5 +585,31 @@ export const COM_TOUR = {
 // ============================================================
 
 // Lookup table so more buildings can register tours later.
-export const TOURS = { ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR, coed: COED_TOUR, ccjs: CCJS_TOUR, cea: CEA_TOUR, com: COM_TOUR};
+export const TOURS = {
+  ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR,
+  coed: COED_TOUR, ccjs: CCJS_TOUR, cea: CEA_TOUR, com: COM_TOUR,
+  'path-gate-coed': PATH_GATE_COED,
+  'path-coed-alumni': PATH_COED_ALUMNI,
+  'path-gate-cea': PATH_GATE_CEA,
+  'path-library-registrar': PATH_LIBRARY_REGISTRAR,
+  'path-com-sas': PATH_COM_SAS,
+};
 export const hasTour = (id) => Boolean(TOURS[id]);
+
+// Given two building ids, returns the pathway tour that connects
+// them DIRECTLY, with the correct starting node and walk direction
+// for going from origin → destination — or null if no such direct
+// pathway exists (multi-hop routing across several pathways isn't
+// supported yet).
+export function findDirectPathway(originId, destId) {
+  for (const [pathwayId, conn] of Object.entries(PATHWAY_CONNECTIONS)) {
+    const nodes = TOURS[pathwayId]?.nodes || [];
+    if (conn.a.buildingId === originId && conn.b.buildingId === destId) {
+      return { pathwayId, reverse: false, startFile: nodes[0]?.file };
+    }
+    if (conn.a.buildingId === destId && conn.b.buildingId === originId) {
+      return { pathwayId, reverse: true, startFile: nodes[nodes.length - 1]?.file };
+    }
+  }
+  return null;
+}

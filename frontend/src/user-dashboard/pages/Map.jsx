@@ -10,25 +10,39 @@ import {
   selectedLocationIcon,
   TILELAYER_URL, 
   userLocationIcon,
-  transformedObjectBuilding
+  transformedObjectBuilding,
+  VIRTUAL_LOCATIONS
 } from "../utils/map-leaflet";
-import { Globe, LocateFixed, Road } from "lucide-react";
+import { Globe, LocateFixed, Road, Footprints } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
-import { hasTour } from "../static/nwssuTour";
+import { hasTour, findDirectPathway } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
 
 export default function Map() {
   const { buildings } = useCampusData();
   const { openTour, openUnavailable } = useUI();
-  const CAMPUS_BUILDING = transformedObjectBuilding(buildings);
+  // Real buildings PLUS lightweight virtual locations (e.g. the Gate) —
+  // so GPS detection, the sidebar list, and map markers all treat both
+  // the same way for routing/pathway purposes.
+  const CAMPUS_BUILDING = [...transformedObjectBuilding(buildings), ...VIRTUAL_LOCATIONS];
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => !isMobile());
   const [modalBuilding, setModalBuilding] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  // Which building the current userLocation corresponds to, if any —
+  // set either from GPS detection or from manually picking a building
+  // as the origin. Needed to look up a direct pathway tour for "Walk There".
+  const [originBuildingId, setOriginBuildingId] = useState(null);
+  // 'destination' (default, existing behavior) or 'origin' — controls
+  // what clicking a building in the sidebar list does. This is really
+  // just a manual override/testing tool now — normally "My Location"
+  // alone is enough to set your origin automatically.
+  const [pickMode, setPickMode] = useState("destination");
   const [loader, setLoader] = useState(null);
   const [alertMsg, setAlertMsg] = useState({
     success: false,
@@ -59,7 +73,13 @@ export default function Map() {
   }, [selectedBuilding]);
 
   const handleBuildingClick = (building) => {
-    setSelectedBuilding(building);
+    if (pickMode === "origin") {
+      setUserLocation(building.position);
+      setOriginBuildingId(building.id);
+      setAlertMsg({ success: true, message: `📍 Origin set to ${building.name}.` });
+    } else {
+      setSelectedBuilding(building);
+    }
   };
 
   const getCurrentLocation = () => {
@@ -78,15 +98,13 @@ export default function Map() {
           ];
           const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
           setUserLocation(location);
+          setOriginBuildingId(building?.id || null);
           setAlertMsg({
             success: true,
-            message: `
-              📍Location Detected: ${building 
-                ? `You are at ${building.name}.`  
-                : "But you are not currently inside or near a recognized campus building."
-              }
-            `
-          });
+        message: building
+          ? `📍Location Detected: You are at ${building.name}. (${location[0].toFixed(6)}, ${location[1].toFixed(6)})`
+          : `📍Location Detected: Not near a recognized location yet. Raw coordinates: ${location[0].toFixed(6)}, ${location[1].toFixed(6)}`
+         });
           setLoader(null);
         },
         // Error
@@ -133,11 +151,6 @@ export default function Map() {
       setAlertMsg({ message: "Make sure you are on the university campus." });
       return;
     }
-    /*
-     campusBuildings above is mock data keyed by abbr only; look up the
-     matching real building record (from useCampusData) to get its real 
-     id, since that's what the tour data (nwssuTour.js) is keyed by.
-    */
     const match = buildings.find((b) => b.id === building.id);
 
     if (match && hasTour(match.id)) {
@@ -172,6 +185,19 @@ export default function Map() {
     }
   }
 
+  // Direct pathway tour (if any) between the current origin building
+  // and the selected destination building. null when no origin
+  // building is known, or no direct pathway connects the two.
+  const pathwayMatch = useMemo(() => {
+    if (!originBuildingId || !selectedBuilding) return null;
+    return findDirectPathway(originBuildingId, selectedBuilding.id);
+  }, [originBuildingId, selectedBuilding]);
+
+  const handleWalkThere = () => {
+    if (!pathwayMatch) return;
+    openTour(pathwayMatch.pathwayId, { reverse: pathwayMatch.reverse, startFile: pathwayMatch.startFile });
+  };
+
   return (
     <>
       <Navbar/>
@@ -197,6 +223,23 @@ export default function Map() {
 
           {isSidebarOpen && (
             <>
+              <div style={{ display: 'flex', gap: 6, padding: '8px 12px 0' }}>
+                <button
+                  type="button"
+                  className={pickMode === "destination" ? "destination-route-btn" : "get-location-btn"}
+                  onClick={() => setPickMode("destination")}
+                >
+                  🎯 Pick Destination
+                </button>
+                <button
+                  type="button"
+                  className={pickMode === "origin" ? "destination-route-btn" : "get-location-btn"}
+                  onClick={() => setPickMode("origin")}
+                >
+                  📍 Pick Origin
+                </button>
+              </div>
+
               <div className="building-search">
                 <span className="search-icon">⌕</span>
 
@@ -235,7 +278,7 @@ export default function Map() {
                       type="button"
                       key={building.id}
                       className={`building-item ${
-                        selectedBuilding?.id === building.id
+                        selectedBuilding?.id === building.id || originBuildingId === building.id
                           ? "active"
                           : ""
                       }`}
@@ -357,6 +400,20 @@ export default function Map() {
                 <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
                 <p><strong>Time:</strong> {Math.ceil(route.duration / 60)} minutes</p>
               </div>
+            )}
+
+            {route.coordinates && pathwayMatch && (
+              <button
+                type="button"
+                className="navigate-btn"
+                onClick={handleWalkThere}
+              ><Footprints size={18} style={{ marginRight: 6 }}/>Walk There</button>
+            )}
+
+            {route.coordinates && !pathwayMatch && originBuildingId && (
+              <p style={{ fontSize: 12, opacity: 0.7, margin: '6px 0 0' }}>
+                A 360° walking pathway isn't available for this route yet.
+              </p>
             )}
           </figure>
         </section>

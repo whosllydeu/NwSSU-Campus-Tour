@@ -1,7 +1,7 @@
 import { useUI } from '../context/UIContext';
 import { useCampusData } from '../context/DataContext';
 import { capitalize } from '../utils/helpers';
-import { hasTour } from '../static/nwssuTour';
+import { hasTour, PATH_LINKS } from '../static/nwssuTour';
 import Photo from './Photo';
 
 const NBSP_DOT = '\u00A0·\u00A0';
@@ -50,6 +50,8 @@ function BuildingDetail({ id }) {
   const b = buildings.find((x) => x.id === id);
   if (!b) return null;
 
+  const walks = PATH_LINKS[b.id] || [];
+
   const startTour = () => {
     if (hasTour(b.id)) openTour(b.id);
     else openUnavailable('Virtual tour is currently not available for this location yet.');
@@ -91,6 +93,11 @@ function BuildingDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
+          {walks.map((w) => (
+            <button key={w.id} className="btn-ghost ds-tour-btn" onClick={() => openTour(w.id)}>
+              🚶 {w.label}
+            </button>
+          ))}
         </div>
 
         <div className="ds-photo-row">
@@ -137,6 +144,7 @@ function DeptDetail({ id }) {
   const emoji = building?.emoji || '🎓';
   const rawPhoto = d.photo || building?.photo || '';
   const tourId = hasTour(d.id) ? d.id : (building && hasTour(building.id) ? building.id : undefined);
+  const walks = PATH_LINKS[building?.id] || [];
 
   const startTour = () => {
     if (tourId) openTour(tourId);
@@ -175,6 +183,11 @@ function DeptDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
+          {walks.map((w) => (
+            <button key={w.id} className="btn-ghost ds-tour-btn" onClick={() => openTour(w.id)}>
+              🚶 {w.label}
+            </button>
+          ))}
         </div>
 
         <div className="ds-photo-row">

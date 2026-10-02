@@ -8,6 +8,26 @@ const OSRM_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/driving"
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
+// Non-building pathway endpoints (e.g. the campus Gate) — not real
+// buildings in data.js, but still need to be detectable by GPS and
+// selectable as a route origin/destination, since several outdoor
+// pathway tours start or end there instead of at an actual building.
+//
+// TODO: replace the placeholder position below with the real gate
+// coordinates. Easiest way to get them: stand at the gate, go to the
+// Map page, tap "My Location" — since Gate isn't registered yet, the
+// alert will show your raw coordinates instead of a building name.
+// Copy those numbers in here.
+export const VIRTUAL_LOCATIONS = [
+  {
+    id: 'gate',
+    abbr: 'GATE',
+    name: 'Main Gate',
+    position: [12.070724, 124.596791], // TODO: replace with real gate coordinates
+    detectionRadius: 30,
+  },
+];
+
 // Transformed object building list from database
 export const transformedObjectBuilding = (buildings) => {
   const campBuildings = buildings.map((b) => ({
@@ -149,3 +169,4 @@ export const allLocationIcon = new L.Icon({
   shadowSize: [41, 41],
   className: "all-location-marker",
 });
+

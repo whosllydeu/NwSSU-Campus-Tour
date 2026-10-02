@@ -16,7 +16,7 @@ export function UIProvider({ children }) {
 
   // ── Overlay state ──
   const [detail, setDetail] = useState(null); // { kind:'building'|'dept', id }
-  const [tour, setTour] = useState(null); // building id with a 360 tour, e.g. 'ccis'
+  const [tour, setTour] = useState(null); // { id, reverse, startFile } — the active 360 tour, or null
   const [lightbox, setLightbox] = useState(null); // { src, caption }
   const [modal, setModal] = useState(null); // { kind:'office'|'org', index }
   const [unavailable, setUnavailable] = useState(null); // { message } — full-screen "not ready yet" state
@@ -50,7 +50,14 @@ export function UIProvider({ children }) {
   const closeDetail = useCallback(() => setDetail(null), []);
 
   // ── Virtual tour overlay ──
-  const openTour = useCallback((id) => setTour(id), []);
+  // opts.reverse: walk a pathway tour from its "b" end toward "a"
+  // (flips forward/back/left/right and the initial facing direction).
+  // opts.startFile: land on a specific node instead of index 0 — used
+  // when entering a pathway partway through, or jumping in from
+  // another tour's cross-tour exit.
+  const openTour = useCallback((id, opts = {}) => {
+    setTour({ id, reverse: !!opts.reverse, startFile: opts.startFile || null });
+  }, []);
   const closeTour = useCallback(() => setTour(null), []);
 
   // ── "Currently unavailable" full-screen overlay ──

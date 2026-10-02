@@ -451,16 +451,17 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   background: var(--bg);
 }
 
-.map-sidebar {
+.map-layout .map-sidebar {
   width: 290px; flex-shrink: 0;
   background: #0d1c0b;
   border-right: 1px solid var(--border);
   overflow-y: auto; transition: transform .3s cubic-bezier(.4,0,.2,1), width .3s;
 }
-.map-sidebar.collapsed { transform: translateX(-100%); width: 0; overflow: hidden; }
+/* Scoped to the legacy .map-layout so it no longer hides the Leaflet map sidebar on mobile */
+.map-layout .map-sidebar.collapsed { transform: translateX(-100%); width: 0; overflow: hidden; }
 @media(max-width:768px) {
-  .map-sidebar { position: absolute; top: 0; left: 0; height: 100%; z-index: 50; transform: translateX(-100%); box-shadow: var(--sh2); }
-  .map-sidebar.open { transform: translateX(0); }
+  .map-layout .map-sidebar { position: absolute; top: 0; left: 0; height: 100%; z-index: 50; transform: translateX(-100%); box-shadow: var(--sh2); }
+  .map-layout .map-sidebar.open { transform: translateX(0); }
 }
 .msb-head {
   display: flex; justify-content: space-between; align-items: center;
@@ -1341,7 +1342,7 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .gsv-stage.gsv-traveling{
   filter:blur(10px) brightness(1.12); transform:scale(1.035);
   transition:filter 140ms ease-in, transform 140ms ease-in;}
-  .gsv-stage canvas{display:block;}
+.gsv-stage canvas{display:block;}
 .gsv-loader{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,13,16,.35);z-index:5;pointer-events:none;}
 .gsv-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:gsv-spin 1s linear infinite;}
 @keyframes gsv-spin{to{transform:rotate(360deg);}}
@@ -1383,13 +1384,6 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .gsv-card h3{margin:5px 0 7px;font-size:19px;color:#202124;}
 .gsv-card p{margin:0;font-size:13.5px;line-height:1.55;color:#3c4043;}
 
-/* left-side stacked chips */
-.gsv-left-stack{
-  position:absolute;top:14px;left:14px;z-index:12;
-  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
-}
-.gsv-left-stack .gsv-attrib,
-.gsv-left-stack .gsv-info{ position:static; }
 /* direction-aware chevron arrows — positioned via inline left/top from
    project(), anchored to each exit's real compass bearing. CSS
    transitions interpolate between the throttled position/opacity
@@ -1399,23 +1393,28 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
   transition:left .18s linear, top .18s linear, opacity .25s ease, transform .12s ease;}
 .gsv-nav:hover{transform:translate(-50%,-50%) scale(1.12);}
 .gsv-chev{display:block;width:130px;transform:perspective(340px) rotateX(52deg);}
-.gsv-chev.side{width:70px;transform:none;}
+.gsv-chev.side{width:70px;transform:perspective(340px) rotateX(52deg);}
+.gsv-chev svg{width:100%;height:auto;display:block;}
+.gsv-chev path{fill:none;stroke:#fff;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;opacity:.92;}
+.gsv-nav:hover .gsv-chev path{stroke:#fff;opacity:1;}
+
+/* cross-tour "enter building" pin CTA */
+.gsv-enter{position:absolute;z-index:9;transform:translate(-50%,-50%);border:none;cursor:pointer;
+  display:flex;align-items:center;gap:7px;
+  padding:10px 18px;border-radius:30px;background:#1a73e8;color:#fff;font-weight:700;font-size:13px;
+  white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4);
+  transition:left .18s linear, top .18s linear, opacity .25s ease, transform .12s ease;}
+.gsv-enter:hover{transform:translate(-50%,-50%) scale(1.08);background:#1558b0;}
+.gsv-pin-icon{animation:gsv-pin-bounce 1.4s ease-in-out infinite;flex-shrink:0;}
+@keyframes gsv-pin-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
 .nav-arrow-wrap { position: relative; pointer-events: none; will-change: transform; }
+
 /* street-name label */
 .gsv-street{position:absolute;right:20px;bottom:26px;z-index:8;color:#fff;font-weight:800;font-size:20px;
   letter-spacing:.02em;transform:rotate(-6deg);text-shadow:0 2px 6px rgba(0,0,0,.6);pointer-events:none;
   max-width:60vw;text-align:right;}
-  
 
-/* launch-tour overlay on the CCIS photo */
-.photo-tour-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  background:linear-gradient(160deg,rgba(26,115,232,.34),rgba(0,0,0,.32));color:#fff;opacity:0;transition:opacity .25s;}
-.ds-photo-hero.has-tour:hover .photo-tour-hint,.ds-photo-hero.has-tour:focus-within .photo-tour-hint{opacity:1;}
-.ds-photo-hero.has-tour{cursor:pointer;position:relative;}
-.photo-tour-play{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.92);color:#1a73e8;display:grid;place-items:center;font-size:22px;box-shadow:0 6px 20px rgba(0,0,0,.35);}
-.photo-tour-label{font-weight:700;font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
-.ds-photo-hero.has-tour .photo-tour-badge{position:absolute;top:10px;left:10px;background:#1a73e8;color:#fff;font-size:11px;font-weight:700;
-  padding:5px 10px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:2;}
 @media(max-width:560px){.gsv-street{font-size:16px;}.gsv-chev{width:64px;}}
 
 /* ── Detail: prominent top actions (Virtual Tour) ── */
@@ -1593,4 +1592,44 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 @media (max-width: 560px) {
   .ds-primary-actions { display: grid; grid-template-columns: 1fr; }
   .ds-primary-actions .btn-primary { width: 100%; min-width: 0; justify-content: center; }
+}
+
+/* ============================================================
+   MOBILE RESPONSIVENESS FIXES
+   ============================================================ */
+
+/* dvh = real visible height on mobile (excludes browser address bar) */
+main { min-height: calc(100dvh - var(--nav-h)); }
+.map-layout, #page-map { height: calc(100dvh - var(--nav-h)); }
+#page-map .map-layout { min-height: calc(100dvh - var(--nav-h)); }
+
+/* Prevent any sideways page scroll */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, canvas { max-width: 100%; }
+
+/* Decorative orb was 500px wide → caused horizontal overflow */
+@media (max-width: 600px) {
+  .o1 { width: 280px; height: 280px; top: -90px; right: -80px; }
+}
+
+@media (max-width: 768px) {
+  /* iOS Safari zooms in on inputs smaller than 16px */
+  input, select, textarea, .ns-input, .msb-search input { font-size: 16px; }
+  .modal-box { max-height: 90dvh; }
+  .modal-overlay { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Touch devices: no sticky hover effects */
+@media (hover: none) {
+  .ds-photo-hero.has-img:hover img { transform: none; }
+  .ds-photo-hero.has-img .photo-zoom-hint { opacity: 1; }
+  #page-map .mw-bldg:hover { transform: translate(-50%, -50%); }
+}
+
+/* 360° tour: keep controls clear of notches / home indicator */
+.gsv-controls { top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); }
+.gsv-street { bottom: max(26px, calc(env(safe-area-inset-bottom) + 12px)); }
+@media (max-width: 560px) {
+  .gsv-card { left: 10px; right: 10px; width: auto; max-width: none; }
+  .gsv-menu { max-height: 70dvh; overflow-y: auto; }
 }

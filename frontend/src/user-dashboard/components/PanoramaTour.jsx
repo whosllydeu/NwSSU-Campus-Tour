@@ -1,13 +1,21 @@
 // ============================================================
 // PanoramaTour — full-screen 360° tour, Google Street View style.
-// Pure Three.js (dependency: `three`). Direction-aware chevron
-// arrows anchored to real compass bearings within the panorama —
-// they slide/fade in and out as you rotate, instead of sitting in
-// a fixed screen position. Left/right arrows use their TRUE bearing
-// only to decide visibility/fade; their on-screen position is a
-// fixed slot beside forward/back (Google-Maps-style tight cluster)
-// rather than their realistically-far-apart projected spot.
-// Attribution chip, round controls, street-name label unchanged.
+// Direction-aware chevron arrows anchored to real compass bearings.
+// Supports:
+//  - Local branching via exits[dir] = 'some-file.jpg' (unchanged).
+//  - Cross-tour jumps via exits[dir] = { tour, node, label } —
+//    rendered as a highlighted pin-icon "Enter Building" CTA
+//    instead of a plain chevron, and triggers
+//    openTour(tour, { startFile: node }) on click.
+//  - Reverse walking: when opened with { reverse: true }, forward/
+//    back and left/right swap meaning, and the initial/on-arrival
+//    facing direction flips 180° — lets one pathway's node list
+//    serve both walking directions without duplicating data.
+//  - Starting mid-tour via { startFile } instead of always node 0.
+//  - At the tour's TRUE start/end (no exit assigned there), the
+//    back/forward chevron stays visible and simply exits the tour
+//    (closeTour) instead of disappearing. Mid-tour dead ends
+//    (exits[dir] explicitly set to null) still hide normally.
 // ============================================================
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
@@ -16,12 +24,25 @@ import { useUI } from '../context/UIContext';
 import NavigationArrow from './NavigationArrow';
 
 const DIRS = ['forward', 'back', 'left', 'right'];
-const SIDE_OFFSET_X = 110; // px either side of center for left/right arrows
-const SIDE_ROW_FRAC = 0.62; // vertical position for the side-arrow row, as a fraction of stage height
+const REV_DIR = { forward: 'back', back: 'forward', left: 'right', right: 'left' };
+const SIDE_OFFSET_X = 110;
+const SIDE_ROW_FRAC = 0.62;
+
+function PinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" className="gsv-pin-icon">
+      <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 7 12 7.3 12.28a1 1 0 0 0 1.4 0C13 22 20 15.25 20 10c0-4.42-3.58-8-8-8z" fill="currentColor" />
+      <circle cx="12" cy="10" r="3" fill="#fff" />
+    </svg>
+  );
+}
 
 export default function PanoramaTour() {
-  const { tour, closeTour } = useUI();
-  const data = tour ? TOURS[tour] : null;
+  const { tour, closeTour, openTour } = useUI();
+  const tourId = typeof tour === 'string' ? tour : tour?.id || null;
+  const reverse = typeof tour === 'string' ? false : tour?.reverse || false;
+  const startFile = typeof tour === 'string' ? null : tour?.startFile || null;
+  const data = tourId ? TOURS[tourId] : null;
 
   const mountRef = useRef(null);
   const stateRef = useRef({});
@@ -29,57 +50,56 @@ export default function PanoramaTour() {
   const [loading, setLoading] = useState(true);
   const [card, setCard] = useState(null);
   const [menu, setMenu] = useState(false);
-  const [compass, setCompass] = useState(false);   // toggle the heading readout
-  const [lonReadout, setLonReadout] = useState(0);  // live camera lon, for tuning `heading`
+  const [compass, setCompass] = useState(false);
+  const [lonReadout, setLonReadout] = useState(0);
   const [nav, setNav] = useState({ forward: null, back: null, left: null, right: null });
 
   const nodes = useMemo(() => data?.nodes || [], [data]);
   const base = (import.meta.env.BASE_URL || '/') + (data?.basePath || '');
 
-  // file -> index lookup, so `exits` can target nodes by filename
-  // instead of fragile array positions.
   const byFile = useMemo(() => {
     const m = {};
     nodes.forEach((n, i) => { m[n.file] = i; });
     return m;
   }, [nodes]);
 
-  // Resolve where a given direction leads from a node.
-  // - If the node defines `exits[dir]`, that wins: a filename string
-  //   is looked up via byFile, and `null` explicitly disables the
-  //   direction (dead end / no side path).
-  // - Otherwise falls back to the old behavior: forward = idx+1,
-  //   back = idx-1, left/right have no default (must be explicit).
-  // Returns -1 when there is no exit in that direction.
+  // Resolves where a direction leads from a node. Applies the
+  // reverse-dir swap first, so authored exits/defaults never need
+  // to know whether this is a forward or backward walk-through.
+  // Returns one of:
+  //   { kind: 'none' }                              — no exit, hide the arrow
+  //   { kind: 'local', index }                       — jump within this tour
+  //   { kind: 'cross', tour, node, reverse, label }  — jump into another tour
   const getExit = useCallback((node, i, dir) => {
+    const rd = reverse ? REV_DIR[dir] : dir;
     const exits = node?.exits;
-    if (exits && Object.prototype.hasOwnProperty.call(exits, dir)) {
-      const v = exits[dir];
-      if (v === null || v === undefined) return -1;
-      return byFile[v] ?? -1;
+    if (exits && Object.prototype.hasOwnProperty.call(exits, rd)) {
+      const v = exits[rd];
+      if (v === null || v === undefined) return { kind: 'none' };
+      if (typeof v === 'object') return { kind: 'cross', tour: v.tour, node: v.node, reverse: !!v.reverse, label: v.label };
+      const idx2 = byFile[v];
+      return idx2 === undefined ? { kind: 'none' } : { kind: 'local', index: idx2 };
     }
-    if (dir === 'forward') return i + 1 < nodes.length ? i + 1 : -1;
-    if (dir === 'back') return i - 1 >= 0 ? i - 1 : -1;
-    return -1;
-  }, [nodes, byFile]);
+    if (rd === 'forward') return i + 1 < nodes.length ? { kind: 'local', index: i + 1 } : { kind: 'none' };
+    if (rd === 'back') return i - 1 >= 0 ? { kind: 'local', index: i - 1 } : { kind: 'none' };
+    return { kind: 'none' };
+  }, [nodes, byFile, reverse]);
 
-  // Direction (in degrees) that "forward" faces in a given node's photo.
-  // Defaults to 0 when a node has no `heading` set, so untouched nodes
-  // behave exactly as before.
   const heading = (node) => node?.heading ?? 0;
 
-  // Real compass bearing an arrow should sit at for a given direction.
-  // Override per-node with `arrowHeadings: { left: 95, right: 250 }` etc.
-  // when a turn isn't a clean 90°/270° off `heading` (e.g. an odd-angle
-  // branch like a fork at the end of a hallway).
+  // Real compass bearing an arrow should sit at for a given UI
+  // direction. Applies the same reverse-dir swap as getExit, so a
+  // reversed walk's "forward" correctly points at the recorded
+  // "back" bearing (i.e. behind the camera as originally shot).
   const dirAngle = (node, dir) => {
-    const custom = node?.arrowHeadings?.[dir];
+    const rd = reverse ? REV_DIR[dir] : dir;
+    const custom = node?.arrowHeadings?.[rd];
     if (custom != null) return custom;
     const h = heading(node);
-    if (dir === 'forward') return h;
-    if (dir === 'back') return (h + 180) % 360;
-    if (dir === 'left') return (h + 270) % 360;
-    if (dir === 'right') return (h + 90) % 360;
+    if (rd === 'forward') return h;
+    if (rd === 'back') return (h + 180) % 360;
+    if (rd === 'left') return (h + 270) % 360;
+    if (rd === 'right') return (h + 90) % 360;
     return h;
   };
 
@@ -103,9 +123,6 @@ export default function PanoramaTour() {
 
     Object.assign(S, { scene, camera, renderer, sphere, cache: {}, lon: 0, lat: 0, drag: false, px: 0, py: 0, raf: 0, idx: 0, lastPos: {} });
 
-    // Project a world bearing (lonD) at floor level (latD) onto screen
-    // pixels relative to the CURRENT camera look direction. Returns null
-    // when the point is behind the camera or outside the frustum.
     const dirVec = (lonD, latD, R) => {
       const phi = THREE.MathUtils.degToRad(90 - latD), th = THREE.MathUtils.degToRad(lonD);
       return new THREE.Vector3(R * Math.sin(phi) * Math.cos(th), R * Math.cos(phi), R * Math.sin(phi) * Math.sin(th));
@@ -119,20 +136,12 @@ export default function PanoramaTour() {
       if (v.z > 1) return null;
       return { x: (v.x * 0.5 + 0.5) * mount.clientWidth, y: (-v.y * 0.5 + 0.5) * mount.clientHeight, o: Math.min(1, (d - 0.15) * 10) };
     };
-    // Same as project(), but remembers each direction's last visible
-    // position so a hidden arrow fades out in place instead of jumping
-    // to center when it reappears. Used for forward/back, which keep
-    // their true projected position.
     const projectDir = (dir, lonD, latD) => {
       const p = project(lonD, latD);
       if (p) { S.lastPos[dir] = { x: p.x, y: p.y }; return p; }
       const last = S.lastPos[dir] || { x: mount.clientWidth / 2, y: mount.clientHeight * 0.72 };
       return { x: last.x, y: last.y, o: 0 };
     };
-    // For left/right: only the fade (o) comes from the true bearing —
-    // position is a fixed slot beside center, so a 90°-apart branch still
-    // reads as a tight Google-Maps-style cluster instead of sitting out
-    // near the screen edge.
     const projectSide = (dir, lonD, latD) => {
       const p = project(lonD, latD);
       const o = p ? p.o : 0;
@@ -150,8 +159,6 @@ export default function PanoramaTour() {
       camera.lookAt(500 * Math.sin(phi) * Math.cos(th), 500 * Math.cos(phi), 500 * Math.sin(phi) * Math.sin(th));
       renderer.render(scene, camera);
 
-      // Throttled to ~10fps: smooth enough for arrow motion, cheap enough
-      // to avoid unnecessary re-renders every single animation frame.
       readoutTick = (readoutTick + 1) % 6;
       if (readoutTick === 0) {
         let norm = Math.round(S.lon) % 360;
@@ -159,10 +166,21 @@ export default function PanoramaTour() {
         setLonReadout(norm);
 
         const node = nodes[S.idx];
+        // True tour boundaries (accounting for reverse): the edge
+        // where back/forward has nothing assigned should still show
+        // a visible, correctly-positioned chevron that exits the
+        // tour — not just vanish like a mid-path dead end.
+        const atBackEdge = reverse ? S.idx === nodes.length - 1 : S.idx === 0;
+        const atForwardEdge = reverse ? S.idx === 0 : S.idx === nodes.length - 1;
+
         const next = {};
         DIRS.forEach((dir) => {
-          const target = getExit(node, S.idx, dir);
-          if (target === -1) { next[dir] = null; return; }
+          const exit = getExit(node, S.idx, dir);
+          if (exit.kind === 'none') {
+            const isEdge = (dir === 'back' && atBackEdge) || (dir === 'forward' && atForwardEdge);
+            next[dir] = isEdge ? projectDir(dir, dirAngle(node, dir), -14) : null;
+            return;
+          }
           const angle = dirAngle(node, dir);
           next[dir] = (dir === 'left' || dir === 'right')
             ? projectSide(dir, angle, -14)
@@ -195,10 +213,20 @@ export default function PanoramaTour() {
       new THREE.TextureLoader().load(base + nodes[i].file, (t) => { if ('colorSpace' in t) t.colorSpace = THREE.SRGBColorSpace; S.cache[i] = t; res(t); });
     });
 
+    const start = (() => {
+      if (!startFile) return 0;
+      const found = nodes.findIndex((n) => n.file === startFile);
+      return found >= 0 ? found : 0;
+    })();
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIdx(0); S.idx = 0; setLoading(true);
-    S.lon = heading(nodes[0]); S.lat = 0;
-    S.loadInto(0).then((t) => { sphere.material.map = t; sphere.material.needsUpdate = true; setLoading(false); if (nodes[1]) S.loadInto(1); });
+    setIdx(start); S.idx = start; setLoading(true);
+    S.lon = dirAngle(nodes[start], 'forward'); S.lat = 0;
+    S.loadInto(start).then((t) => {
+      sphere.material.map = t; sphere.material.needsUpdate = true; setLoading(false);
+      if (nodes[start + 1]) S.loadInto(start + 1);
+      if (nodes[start - 1]) S.loadInto(start - 1);
+    });
 
     return () => {
       cancelAnimationFrame(S.raf);
@@ -219,26 +247,41 @@ export default function PanoramaTour() {
     const S = stateRef.current;
     if (!S.loadInto || i < 0 || i >= nodes.length) return;
     setCard(null); setMenu(false); setLoading(true);
-    mountRef.current?.classList.add('gsv-traveling'); // blur in immediately on click
+    mountRef.current?.classList.add('gsv-traveling');
     S.loadInto(i).then((t) => {
       S.sphere.material.map = t; S.sphere.material.needsUpdate = true;
-      S.lon = heading(nodes[i]); S.lat = 0; S.idx = i; setIdx(i); setLoading(false);
-      mountRef.current?.classList.remove('gsv-traveling'); // blur eases back out
+      S.lon = dirAngle(nodes[i], 'forward'); S.lat = 0; S.idx = i; setIdx(i); setLoading(false);
+      mountRef.current?.classList.remove('gsv-traveling');
       if (nodes[i + 1]) S.loadInto(i + 1);
       if (nodes[i - 1]) S.loadInto(i - 1);
     });
-  }, [nodes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, reverse]);
+
+  // Leaves this tour entirely and enters the one named in a
+  // cross-tour exit, landing on its specified node.
+  const jumpTour = useCallback((exit) => {
+    openTour(exit.tour, { reverse: exit.reverse, startFile: exit.node });
+  }, [openTour]);
 
   useEffect(() => {
     if (!data) return;
     const onKey = (e) => {
-      if (e.key === 'ArrowRight') { const t = getExit(nodes[stateRef.current.idx], stateRef.current.idx, 'forward'); if (t !== -1) goTo(t); }
-      else if (e.key === 'ArrowLeft') { const t = getExit(nodes[stateRef.current.idx], stateRef.current.idx, 'back'); if (t !== -1) goTo(t); }
-      else if (e.key === 'Escape') closeTour();
+      const S = stateRef.current;
+      const node = nodes[S.idx];
+      if (e.key === 'ArrowRight') {
+        const exit = getExit(node, S.idx, 'forward');
+        if (exit.kind === 'local') goTo(exit.index);
+        else if (exit.kind === 'cross') jumpTour(exit);
+      } else if (e.key === 'ArrowLeft') {
+        const exit = getExit(node, S.idx, 'back');
+        if (exit.kind === 'local') goTo(exit.index);
+        else if (exit.kind === 'cross') jumpTour(exit);
+      } else if (e.key === 'Escape') closeTour();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [data, goTo, closeTour, nodes, getExit]);
+  }, [data, goTo, closeTour, nodes, getExit, jumpTour]);
 
   const toggleFull = () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
@@ -247,20 +290,26 @@ export default function PanoramaTour() {
 
   if (!data) return null;
   const n = nodes[idx] || {};
-  const fwdTarget = getExit(n, idx, 'forward');
-  const backTarget = getExit(n, idx, 'back');
-  const leftTarget = getExit(n, idx, 'left');
-  const rightTarget = getExit(n, idx, 'right');
+  const exits = {
+    forward: getExit(n, idx, 'forward'),
+    back: getExit(n, idx, 'back'),
+    left: getExit(n, idx, 'left'),
+    right: getExit(n, idx, 'right'),
+  };
+  const atBackEdge = reverse ? idx === nodes.length - 1 : idx === 0;
+  const atForwardEdge = reverse ? idx === 0 : idx === nodes.length - 1;
 
-  // Turns a projected {x,y,o} (or null, meaning "rotated out of view") into
-  // inline style: fades opacity to 0 and disables clicks when hidden, but
-  // keeps the element mounted so CSS transitions can animate the fade.
   const navStyle = (p) => ({
     left: p ? p.x : '50%',
     top: p ? p.y : '72%',
     opacity: p ? p.o : 0,
     pointerEvents: p && p.o > 0.08 ? 'auto' : 'none',
   });
+
+  const handleArrow = (exit) => {
+    if (exit.kind === 'local') goTo(exit.index);
+    else if (exit.kind === 'cross') jumpTour(exit);
+  };
 
   return (
     <div className="gsv-root">
@@ -282,7 +331,7 @@ export default function PanoramaTour() {
       {compass && (
         <div className="gsv-attrib" style={{ top: 60, gap: 10 }}>
           <NavigationArrow heading={lonReadout} moving={false} size={28} color="#1a73e8" />
-          <span className="gsv-attrib-txt">Node #{idx + 1} · heading: <b>{lonReadout}°</b></span>
+          <span className="gsv-attrib-txt">Node #{idx + 1} · heading: <b>{lonReadout}°</b>{reverse ? ' · reversed' : ''}</span>
         </div>
       )}
 
@@ -310,34 +359,64 @@ export default function PanoramaTour() {
         </div>
       )}
 
-      {/* direction-aware chevrons — anchored to real bearings, fade as you rotate */}
-      {backTarget !== -1 && (
-        <button className="gsv-nav back" style={navStyle(nav.back)} onClick={() => goTo(backTarget)} aria-label="Back">
-          <span className="gsv-chev">
-            <svg viewBox="0 0 120 70"><path d="M12 20 L60 56 L108 20" /></svg>
-          </span>
+      {/* back */}
+      {exits.back.kind !== 'none' ? (
+        exits.back.kind === 'cross' ? (
+          <button className="gsv-enter" style={navStyle(nav.back)} onClick={() => handleArrow(exits.back)} aria-label="Enter building">
+            <PinIcon /><span>{exits.back.label || `Enter ${TOURS[exits.back.tour]?.title || 'Building'}`}</span>
+          </button>
+        ) : (
+          <button className="gsv-nav back" style={navStyle(nav.back)} onClick={() => handleArrow(exits.back)} aria-label="Back">
+            <span className="gsv-chev"><svg viewBox="0 0 120 70"><path d="M12 20 L60 56 L108 20" /></svg></span>
+          </button>
+        )
+      ) : atBackEdge ? (
+        <button className="gsv-nav back" style={navStyle(nav.back)} onClick={closeTour} aria-label="Exit tour">
+          <span className="gsv-chev"><svg viewBox="0 0 120 70"><path d="M12 20 L60 56 L108 20" /></svg></span>
         </button>
+      ) : null}
+
+      {/* forward */}
+      {exits.forward.kind !== 'none' ? (
+        exits.forward.kind === 'cross' ? (
+          <button className="gsv-enter" style={navStyle(nav.forward)} onClick={() => handleArrow(exits.forward)} aria-label="Enter building">
+            <PinIcon /><span>{exits.forward.label || `Enter ${TOURS[exits.forward.tour]?.title || 'Building'}`}</span>
+          </button>
+        ) : (
+          <button className="gsv-nav fwd" style={navStyle(nav.forward)} onClick={() => handleArrow(exits.forward)} aria-label="Forward">
+            <span className="gsv-chev"><svg viewBox="0 0 120 70"><path d="M12 50 L60 14 L108 50" /></svg></span>
+          </button>
+        )
+      ) : atForwardEdge ? (
+        <button className="gsv-nav fwd" style={navStyle(nav.forward)} onClick={closeTour} aria-label="Exit tour">
+          <span className="gsv-chev"><svg viewBox="0 0 120 70"><path d="M12 50 L60 14 L108 50" /></svg></span>
+        </button>
+      ) : null}
+
+      {/* left */}
+      {exits.left.kind !== 'none' && (
+        exits.left.kind === 'cross' ? (
+          <button className="gsv-enter side" style={navStyle(nav.left)} onClick={() => handleArrow(exits.left)} aria-label="Enter building">
+            <PinIcon /><span>{exits.left.label || `Enter ${TOURS[exits.left.tour]?.title || 'Building'}`}</span>
+          </button>
+        ) : (
+          <button className="gsv-nav side left" style={navStyle(nav.left)} onClick={() => handleArrow(exits.left)} aria-label="Turn left">
+            <span className="gsv-chev side"><svg viewBox="0 0 70 120"><path d="M50 12 L14 60 L50 108" /></svg></span>
+          </button>
+        )
       )}
-      {fwdTarget !== -1 && (
-        <button className="gsv-nav fwd" style={navStyle(nav.forward)} onClick={() => goTo(fwdTarget)} aria-label="Forward">
-          <span className="gsv-chev">
-            <svg viewBox="0 0 120 70"><path d="M12 50 L60 14 L108 50" /></svg>
-          </span>
-        </button>
-      )}
-      {leftTarget !== -1 && (
-        <button className="gsv-nav side left" style={navStyle(nav.left)} onClick={() => goTo(leftTarget)} aria-label="Turn left">
-          <span className="gsv-chev side">
-            <svg viewBox="0 0 70 120"><path d="M50 12 L14 60 L50 108" /></svg>
-          </span>
-        </button>
-      )}
-      {rightTarget !== -1 && (
-        <button className="gsv-nav side right" style={navStyle(nav.right)} onClick={() => goTo(rightTarget)} aria-label="Turn right">
-          <span className="gsv-chev side">
-            <svg viewBox="0 0 70 120"><path d="M20 12 L56 60 L20 108" /></svg>
-          </span>
-        </button>
+
+      {/* right */}
+      {exits.right.kind !== 'none' && (
+        exits.right.kind === 'cross' ? (
+          <button className="gsv-enter side" style={navStyle(nav.right)} onClick={() => handleArrow(exits.right)} aria-label="Enter building">
+            <PinIcon /><span>{exits.right.label || `Enter ${TOURS[exits.right.tour]?.title || 'Building'}`}</span>
+          </button>
+        ) : (
+          <button className="gsv-nav side right" style={navStyle(nav.right)} onClick={() => handleArrow(exits.right)} aria-label="Turn right">
+            <span className="gsv-chev side"><svg viewBox="0 0 70 120"><path d="M20 12 L56 60 L20 108" /></svg></span>
+          </button>
+        )
       )}
 
       <div className="gsv-street">{n.title}</div>
