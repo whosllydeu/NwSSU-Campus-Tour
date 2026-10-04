@@ -2,10 +2,12 @@ import { Building2, Clock, Globe, MapPin, X } from "lucide-react";
 import "../stylesheets/map.css";
 import { hasTour } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
+import { useTour } from "../context/TourContext";
 
 const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
 
-  const { openTour, openUnavailable } = useUI();
+  const { openUnavailable } = useUI();
+  const { openTour } = useTour();
 
   if (!building) {
     return null;
@@ -13,8 +15,8 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
 
   const inTour = () => {
     if (hasTour(building.id)) {
-      onClose();
-      openTour(building.id)
+      // console.log(building.id);
+      openTour(building.id);
     } else {
       onClose();
       openUnavailable("Virtual Tour is currently not available for this location yet.");

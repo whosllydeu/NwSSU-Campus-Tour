@@ -19,7 +19,12 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.4",
     "recharts": "^3.10.1",
-    "three": "^0.186.0"
+    "three": "^0.186.0",
+    "@photo-sphere-viewer/core": "^5.15.1",
+    "@photo-sphere-viewer/gallery-plugin": "^5.15.1",
+    "@photo-sphere-viewer/markers-plugin": "^5.15.1",
+    "@photo-sphere-viewer/virtual-tour-plugin": "^5.15.1",
+    "react-photo-sphere-viewer": "^6.2.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
