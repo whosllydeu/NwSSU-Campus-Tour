@@ -1,6 +1,6 @@
 import { MarkersPlugin } from "@photo-sphere-viewer/markers-plugin";
 import { VirtualTourPlugin } from "@photo-sphere-viewer/virtual-tour-plugin";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { ReactPhotoSphereViewer } from "react-photo-sphere-viewer";
 
 import "@photo-sphere-viewer/core/index.css";
@@ -10,7 +10,7 @@ import "../stylesheets/SphereTour.css";
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 
-export const SphereTour = ({ nodes }) => {
+export const SphereTour = ({ nodes, startNodeId }) => {
 
   const plugins = useMemo(() => [
     [MarkersPlugin],
@@ -18,7 +18,7 @@ export const SphereTour = ({ nodes }) => {
       VirtualTourPlugin,
       {
         nodes,
-        startNodeId: nodes[0].id,
+        startNodeId: startNodeId || nodes[0].id,
         positionMode: "manual",
         renderMode: "3d",
         preload: true,
@@ -33,7 +33,11 @@ export const SphereTour = ({ nodes }) => {
         },
       }
     ]
-  ], [nodes]);
+  ], [nodes, startNodeId]);
+
+  useEffect(() => {
+    console.log(startNodeId);
+  }, [startNodeId]);
 
   const handleReady = useCallback((instance) => {
     // const tour = instance.getPlugin(VirtualTourPlugin);
@@ -59,10 +63,13 @@ export const SphereTour = ({ nodes }) => {
   );
 }
 
-export const TourOverlay = ({ nodes, onClose }) => {
+export const TourOverlay = ({ nodes, startNodeId, onClose }) => {
   return createPortal(
     <div className="tour-overlay">
-      <SphereTour nodes={nodes} />
+      <SphereTour
+        nodes={nodes}
+        startNodeId={startNodeId}
+      />
 
       <button
         className="tour-close"

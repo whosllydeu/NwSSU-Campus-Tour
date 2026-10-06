@@ -5,6 +5,7 @@ const CAT_TOUR_NODES = [
     panorama: "/panoramas/cat/cat-01.jpg",
     name: "Building Entrance",
     caption: "Building Entrance",
+    gps: [12.071104, 124.595427],
     links: [
       { nodeId: "building-2", position: { yaw: "0deg", pitch: "180deg" } },
     ],
@@ -14,6 +15,7 @@ const CAT_TOUR_NODES = [
     panorama: "/panoramas/cat/cat-02.jpg",
     name: "Hallway",
     caption: "Hallway",
+    gps: [12.071246, 124.595470],
     links: [
       { nodeId: "building-1", position: { yaw: "180deg", pitch: "0deg" } },
       { nodeId: "building-3", position: { yaw: "0deg", pitch: "0deg" } },
@@ -24,6 +26,7 @@ const CAT_TOUR_NODES = [
     panorama: "/panoramas/cat/cat-03.jpg",
     name: "Hallway",
     caption: "Hallway",
+    gps: [12.071311, 124.595526],
     links: [
       { nodeId: "building-2", position: { yaw: "-90deg", pitch: "0deg" } },
       { nodeId: "building-18", position: { yaw: "0deg", pitch: "0deg" } },
@@ -34,6 +37,7 @@ const CAT_TOUR_NODES = [
     id: "building-4",
     panorama: "/panoramas/cat/cat-04.jpg",
     name: "Hallway",
+    gps: [12.071353, 124.595529],
     caption: "Hallway",
     links: [
       { nodeId: "building-5", position: { yaw: "90deg", pitch: "0deg" } },
@@ -44,6 +48,7 @@ const CAT_TOUR_NODES = [
     panorama: "/panoramas/cat/cat-05.jpg",
     name: "Hallway",
     caption: "Hallway",
+    gps: [12.071443, 124.595596],
     links: [
       { nodeId: "building-6", position: { yaw: "90deg", pitch: "0deg" } },
       { nodeId: "building-3", position: { yaw: "-90deg", pitch: "0deg" } },

@@ -7,9 +7,12 @@ const TourContext = createContext(null);
 export const TourProvider = ({ children }) => {
   const [tour, setTour] = useState(null);
 
-  const openTour = (buildingId) => {
+  const openTour = (buildingId, startNodeId = null) => {
     const nodes = nwssuTourNodes[buildingId];
-    setTour(nodes);
+    setTour({
+      nodes,
+      startNodeId
+    });
   };
 
   const closeTour = () => {
@@ -21,7 +24,8 @@ export const TourProvider = ({ children }) => {
       {children}
       {tour && (
         <TourOverlay
-          nodes={tour}
+          nodes={tour.nodes}
+          startNodeId={tour.startNodeId}
           onClose={closeTour}
         />
       )}

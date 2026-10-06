@@ -11,7 +11,8 @@ import {
   TILELAYER_URL, 
   userLocationIcon,
   transformedObjectBuilding,
-  VIRTUAL_LOCATIONS
+  VIRTUAL_LOCATIONS,
+  findNearestPanorama
 } from "../utils/map-leaflet";
 import { Globe, LocateFixed, Road, Footprints } from "lucide-react";
 import { Navbar } from "../components";
@@ -19,10 +20,13 @@ import { useCampusData } from "../context/DataContext";
 import { hasTour, findDirectPathway } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
+import { nwssuTourNodes } from "../static/tourNodes";
+import { useTour } from "../context/TourContext";
 
 export default function Map() {
   const { buildings } = useCampusData();
-  const { openTour, openUnavailable } = useUI();
+  const { openUnavailable } = useUI();
+  const { openTour } = useTour();
   // Real buildings PLUS lightweight virtual locations (e.g. the Gate) —
   // so GPS detection, the sidebar list, and map markers all treat both
   // the same way for routing/pathway purposes.
@@ -96,8 +100,9 @@ export default function Map() {
             position.coords.latitude,
             position.coords.longitude
           ];
+          const testLocation = [12.071414, 124.595566];
           const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
-          setUserLocation(location);
+          setUserLocation(testLocation);
           setOriginBuildingId(building?.id || null);
           setAlertMsg({
             success: true,
@@ -151,10 +156,33 @@ export default function Map() {
       setAlertMsg({ message: "Make sure you are on the university campus." });
       return;
     }
+
     const match = buildings.find((b) => b.id === building.id);
 
     if (match && hasTour(match.id)) {
-      openTour(match.id);
+      
+      const nodes = nwssuTourNodes[match.id];
+
+      const nearest = findNearestPanorama(
+        userLocation,
+        nodes
+      );
+
+      if (!nearest) {
+        openUnavailable(
+          "No panorama location is available for this tour yet."
+        );
+        return;
+      }
+
+      console.log(
+        `Nearest panorama: ${nearest.node.id} (${nearest.distance.toFixed(2)}m away)`
+      );
+
+      openTour(
+        match.id,
+        nearest.node.id
+      );
     } else {
       openUnavailable("Virtual Tour is currently not available for this location yet.");
     }

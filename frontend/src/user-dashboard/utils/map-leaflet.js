@@ -60,6 +60,34 @@ export const findBuildingAtLocation = (location, campusBuilding) => {
   };
 }
 
+export const findNearestPanorama = (userLocation, nodes) => {
+  if (!userLocation || !nodes?.length) {
+    return null;
+  }
+
+  let nearest = null;
+
+  for (const node of nodes) {
+    if (!node.gps) {
+      continue;
+    }
+
+    const distance = getDistanceInMeters(
+      userLocation,
+      node.gps
+    );
+
+    if (!nearest || distance < nearest.distance) {
+      nearest = {
+        node,
+        distance,
+      };
+    }
+  }
+
+  return nearest;
+};
+
 const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
   const EARTH_RADIUS = 6371000;
 
