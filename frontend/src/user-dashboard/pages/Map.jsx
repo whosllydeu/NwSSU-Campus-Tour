@@ -421,7 +421,7 @@ export default function Map() {
               className={loader === "destination" ? "navigate-btn-loader" : "navigate-btn"}
               disabled={loader === "destination"}
               onClick={handleNavigateHere}
-            ><Globe size={18} style={{ marginRight: 6 }}/>Open 360 Tour</button>
+            ><Globe size={18} style={{ marginRight: 6 }}/>Walk there!</button>
 
             {route.coordinates && (
               <div className="route-info">

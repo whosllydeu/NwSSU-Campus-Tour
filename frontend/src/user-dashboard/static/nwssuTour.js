@@ -575,24 +575,28 @@ export const PATH_COM_SAS = applyNodeOverrides(withPathwayConnections({
   })),
 }, 'path-com-sas'), 'path-com-sas');
 
-// ============================================================
-// Auxiliary Building (Student Council Building) Virtual Tour
-// Same structure as CON_TOUR above. Only one panorama was
-// provided for this building, so the viewer will show it with
-// no Back/Next arrows (both are automatically hidden when there
-// is nothing before/after the current node in `nodes`). Add more
-// nodes here later the same way the other tours are built.
-// ============================================================
+export const LIB_TOUR = {
+  buildingId: 'lib',
+  title: 'NwSSU Library',
+  basePath: 'panoramas/library/', // resolved against import.meta.env.BASE_URL
+  nodes: [
+    { file: 'lib-02.jpg', title: 'Stairwell Landing',                        sub: 'NwSSU Library' },
+    { file: 'lib-03.jpg', title: 'Hallway',                                  sub: 'NwSSU Library', heading: 282 },
+    { file: 'lib-01.jpg', title: 'Entrance & Stairwell',                     sub: 'NwSSU Library', heading: 206 },
+  ]
+}
+
 
 // Lookup table so more buildings can register tours later.
 export const TOURS = {
   ccis: CCIS_TOUR, con: CON_TOUR, president: ADMIN_TOUR, cat: CAT_TOUR,
-  coed: COED_TOUR, ccjs: CCJS_TOUR, cea: CEA_TOUR, com: COM_TOUR,
+  coed: COED_TOUR, ccjs: CCJS_TOUR, cea: CEA_TOUR, com: COM_TOUR, lib: LIB_TOUR,
   'path-gate-coed': PATH_GATE_COED,
   'path-coed-alumni': PATH_COED_ALUMNI,
   'path-gate-cea': PATH_GATE_CEA,
   'path-library-registrar': PATH_LIBRARY_REGISTRAR,
   'path-com-sas': PATH_COM_SAS,
+
 };
 export const hasTour = (id) => Boolean(TOURS[id]);
 
