@@ -12,21 +12,17 @@ import {
   userLocationIcon,
   transformedObjectBuilding,
   VIRTUAL_LOCATIONS,
-  findNearestPanorama
 } from "../utils/map-leaflet";
-import { Globe, LocateFixed, Road, Footprints } from "lucide-react";
+import { Globe, LocateFixed, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
-import { hasTour, findDirectPathway } from "../static/nwssuTour";
+import { planWalk } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
-import { nwssuTourNodes } from "../static/tourNodes";
-import { useTour } from "../context/TourContext";
 
 export default function Map() {
   const { buildings } = useCampusData();
-  const { openUnavailable } = useUI();
-  const { openTour } = useTour();
+  const { openUnavailable, openTour } = useUI();
   // Real buildings PLUS lightweight virtual locations (e.g. the Gate) —
   // so GPS detection, the sidebar list, and map markers all treat both
   // the same way for routing/pathway purposes.
@@ -145,47 +141,32 @@ export default function Map() {
     }
   }
 
+  // "Walk there!" — opens the 360° tour on the best starting panorama
+  // (nearest GPS-tagged node → the building you're at → Main Gate) and
+  // guides you along the shortest chain of pathway panoramas into the
+  // selected building's entrance node. Routes are configured in
+  // WALK_ROUTES (static/tourNodes.js), not hard-coded here.
   const handleNavigateHere = () => {
-    if (!userLocation) {
-      setAlertMsg({ message: "Please get your current location first" });
+    if (!selectedBuilding) {
+      setAlertMsg({ message: "Select a destination building first." });
       return;
     }
 
-    const { building } = findBuildingAtLocation(userLocation, CAMPUS_BUILDING);
-    if (!building) {
-      setAlertMsg({ message: "Make sure you are on the university campus." });
+    const plan = planWalk(selectedBuilding.id, {
+      userLocation,
+      originBuildingId,
+    });
+
+    if (!plan) {
+      openUnavailable("A 360° walking route to this location isn't available yet.");
       return;
     }
 
-    const match = buildings.find((b) => b.id === building.id);
-
-    if (match && hasTour(match.id)) {
-      
-      const nodes = nwssuTourNodes[match.id];
-
-      const nearest = findNearestPanorama(
-        userLocation,
-        nodes
-      );
-
-      if (!nearest) {
-        openUnavailable(
-          "No panorama location is available for this tour yet."
-        );
-        return;
-      }
-
-      console.log(
-        `Nearest panorama: ${nearest.node.id} (${nearest.distance.toFixed(2)}m away)`
-      );
-
-      openTour(
-        match.id,
-        nearest.node.id
-      );
-    } else {
-      openUnavailable("Virtual Tour is currently not available for this location yet.");
-    }
+    openTour(selectedBuilding.id, {
+      startNode: plan.startNode,
+      destinationNode: plan.arriveNode,
+      destinationLabel: selectedBuilding.name,
+    });
   }
 
   const handleGetRoute = async () => {
@@ -212,19 +193,6 @@ export default function Map() {
       alert(error);  
     }
   }
-
-  // Direct pathway tour (if any) between the current origin building
-  // and the selected destination building. null when no origin
-  // building is known, or no direct pathway connects the two.
-  const pathwayMatch = useMemo(() => {
-    if (!originBuildingId || !selectedBuilding) return null;
-    return findDirectPathway(originBuildingId, selectedBuilding.id);
-  }, [originBuildingId, selectedBuilding]);
-
-  const handleWalkThere = () => {
-    if (!pathwayMatch) return;
-    openTour(pathwayMatch.pathwayId, { reverse: pathwayMatch.reverse, startFile: pathwayMatch.startFile });
-  };
 
   return (
     <>
@@ -430,19 +398,6 @@ export default function Map() {
               </div>
             )}
 
-            {route.coordinates && pathwayMatch && (
-              <button
-                type="button"
-                className="navigate-btn"
-                onClick={handleWalkThere}
-              ><Footprints size={18} style={{ marginRight: 6 }}/>Walk There</button>
-            )}
-
-            {route.coordinates && !pathwayMatch && originBuildingId && (
-              <p style={{ fontSize: 12, opacity: 0.7, margin: '6px 0 0' }}>
-                A 360° walking pathway isn't available for this route yet.
-              </p>
-            )}
           </figure>
         </section>
       </main>
