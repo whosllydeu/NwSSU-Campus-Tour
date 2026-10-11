@@ -95,3 +95,25 @@ export function findBuildingTourId(building, departments = [], hasTour) {
 
   return candidates.find((id) => hasTour(id)) || null;
 }
+
+/**
+ * Uploaded gallery images (Admin → Buildings) near a point, closest first.
+ * Only images with coordinates that are not marked "normal photo" are
+ * considered; whether an unmarked older image really is a 360° panorama
+ * is confirmed later with getBuildingPanoramas().
+ * @returns [{ building, item, distance }]
+ */
+export function uploadedImagesNear(buildings, latLng, metersBetween, maxMeters = Infinity) {
+  if (!Array.isArray(latLng) || latLng.length < 2) return [];
+  const out = [];
+  (buildings || []).forEach((building) => {
+    buildingGallery(building).forEach((item) => {
+      const lat = Number(item.lat);
+      const lng = Number(item.lng);
+      if (item.panorama === false || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const distance = metersBetween(latLng, [lat, lng]);
+      if (distance <= maxMeters) out.push({ building, item, distance });
+    });
+  });
+  return out.sort((a, b) => a.distance - b.distance);
+}

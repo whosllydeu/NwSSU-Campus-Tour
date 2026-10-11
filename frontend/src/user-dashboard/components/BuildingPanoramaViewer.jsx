@@ -20,6 +20,7 @@
 // Props:
 //   building   the building record (for the title)
 //   items      [{ id, src, caption, lat, lng, heading }] from getBuildingPanoramas()
+//   startId    optional — id of the view to open on (default: the first)
 //   onClose()
 // ============================================================
 import { useEffect, useRef, useState } from 'react';
@@ -92,9 +93,10 @@ function buildNodes(items, buildingName) {
   });
 }
 
-export default function BuildingPanoramaViewer({ building, items, onClose }) {
+export default function BuildingPanoramaViewer({ building, items, startId = null, onClose }) {
   const mountRef = useRef(null);
-  const [currentId, setCurrentId] = useState(items[0]?.id || null);
+  const firstId = items.some((item) => item.id === startId) ? startId : items[0]?.id || null;
+  const [currentId, setCurrentId] = useState(firstId);
   const [facing, setFacing] = useState(0);
   const [error, setError] = useState('');
 
@@ -116,6 +118,7 @@ export default function BuildingPanoramaViewer({ building, items, onClose }) {
       const nodes = buildNodes(items, buildingName);
       const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
       const multiple = nodes.length > 1;
+      const startNode = byId[firstId] || nodes[0];
 
       // Face the way you were walking when you arrive on a view.
       const arrivalYaw = (toNode, fromNode) => {
@@ -150,7 +153,7 @@ export default function BuildingPanoramaViewer({ building, items, onClose }) {
           positionMode: 'manual',
           renderMode: '3d',
           nodes,
-          startNodeId: nodes[0].id,
+          startNodeId: startNode.id,
           preload: true,
           showLinkTooltip: true,
           arrowStyle: { element: buildArrow, size: { width: 80, height: 80 } },
@@ -167,7 +170,7 @@ export default function BuildingPanoramaViewer({ building, items, onClose }) {
       viewer = new Viewer({
         container,
         loadingTxt: 'Loading 360° view…',
-        defaultYaw: nodes[0].data.forward * D2R,
+        defaultYaw: startNode.data.forward * D2R,
         defaultPitch: 0,
         touchmoveTwoFingers: false,
         mousewheelCtrlKey: false,
@@ -199,7 +202,7 @@ export default function BuildingPanoramaViewer({ building, items, onClose }) {
       clearTimeout(timer);
       if (viewer) viewer.destroy();
     };
-  }, [items, building]);
+  }, [items, building, firstId]);
 
   // Esc closes; lock page scroll while open.
   useEffect(() => {

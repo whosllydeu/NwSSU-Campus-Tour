@@ -23,7 +23,7 @@ export const VIRTUAL_LOCATIONS = [
     id: 'gate',
     abbr: 'GATE',
     name: 'Main Gate',
-    position: [12.070724, 124.596791], // TODO: replace with real gate coordinates
+    position: [12.070884, 124.596793], // TODO: replace with real gate coordinates
     detectionRadius: 30,
   },
 ];

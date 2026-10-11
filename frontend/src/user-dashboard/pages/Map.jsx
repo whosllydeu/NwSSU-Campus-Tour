@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import "../stylesheets/map.css";
-import {
-  MapContainer,
-  Marker,
-  TileLayer,
-  Popup,
-  Polyline,
-  CircleMarker,
-  Tooltip,
-} from "react-leaflet";
+import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { 
   allLocationIcon, 
   findBuildingAtLocation, 
+  getWalkingRoute, 
   RouteFitter, 
   selectedLocationIcon,
   TILELAYER_URL, 
@@ -20,29 +13,77 @@ import {
   transformedObjectBuilding,
   VIRTUAL_LOCATIONS,
 } from "../utils/map-leaflet";
-import { campusRouter, formatDistance } from "../../utils/campusRouting";
-import { Globe, LocateFixed, Network, Road } from "lucide-react";
+import { Globe, LocateFixed, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
-import { planWalk } from "../static/nwssuTour";
+import { planWalk, WALK_ROUTES } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
+import { findBuildingTourId } from "../utils/panorama";
 
-// How far (metres) a building/user position may be from a walkway and
-// still be snapped onto it when the building has no entranceNodeId yet.
-const MAX_SNAP_METERS = 60;
+// DEV ONLY: pretend to stand somewhere on campus while testing at home.
+// Put  VITE_TEST_LOCATION=12.071414,124.595566  in .env.local, restart
+// `npm run dev`, and remove it again before deploying.
+const TEST_LOCATION = (() => {
+  const raw = import.meta.env.VITE_TEST_LOCATION;
+  if (!raw) return null;
+  const [lat, lng] = String(raw).split(",").map(Number);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? [lat, lng] : null;
+})();
+
+const GEO_ERRORS = {
+  1: "Location permission was denied. Allow location access in your browser settings.",
+  2: "Your location could not be determined.",
+  3: "Getting your location timed out.",
+};
+
+/** Asks the browser for the user's position. Resolves to [lat, lng]. */
+function requestLocation() {
+  if (TEST_LOCATION) return Promise.resolve(TEST_LOCATION);
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by this browser."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve([position.coords.latitude, position.coords.longitude]),
+      (err) => reject(new Error(GEO_ERRORS[err.code] || "Unable to get your location.")),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  });
+}
 
 export default function Map() {
-  const { buildings } = useCampusData();
+  const { buildings, departments } = useCampusData();
+
   const { openUnavailable, openTour } = useUI();
   // Real buildings PLUS lightweight virtual locations (e.g. the Gate) —
   // so GPS detection, the sidebar list, and map markers all treat both
   // the same way for routing/pathway purposes.
-  const CAMPUS_BUILDING = [...transformedObjectBuilding(buildings), ...VIRTUAL_LOCATIONS];
+  // Memoised so it only rebuilds when `buildings` changes — otherwise the
+  // useMemo below (filteredBuildings) would recompute on every render.
+  const CAMPUS_BUILDING = useMemo(
+    () => [...transformedObjectBuilding(buildings), ...VIRTUAL_LOCATIONS],
+    [buildings]
+  );
+
+  // WALK_ROUTES (tours/walkRoutes.js) are keyed by short ids like 'ccis'.
+  // Buildings added from the Admin Dashboard get name-based ids, so also
+  // try the linked department and the abbreviation (same lookup the
+  // "Open 360 Tour" button uses).
+  const walkRouteKey = (id) => {
+    if (!id) return null;
+    if (WALK_ROUTES[id]) return id;
+    const full = buildings.find((b) => b.id === id) || CAMPUS_BUILDING.find((b) => b.id === id);
+    return findBuildingTourId(full, departments, (key) => Boolean(WALK_ROUTES[key]));
+  };
 
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => !isMobile());
   const [modalBuilding, setModalBuilding] = useState(null);
+  // Where userLocation came from: 'gps' (real current location) or
+  // 'origin' (picked from the list — temporary testing tool).
+  const [locationSource, setLocationSource] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -63,13 +104,8 @@ export default function Map() {
   const [route, setRoute] = useState({
     coordinates: null,
     distance: null,
-    duration: null,
-    steps: [],
-    edgeIds: [],
+    duration: null
   });
-  // Graph mode: overlays the pedestrian graph (nodes + edges) for debugging.
-  const [showGraph, setShowGraph] = useState(false);
-  const graphStats = useMemo(() => campusRouter.analyze(), []);
 
   const filteredBuildings = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -93,90 +129,82 @@ export default function Map() {
     if (pickMode === "origin") {
       setUserLocation(building.position);
       setOriginBuildingId(building.id);
+      setLocationSource('origin');
       setAlertMsg({ success: true, message: `📍 Origin set to ${building.name}.` });
     } else {
       setSelectedBuilding(building);
     }
   };
 
-  const getCurrentLocation = () => {
-    try {
-      setLoader("location");
-      if (!navigator.geolocation) {
-        return alert("Geolocation is not supported by this browser");
-      }
+  // Saves a location as the user's origin and detects which building it is at.
+  const applyLocation = (location) => {
+    const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
+    setUserLocation(location);
+    setOriginBuildingId(building?.id || null);
+    setLocationSource('gps');
+    return building;
+  };
 
-      navigator.geolocation.getCurrentPosition(
-        // Success getting location
-        (position) => {
-          const location = [
-            position.coords.latitude,
-            position.coords.longitude
-          ];
-          const testLocation = [12.071414, 124.595566];
-          const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
-          setUserLocation(testLocation);
-          setOriginBuildingId(building?.id || null);
-          setAlertMsg({
-            success: true,
+  const getCurrentLocation = async () => {
+    setLoader("location");
+    try {
+      const location = await requestLocation();
+      const building = applyLocation(location);
+      setAlertMsg({
+        success: true,
         message: building
           ? `📍Location Detected: You are at ${building.name}. (${location[0].toFixed(6)}, ${location[1].toFixed(6)})`
-          : `📍Location Detected: Not near a recognized location yet. Raw coordinates: ${location[0].toFixed(6)}, ${location[1].toFixed(6)}`
-         });
-          setLoader(null);
-        },
-        // Error
-        (err) => {
-          switch (err.code) {
-            case err.PERMISSION_DENIED:
-              alert("Location permission was denied.");
-              break;
-
-            case err.POSITION_UNAVAILABLE:
-              alert("Your location could not be determined.");
-              break;
-
-            case err.TIMEOUT:
-              alert("Getting your location timed out.");
-              break;
-
-            default:
-              alert("Unable to get your location.");
-          }
-          setLoader(null);
-        },
-        // Gps Options
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0,
-        },
-      );
-    } 
-    catch (error) {
-      alert(error);  
+          : `📍Location Detected: Not near a recognized location yet. Raw coordinates: ${location[0].toFixed(6)}, ${location[1].toFixed(6)}`,
+      });
+    } catch (error) {
+      setAlertMsg({ message: error.message });
+    } finally {
+      setLoader(null);
     }
-  }
+  };
 
   // "Walk there!" — opens the 360° tour on the best starting panorama
   // (nearest GPS-tagged node → the building you're at → Main Gate) and
   // guides you along the shortest chain of pathway panoramas into the
   // selected building's entrance node. Routes are configured in
   // WALK_ROUTES (static/tourNodes.js), not hard-coded here.
-  const handleNavigateHere = () => {
+  const handleNavigateHere = async () => {
     if (!selectedBuilding) {
       setAlertMsg({ message: "Select a destination building first." });
       return;
     }
 
-    const plan = planWalk(selectedBuilding.id, {
-      userLocation,
-      originBuildingId,
+    // First-time visitors may not know where they are — if no origin was
+    // set yet, quietly try GPS so the walk starts from the photo nearest
+    // to them instead of always from the Gate.
+    let location = userLocation;
+    let originId = originBuildingId;
+    if (!location && !originId) {
+      setLoader("destination");
+      try {
+        location = await requestLocation();
+        originId = applyLocation(location)?.id || null;
+      } catch {
+        location = null; // no permission / no GPS → fall back below
+      } finally {
+        setLoader(null);
+      }
+    }
+
+    const plan = planWalk(walkRouteKey(selectedBuilding.id) || selectedBuilding.id, {
+      userLocation: location,
+      originBuildingId: walkRouteKey(originId),
     });
 
     if (!plan) {
       openUnavailable("A 360° walking route to this location isn't available yet.");
       return;
+    }
+
+    if (plan.startDistance !== null) {
+      setAlertMsg({ success: true, message: `🚶 Starting from the 360° photo nearest to you (${Math.round(plan.startDistance)} m away).` });
+    } else if (location) {
+      setAlertMsg({ message: "No 360° photo with coordinates is close to you yet — starting from your origin / the Main Gate." });
     }
 
     openTour(selectedBuilding.id, {
@@ -186,31 +214,7 @@ export default function Map() {
     });
   }
 
-  // Look up a building's graph entrance. transformedObjectBuilding() may
-  // drop extra fields, so fall back to the raw building record.
-  const getEntranceNodeId = (building) => {
-    if (!building) return null;
-    const raw = buildings.find((item) => item.id === building.id);
-    return building.entranceNodeId ?? raw?.entranceNodeId ?? null;
-  };
-
-  // Turn a building or a raw position into something the router accepts:
-  // { entranceNodeId } when the building has one, otherwise the position,
-  // which the router snaps onto the nearest walkway.
-  const toRouteEndpoint = (building, fallbackPosition) => {
-    const entranceNodeId = getEntranceNodeId(building);
-    if (entranceNodeId && campusRouter.getNode(entranceNodeId)) {
-      return { entranceNodeId };
-    }
-    return fallbackPosition ?? building?.position ?? null;
-  };
-
-  const clearRoute = () =>
-    setRoute({ coordinates: null, distance: null, duration: null, steps: [], edgeIds: [] });
-
-  // On-campus routing is computed locally on the pedestrian graph (A*),
-  // so it follows the real walkways and also works offline.
-  const handleGetRoute = () => {
+  const handleGetRoute = async () => {
     setLoader("destination");
     try {
       if (!userLocation) {
@@ -225,45 +229,8 @@ export default function Map() {
         return;
       }
 
-      const originBuilding = originBuildingId
-        ? CAMPUS_BUILDING.find((item) => item.id === originBuildingId)
-        : null;
-
-      const result = campusRouter.route(
-        toRouteEndpoint(originBuilding, userLocation),
-        toRouteEndpoint(selectedBuilding),
-        { maxDistance: MAX_SNAP_METERS }
-      );
-
-      if (!result.ok) {
-        clearRoute();
-        const where = result.which === "start" ? "Your starting point" : selectedBuilding.name;
-        setAlertMsg({
-          message:
-            result.reason === "too-far"
-              ? `${where} is not near a mapped campus walkway yet (${Math.round(result.snap?.distance ?? 0)} m away).`
-              : result.message,
-        });
-        setLoader(null);
-        return;
-      }
-
-      setRoute({
-        coordinates: result.coordinates,
-        distance: result.distance,
-        duration: result.duration,
-        steps: result.steps,
-        edgeIds: result.edges.map((edge) => edge.id),
-      });
-
-      const snapNote =
-        result.startSnap && result.startSnap.distance > 15
-          ? ` Starting from the nearest walkway, ${Math.round(result.startSnap.distance)} m from you.`
-          : "";
-      setAlertMsg({
-        success: true,
-        message: `🚶 Route to ${selectedBuilding.name} found along campus walkways.${snapNote}`,
-      });
+      const result = await getWalkingRoute(userLocation, selectedBuilding.position);
+      setRoute(result);
       setLoader(null);
     } 
     catch (error) {
@@ -311,6 +278,27 @@ export default function Map() {
                   onClick={() => setPickMode("origin")}
                 >
                   📍 Pick Origin
+                </button>
+              </div>
+
+              {/* Current location — "Walk there!" then starts from the 360°
+                  photo nearest to where the user is standing. */}
+              <div style={{ padding: '8px 12px 0' }}>
+                <button
+                  type="button"
+                  className={
+                    loader === "location"
+                      ? "get-location-btn-loader"
+                      : locationSource === "gps" ? "destination-route-btn" : "get-location-btn"
+                  }
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={getCurrentLocation}
+                  disabled={loader === "location"}
+                >
+                  <LocateFixed size={18} style={{ marginRight: 6 }} />
+                  {loader === "location"
+                    ? "Locating..."
+                    : locationSource === "gps" ? "Using My Current Location ✓" : "Use My Current Location"}
                 </button>
               </div>
 
@@ -389,43 +377,6 @@ export default function Map() {
                 url={TILELAYER_URL}
               />
 
-              {/* Graph mode: pedestrian network overlay (drawn under the route) */}
-              {showGraph && (
-                <>
-                  {campusRouter.graph.edges.map((edge) => (
-                    <Polyline
-                      key={edge.id}
-                      positions={edge.geometry}
-                      interactive={false}
-                      pathOptions={{
-                        color: edge.connector ? "#dc2626" : "#64748b",
-                        weight: 3,
-                        opacity: 0.8,
-                        dashArray: edge.connector ? "6 6" : null,
-                      }}
-                    />
-                  ))}
-
-                  {campusRouter.graph.nodes.map((node) => (
-                    <CircleMarker
-                      key={node.id}
-                      center={node.coord}
-                      radius={5}
-                      pathOptions={{
-                        color: "#0f172a",
-                        weight: 2,
-                        fillColor: node.kind === "intersection" ? "#f59e0b" : "#ffffff",
-                        fillOpacity: 1,
-                      }}
-                    >
-                      <Tooltip direction="top" offset={[0, -4]}>
-                        {node.id} ({node.kind})
-                      </Tooltip>
-                    </CircleMarker>
-                  ))}
-                </>
-              )}
-
               {filteredBuildings.map((building) => {
                 const isSelected = selectedBuilding?.id === building.id;
 
@@ -457,13 +408,6 @@ export default function Map() {
 
               {route.coordinates && (
                 <>
-                  {showGraph && (
-                    <Polyline
-                      positions={route.coordinates}
-                      interactive={false}
-                      pathOptions={{ color: "#ffffff", weight: 10, opacity: 0.9 }}
-                    />
-                  )}
                   <Polyline
                     positions={route.coordinates}
                     pathOptions={{
@@ -512,36 +456,10 @@ export default function Map() {
               disabled={loader === "destination"}
               onClick={handleNavigateHere}
             ><Globe size={18} style={{ marginRight: 6 }}/>Walk there!</button>
-
-            <button
-              type="button"
-              className={showGraph ? "destination-route-btn" : "get-location-btn"}
-              onClick={() => setShowGraph((prev) => !prev)}
-              aria-pressed={showGraph}
-            ><Network size={18} style={{ marginRight: 6 }}/>{showGraph ? "Hide Graph" : "Show Graph"}</button>
-
-            {showGraph && (
-              <small style={{ display: 'block', marginTop: 6, opacity: 0.75 }}>
-                Graph: {graphStats.nodeCount} nodes · {graphStats.edgeCount} edges · {graphStats.componentCount} connected component{graphStats.componentCount === 1 ? "" : "s"}
-                {route.edgeIds.length > 0 && <> · route uses {route.edgeIds.join(" → ")}</>}
-              </small>
-            )}
-
             {route.coordinates && (
               <div className="route-info">
                 <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
-                <p><strong>Time:</strong> {Math.max(1, Math.ceil(route.duration / 60))} minutes</p>
-
-                {route.steps.length > 0 && (
-                  <ol style={{ margin: '8px 0 0', paddingLeft: 18 }}>
-                    {route.steps.map((step, index) => (
-                      <li key={index} style={{ marginBottom: 4 }}>
-                        {step.instruction}
-                        {step.distance > 0 && <small> ({formatDistance(step.distance)})</small>}
-                      </li>
-                    ))}
-                  </ol>
-                )}
+                <p><strong>Time:</strong> {Math.ceil(route.duration / 60)} minutes</p>
               </div>
             )}
 
@@ -556,6 +474,7 @@ export default function Map() {
           navigateLoading={loader === "navigation"}
         />
       )}
+
     </>
   );
 };
