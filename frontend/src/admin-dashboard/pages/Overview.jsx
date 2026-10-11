@@ -33,8 +33,8 @@ export default function Overview() {
       <div className="ad-stat-grid">
         <StatCard icon="🏛️" label="Total Buildings" value={stats.totalBuildings} accent="green" />
         <StatCard icon="🎓" label="Departments" value={stats.totalDepartments} accent="gold" />
-        <StatCard icon="🏢" label="Offices" value={stats.totalOffices} accent="blue" />
-        <StatCard icon="👥" label="Organizations" value={stats.totalOrganizations} accent="teal" />
+        <StatCard icon="📚" label="Programs" value={stats.totalPrograms} accent="blue" />
+        <StatCard icon="🖼️" label="Building Images" value={stats.totalGalleryImages} accent="teal" />
       </div>
 
       <div className="ad-two-col">
@@ -83,8 +83,6 @@ export default function Overview() {
         <div className="ad-quicklinks">
           <Link to="/admin/buildings" className="btn-ghost">Manage Buildings</Link>
           <Link to="/admin/departments" className="btn-ghost">Manage Departments</Link>
-          <Link to="/admin/offices" className="btn-ghost">Manage Offices</Link>
-          <Link to="/admin/organizations" className="btn-ghost">Manage Organizations</Link>
           <Link to="/admin/reports" className="btn-gold">View Reports</Link>
         </div>
       </div>

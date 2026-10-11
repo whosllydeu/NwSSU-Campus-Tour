@@ -35,7 +35,7 @@ function groupActivityByDay(activity, days) {
 }
 
 export default function Reports() {
-  const { isLoading, buildings, departments, organizations, activity, stats } = useAdmin();
+  const { isLoading, buildings, departments, activity, stats } = useAdmin();
   const { showToast } = useUI();
   const [typeFilter, setTypeFilter] = useState('all');
   const [activityRange, setActivityRange] = useState(30);
@@ -51,10 +51,13 @@ export default function Reports() {
     [departments]
   );
 
-  const orgsByCollege = useMemo(() => {
-    const byCollege = organizations.reduce((acc, o) => { acc[o.college] = (acc[o.college] || 0) + 1; return acc; }, {});
-    return Object.entries(byCollege).map(([college, count]) => ({ name: college, value: count }));
-  }, [organizations]);
+  const photoCoverage = useMemo(() => {
+    const withPhoto = buildings.filter((b) => Boolean(b.photo)).length;
+    return [
+      { name: 'With photo', value: withPhoto },
+      { name: 'No photo yet', value: buildings.length - withPhoto },
+    ].filter((d) => d.value > 0);
+  }, [buildings]);
 
   const activityTrend = useMemo(() => groupActivityByDay(activity, activityRange), [activity, activityRange]);
 
@@ -114,12 +117,12 @@ export default function Reports() {
         </div>
 
         <div className="ad-panel">
-          <h2>Organizations by College</h2>
+          <h2>Building Photo Coverage</h2>
           <div className="ad-chart-box">
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={orgsByCollege} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(d) => d.name}>
-                  {orgsByCollege.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                <Pie data={photoCoverage} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(d) => `${d.name}: ${d.value}`}>
+                  {photoCoverage.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: '#162a12', border: '1px solid rgba(200,168,75,0.3)', borderRadius: 8, color: '#f0ebe0' }} />
               </PieChart>
@@ -166,8 +169,8 @@ export default function Reports() {
       <div className="ad-panel">
         <h2>Summary</h2>
         <p className="ad-muted">
-          {stats.totalBuildings} buildings, {stats.totalDepartments} departments, {stats.totalOffices} offices and{' '}
-          {stats.totalOrganizations} organizations are currently tracked. {stats.totalPrograms} academic programs are
+          {stats.totalBuildings} buildings ({stats.buildingsWithPhoto} with a photo, {stats.totalGalleryImages} additional
+          images) and {stats.totalDepartments} departments are currently tracked. {stats.totalPrograms} academic programs are
           offered across {stats.totalDepartments} colleges, supported by {stats.totalFaculty} listed faculty members.
         </p>
       </div>

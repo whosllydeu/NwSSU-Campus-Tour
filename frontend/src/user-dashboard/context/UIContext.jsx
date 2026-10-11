@@ -18,7 +18,6 @@ export function UIProvider({ children }) {
   const [detail, setDetail] = useState(null); // { kind:'building'|'dept', id }
   const [tour, setTour] = useState(null); // { id, startNode, destinationNode, destinationLabel } — the active 360 tour, or null
   const [lightbox, setLightbox] = useState(null); // { src, caption }
-  const [modal, setModal] = useState(null); // { kind:'office'|'org', index }
   const [unavailable, setUnavailable] = useState(null); // { message } — full-screen "not ready yet" state
   const [toast, setToast] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,11 +77,6 @@ export function UIProvider({ children }) {
   const openLightbox = useCallback((src, caption = '') => setLightbox({ src, caption }), []);
   const closeLightbox = useCallback(() => setLightbox(null), []);
 
-  // ── Office / Org modal ──
-  const showOfficeModal = useCallback((index) => setModal({ kind: 'office', index }), []);
-  const showOrgModal = useCallback((index) => setModal({ kind: 'org', index }), []);
-  const closeModal = useCallback(() => setModal(null), []);
-
   // ── Toast ──
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -92,12 +86,12 @@ export function UIProvider({ children }) {
 
   // ── Body scroll lock while a full-screen overlay is open ──
   useEffect(() => {
-    const locked = Boolean(detail || lightbox || modal || tour || unavailable);
+    const locked = Boolean(detail || lightbox || tour || unavailable);
     document.body.style.overflow = locked ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [detail, lightbox, modal, tour, unavailable]);
+  }, [detail, lightbox, tour, unavailable]);
 
   // ── Close overlays on Escape (mirrors the original keydown handlers) ──
   useEffect(() => {
@@ -106,15 +100,14 @@ export function UIProvider({ children }) {
       if (lightbox) closeLightbox();
       else if (unavailable) closeUnavailable();
       else if (detail) closeDetail();
-      else if (modal) closeModal();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [lightbox, detail, modal, unavailable, closeLightbox, closeDetail, closeModal, closeUnavailable]);
+  }, [lightbox, detail, unavailable, closeLightbox, closeDetail, closeUnavailable]);
 
   // ── Trap the device/browser back button so it closes the topmost
   // overlay instead of leaving the app or changing pages. Overlays can
-  // nest (e.g. a modal opened from inside a Detail screen), so this
+  // nest (e.g. a lightbox opened from inside a Detail screen), so this
   // tracks the REAL order things were opened in — a true stack —
   // rather than a fixed priority guess.
   // Each nested open pushes one history entry (same URL, just a
@@ -128,7 +121,6 @@ export function UIProvider({ children }) {
 
   const overlays = {
     lightbox: Boolean(lightbox),
-    modal: Boolean(modal),
     detail: Boolean(detail),
     tour: Boolean(tour),
     unavailable: Boolean(unavailable),
@@ -168,7 +160,7 @@ export function UIProvider({ children }) {
 
   useEffect(() => {
     const closers = {
-      lightbox: closeLightbox, modal: closeModal, detail: closeDetail,
+      lightbox: closeLightbox, detail: closeDetail,
       tour: closeTour, unavailable: closeUnavailable, drawerOpen: closeDrawer,
     };
     const onPopState = () => {
@@ -186,17 +178,16 @@ export function UIProvider({ children }) {
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [closeLightbox, closeModal, closeDetail, closeTour, closeUnavailable, closeDrawer]);
+  }, [closeLightbox, closeDetail, closeTour, closeUnavailable, closeDrawer]);
 
   const value = {
-    detail, lightbox, modal, toast,
+    detail, lightbox, toast,
     tour, openTour, closeTour,
     unavailable, openUnavailable, closeUnavailable,
     searchQuery, setSearchQuery,
     drawerOpen, openDrawer, closeDrawer, toggleDrawer,
     openBuilding, openDept, closeDetail,
     openLightbox, closeLightbox,
-    showOfficeModal, showOrgModal, closeModal,
     showToast,
   };
 

@@ -6,5 +6,4 @@ export { default as DetailScreen } from "./DetailScreen";
 export { default as PanoramaTour } from "./PanoramaTour";
 export { default as Unavailable } from "./Unavailable";
 export { default as Lightbox } from "./Lightbox";
-export { default as Modal } from "./Modal";
 export { default as Toast } from "./Toast";

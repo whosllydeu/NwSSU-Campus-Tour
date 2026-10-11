@@ -1,0 +1,95 @@
+/* ══════════════════════════════════════════════════════
+   Building photo gallery (DetailScreen + map BuildingInfoModal)
+   ══════════════════════════════════════════════════════ */
+
+.bg-section { margin-bottom: 28px; }
+
+.bg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.bg-item { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.bg-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: block;
+}
+.bg-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.bg-thumb:hover img { transform: scale(1.05); }
+.bg-item.active .bg-thumb { outline: 2px solid var(--gold, #c8a84b); outline-offset: 2px; }
+
+.bg-item figcaption { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bg-caption {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #f0ebe0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bg-coords {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted, #8a8270);
+  text-decoration: none;
+}
+.bg-coords:hover { color: var(--gold, #c8a84b); }
+
+/* ── Header thumbnail that replaced the emoji icon ── */
+.bim-header-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+.building-modal-icon.has-img { overflow: hidden; padding: 0; }
+
+.ds-hero-thumb {
+  width: clamp(120px, 18vw, 220px);
+  height: clamp(120px, 18vw, 220px);
+  object-fit: cover;
+  border-radius: 24px;
+  display: block;
+}
+.ds-hero-emoji.has-img { opacity: 0.18; filter: grayscale(0.2) blur(1px); }
+
+.ds-contact-icon.has-img { font-size: 0; }
+.ds-contact-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-ico.has-img { padding: 0; overflow: hidden; }
+.sp-ico.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ph-icon { display: inline-flex; align-items: center; justify-content: center; }
+
+.bim-photo-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted, #8a8270);
+}

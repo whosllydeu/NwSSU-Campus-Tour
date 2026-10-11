@@ -2,8 +2,13 @@
 
 function fromDb(row) {
   if (!row) return row;
-  const { description, department_id, ...rest } = row;
-  return { ...rest, desc: description, dept: department_id };
+  const { description, department_id, images, ...rest } = row;
+  return {
+    ...rest,
+    desc: description || '',
+    dept: department_id,
+    images: Array.isArray(images) ? images : [],
+  };
 }
 
 export async function listBuildings() {

@@ -7,8 +7,6 @@ import {
 
 import { listBuildings } from "../services/buildings.service";
 import { listDepartments } from "../services/departments.service";
-import { listOffices } from "../services/offices.service";
-import { listOrganizations } from "../services/organizations.service";
 
 const DataContext = createContext(null);
 
@@ -30,8 +28,6 @@ export const DataProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [buildings, setBuildings] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [offices, setOffices] = useState([]);
-  const [organizations, setOrganizations] = useState([]);
 
   useEffect(() => {
     const initialData = async () => {
@@ -40,18 +36,12 @@ export const DataProvider = ({ children }) => {
         const [
           buildings,
           departments,
-          offices,
-          organizations,
         ] = await Promise.all([
             listBuildings(),
             listDepartments(),
-            listOffices(),
-            listOrganizations(),
         ]);
         setBuildings(buildings);
         setDepartments(departments);
-        setOffices(offices);
-        setOrganizations(organizations);
 
         setError(null);
         } catch (err) {
@@ -67,7 +57,7 @@ export const DataProvider = ({ children }) => {
   const value = {
     isLoading,
     error,
-    buildings, departments, offices, organizations
+    buildings, departments
   };
 
   return (

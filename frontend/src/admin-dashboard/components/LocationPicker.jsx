@@ -34,6 +34,7 @@ export default function LocationPicker({
   latitude,
   longitude,
   onChange,
+  helpText = 'Click anywhere on the map to select the building location. You can also drag the marker to fine-tune the position.',
 }) {
   const hasCoordinates = isValidCoordinate(latitude) && isValidCoordinate(longitude);
 
@@ -102,8 +103,7 @@ export default function LocationPicker({
       </div>
 
       <p className="ad-location-help">
-        Click anywhere on the map to select the building location.
-        You can also drag the marker to fine-tune the position.
+        {helpText}
       </p>
     </div>
   );

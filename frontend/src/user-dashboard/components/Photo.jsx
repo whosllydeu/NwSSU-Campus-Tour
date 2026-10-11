@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { Building2 } from 'lucide-react';
 import { useUI } from '../context/UIContext';
-import { img } from '../utils/assets';
+import { resolveImage } from '../utils/assets';
 
 const SIZE_CLASS = { hero: 'ds-photo-hero', card: 'ds-photo-card', dept: 'ds-photo-dept' };
 
-function Placeholder({ emoji, color, name }) {
+// Shown when a building has no uploaded photo yet.
+function Placeholder({ color, name }) {
   return (
     <div className="ph-inner">
-      <span className="ph-emoji">{emoji}</span>
+      <span className="ph-emoji ph-icon" style={{ color }}>
+        <Building2 size={72} strokeWidth={1.4} />
+      </span>
       <span className="ph-label" style={{ color }}>{name}</span>
     </div>
   );
@@ -15,11 +19,11 @@ function Placeholder({ emoji, color, name }) {
 
 // `tourId` — when set, the photo becomes a virtual-tour launcher
 // (clicking starts the 360° tour instead of enlarging the image).
-export default function Photo({ photo, emoji, color, name, context = 'hero', tourId }) {
+export default function Photo({ photo, color, name, context = 'hero', tourId }) {
   const { openLightbox, openTour } = useUI();
   const [errored, setErrored] = useState(false);
   const cls = SIZE_CLASS[context] || SIZE_CLASS.hero;
-  const src = img(photo);
+  const src = resolveImage(photo);
   const hasImg = Boolean(src) && !errored;
   const isTour = Boolean(tourId);
 
@@ -64,7 +68,7 @@ export default function Photo({ photo, emoji, color, name, context = 'hero', tou
 
   return (
     <div className={`${cls} is-placeholder`} style={{ background: `linear-gradient(135deg,${color}44,${color}22)` }}>
-      <Placeholder emoji={emoji} color={color} name={name} />
+      <Placeholder color={color} name={name} />
       <div className="photo-no-img-hint">📷 No photo yet</div>
     </div>
   );

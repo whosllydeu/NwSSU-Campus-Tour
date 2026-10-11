@@ -5,7 +5,6 @@ const LINKS = [
   { to: '/map', label: 'Map' },
   { to: '/buildings', label: 'Buildings' },
   { to: '/departments', label: 'Departments' },
-  { to: '/offices', label: 'Offices' },
   { to: '/about', label: 'About Us' },
 ];
 

@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import "../stylesheets/map.css";
-import { MapContainer, Marker, TileLayer, Popup, Polyline } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+  Popup,
+  Polyline,
+  CircleMarker,
+  Tooltip,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { 
   allLocationIcon, 
   findBuildingAtLocation, 
-  getWalkingRoute, 
   RouteFitter, 
   selectedLocationIcon,
   TILELAYER_URL, 
@@ -13,12 +20,17 @@ import {
   transformedObjectBuilding,
   VIRTUAL_LOCATIONS,
 } from "../utils/map-leaflet";
-import { Globe, LocateFixed, Road } from "lucide-react";
+import { campusRouter, formatDistance } from "../../utils/campusRouting";
+import { Globe, LocateFixed, Network, Road } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
 import { planWalk } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
+
+// How far (metres) a building/user position may be from a walkway and
+// still be snapped onto it when the building has no entranceNodeId yet.
+const MAX_SNAP_METERS = 60;
 
 export default function Map() {
   const { buildings } = useCampusData();
@@ -51,8 +63,13 @@ export default function Map() {
   const [route, setRoute] = useState({
     coordinates: null,
     distance: null,
-    duration: null
+    duration: null,
+    steps: [],
+    edgeIds: [],
   });
+  // Graph mode: overlays the pedestrian graph (nodes + edges) for debugging.
+  const [showGraph, setShowGraph] = useState(false);
+  const graphStats = useMemo(() => campusRouter.analyze(), []);
 
   const filteredBuildings = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -169,7 +186,31 @@ export default function Map() {
     });
   }
 
-  const handleGetRoute = async () => {
+  // Look up a building's graph entrance. transformedObjectBuilding() may
+  // drop extra fields, so fall back to the raw building record.
+  const getEntranceNodeId = (building) => {
+    if (!building) return null;
+    const raw = buildings.find((item) => item.id === building.id);
+    return building.entranceNodeId ?? raw?.entranceNodeId ?? null;
+  };
+
+  // Turn a building or a raw position into something the router accepts:
+  // { entranceNodeId } when the building has one, otherwise the position,
+  // which the router snaps onto the nearest walkway.
+  const toRouteEndpoint = (building, fallbackPosition) => {
+    const entranceNodeId = getEntranceNodeId(building);
+    if (entranceNodeId && campusRouter.getNode(entranceNodeId)) {
+      return { entranceNodeId };
+    }
+    return fallbackPosition ?? building?.position ?? null;
+  };
+
+  const clearRoute = () =>
+    setRoute({ coordinates: null, distance: null, duration: null, steps: [], edgeIds: [] });
+
+  // On-campus routing is computed locally on the pedestrian graph (A*),
+  // so it follows the real walkways and also works offline.
+  const handleGetRoute = () => {
     setLoader("destination");
     try {
       if (!userLocation) {
@@ -184,8 +225,45 @@ export default function Map() {
         return;
       }
 
-      const result = await getWalkingRoute(userLocation, selectedBuilding.position);
-      setRoute(result);
+      const originBuilding = originBuildingId
+        ? CAMPUS_BUILDING.find((item) => item.id === originBuildingId)
+        : null;
+
+      const result = campusRouter.route(
+        toRouteEndpoint(originBuilding, userLocation),
+        toRouteEndpoint(selectedBuilding),
+        { maxDistance: MAX_SNAP_METERS }
+      );
+
+      if (!result.ok) {
+        clearRoute();
+        const where = result.which === "start" ? "Your starting point" : selectedBuilding.name;
+        setAlertMsg({
+          message:
+            result.reason === "too-far"
+              ? `${where} is not near a mapped campus walkway yet (${Math.round(result.snap?.distance ?? 0)} m away).`
+              : result.message,
+        });
+        setLoader(null);
+        return;
+      }
+
+      setRoute({
+        coordinates: result.coordinates,
+        distance: result.distance,
+        duration: result.duration,
+        steps: result.steps,
+        edgeIds: result.edges.map((edge) => edge.id),
+      });
+
+      const snapNote =
+        result.startSnap && result.startSnap.distance > 15
+          ? ` Starting from the nearest walkway, ${Math.round(result.startSnap.distance)} m from you.`
+          : "";
+      setAlertMsg({
+        success: true,
+        message: `🚶 Route to ${selectedBuilding.name} found along campus walkways.${snapNote}`,
+      });
       setLoader(null);
     } 
     catch (error) {
@@ -311,6 +389,43 @@ export default function Map() {
                 url={TILELAYER_URL}
               />
 
+              {/* Graph mode: pedestrian network overlay (drawn under the route) */}
+              {showGraph && (
+                <>
+                  {campusRouter.graph.edges.map((edge) => (
+                    <Polyline
+                      key={edge.id}
+                      positions={edge.geometry}
+                      interactive={false}
+                      pathOptions={{
+                        color: edge.connector ? "#dc2626" : "#64748b",
+                        weight: 3,
+                        opacity: 0.8,
+                        dashArray: edge.connector ? "6 6" : null,
+                      }}
+                    />
+                  ))}
+
+                  {campusRouter.graph.nodes.map((node) => (
+                    <CircleMarker
+                      key={node.id}
+                      center={node.coord}
+                      radius={5}
+                      pathOptions={{
+                        color: "#0f172a",
+                        weight: 2,
+                        fillColor: node.kind === "intersection" ? "#f59e0b" : "#ffffff",
+                        fillOpacity: 1,
+                      }}
+                    >
+                      <Tooltip direction="top" offset={[0, -4]}>
+                        {node.id} ({node.kind})
+                      </Tooltip>
+                    </CircleMarker>
+                  ))}
+                </>
+              )}
+
               {filteredBuildings.map((building) => {
                 const isSelected = selectedBuilding?.id === building.id;
 
@@ -342,6 +457,13 @@ export default function Map() {
 
               {route.coordinates && (
                 <>
+                  {showGraph && (
+                    <Polyline
+                      positions={route.coordinates}
+                      interactive={false}
+                      pathOptions={{ color: "#ffffff", weight: 10, opacity: 0.9 }}
+                    />
+                  )}
                   <Polyline
                     positions={route.coordinates}
                     pathOptions={{
@@ -391,10 +513,35 @@ export default function Map() {
               onClick={handleNavigateHere}
             ><Globe size={18} style={{ marginRight: 6 }}/>Walk there!</button>
 
+            <button
+              type="button"
+              className={showGraph ? "destination-route-btn" : "get-location-btn"}
+              onClick={() => setShowGraph((prev) => !prev)}
+              aria-pressed={showGraph}
+            ><Network size={18} style={{ marginRight: 6 }}/>{showGraph ? "Hide Graph" : "Show Graph"}</button>
+
+            {showGraph && (
+              <small style={{ display: 'block', marginTop: 6, opacity: 0.75 }}>
+                Graph: {graphStats.nodeCount} nodes · {graphStats.edgeCount} edges · {graphStats.componentCount} connected component{graphStats.componentCount === 1 ? "" : "s"}
+                {route.edgeIds.length > 0 && <> · route uses {route.edgeIds.join(" → ")}</>}
+              </small>
+            )}
+
             {route.coordinates && (
               <div className="route-info">
                 <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
-                <p><strong>Time:</strong> {Math.ceil(route.duration / 60)} minutes</p>
+                <p><strong>Time:</strong> {Math.max(1, Math.ceil(route.duration / 60))} minutes</p>
+
+                {route.steps.length > 0 && (
+                  <ol style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+                    {route.steps.map((step, index) => (
+                      <li key={index} style={{ marginBottom: 4 }}>
+                        {step.instruction}
+                        {step.distance > 0 && <small> ({formatDistance(step.distance)})</small>}
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             )}
 
