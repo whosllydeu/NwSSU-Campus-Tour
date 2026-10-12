@@ -41,13 +41,26 @@ export const CONNECTIONS = [
   { from: 'pathway-gate-cea-08', to: 'cea-25', fromDir: 'right', toDir: 'left' }, // TODO tune
   // 11
   { from: 'pathway-gate-cea-10', to: 'cea-02', fromDir: 'right', toDir: 'back' },
-  // 12
-  { from: 'pathway-gate-cea-14', to: 'pathway-com-sas-01', fromDir: 'forward', toDir: 'back' },
+  // 12 — Gate→CEA ends at photo 12.
+  //   a) into the FIRST building of College of Management (com-01 … com-10)
+  {
+    from: 'pathway-gate-cea-12', to: 'com-01', fromDir: 'right', toDir: 'back', // TODO tune
+    label: 'Walk to the First Building of College of Management',
+  },
+  //   b) keep the outdoor path so "Walk there!" routes (e.g. to the Library) stay outside
+  {
+    from: 'pathway-gate-cea-12', to: 'pathway-com-sas-01', fromDir: 'forward', toDir: 'back',
+    label: 'Continue on COM → SAS Pathway',
+  },
   // 13
   { from: 'pathway-com-sas-14', to: 'cat-09', fromDir: 'forward', toDir: 'back' }, // TODO tune toDir
 
-  // Carried over from the old NODE_OVERRIDES (not in the new list).
-  // Delete these two lines if they are no longer correct.
-  { from: 'pathway-com-sas-03', to: 'com-01', fromDir: 'left', toDir: 'back', label: 'Enter College of Management' },
-  { from: 'pathway-com-sas-07', to: 'pathway-library-registrar-01', fromDir: 'right', toDir: 'left', label: 'Walk to Library' },
+  // SECOND building of College of Management (com-14 … com-20).
+  // (com-11 … com-13 are the road between the first and second building.)
+  {
+    from: 'pathway-com-sas-03', to: 'com-14', fromDir: 'right', toDir: 'back', // TODO tune toDir
+    label: 'Second Building of College of Management',
+  },
+  // "Walk to Library" pin sits on the Library passage (yaw -79°, tuned on-site with 🧭)
+  { from: 'pathway-com-sas-07', to: 'pathway-library-registrar-01', fromYaw: -79, toDir: 'left', label: 'Walk to Library' },
 ];

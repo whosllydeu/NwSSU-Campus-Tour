@@ -1,9 +1,14 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
+import { campusRouter } from "../../utils/campusRouting";
 
-// OSRM walking routing service api
-const OSRM_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/driving";
+// On-campus routing runs locally on the campus walkway graph
+// (src/data/campusGraph.json) using A* — no external routing service,
+// so routes stay on the real walkways and also work offline.
+
+// How far (metres) a point may be from a walkway and still be snapped onto it.
+export const MAX_SNAP_METERS = 60;
 
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -25,6 +30,7 @@ export const VIRTUAL_LOCATIONS = [
     name: 'Main Gate',
     position: [12.070884, 124.596793], // TODO: replace with real gate coordinates
     detectionRadius: 30,
+    entranceNodeId: 'GATE-CEA:1', // first point of the GATE-CEA walkway
   },
 ];
 
@@ -34,7 +40,8 @@ export const transformedObjectBuilding = (buildings) => {
     id: b.id,
     abbr: b.abbr,
     name: b.name,
-    position: [b.lat, b.lng]
+    position: [b.lat, b.lng],
+    entranceNodeId: b.entranceNodeId ?? null,
   }));
   return campBuildings;
 }
@@ -101,53 +108,38 @@ const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
   return EARTH_RADIUS * distanceAngle;
 }
 
-export const getWalkingRoute = async (start, destination) => {
-  const [startLat, startLng] = start;
-  const [destinationLat, destinationLng] = destination;
+/**
+ * Walking route along the campus walkways.
+ * `start` / `destination` can be [lat, lng] (snapped onto the nearest
+ * walkway) or { entranceNodeId } (routes from/to that graph node).
+ * Resolves to { coordinates, distance (m), duration (s), steps, edges, ... }.
+ * Throws an Error with a readable message when no route is possible.
+ */
+export const getWalkingRoute = async (start, destination, options = {}) => {
+  const result = campusRouter.route(start, destination, {
+    maxDistance: options.maxDistance ?? MAX_SNAP_METERS,
+  });
 
-  const coordinates =
-  	`${startLng},${startLat};` +
-  	`${destinationLng},${destinationLat}`
-  ;
-
-  const url =
-  	`${OSRM_URL}/${coordinates}` +
-  	`?overview=full` +
-  	`&geometries=geojson` +
-  	`&steps=true`
-  ;
-
-  const response = await fetch(url);
-
-  if (!response.ok) {
-  	throw new Error(
-  	  `Routing server returned HTTP ${response.status}`
-  	);
+  if (!result.ok) {
+    const where = result.which === "start" ? "Your starting point" : "The destination";
+    const message =
+      result.reason === "too-far"
+        ? `${where} is ${Math.round(result.snap?.distance ?? 0)} m from the nearest mapped campus walkway.`
+        : result.message;
+    const error = new Error(message);
+    error.reason = result.reason;
+    error.which = result.which;
+    throw error;
   }
-
-  const data = await response.json();
-
-  if (data.code !== "Ok") {
-  	throw new Error(
-  	  data.message ||
-  	  "OSRM could not calculate a walking route."
-  	);
-  }
-
-  if (!data.routes || data.routes.length === 0) {
-  	throw new Error("No walking route was found.");
-  }
-
-  const route = data.routes[0];
-  const routeCoordinates = route.geometry.coordinates.map(
-  	([lng, lat]) => [lat, lng]
-  );
 
   return {
-  	coordinates: routeCoordinates,
-  	distance: route.distance,
-  	duration: route.duration,
-  	steps: route.legs?.[0]?.steps || [],
+    coordinates: result.coordinates,
+    distance: result.distance,
+    duration: result.duration,
+    steps: result.steps,
+    edges: result.edges,
+    startSnap: result.startSnap,
+    endSnap: result.endSnap,
   };
 }
 
@@ -197,4 +189,3 @@ export const allLocationIcon = new L.Icon({
   shadowSize: [41, 41],
   className: "all-location-marker",
 });
-

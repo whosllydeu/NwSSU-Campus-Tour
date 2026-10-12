@@ -145,7 +145,9 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     let best = null;
     for (const e of graph.edges) {
       if (e.connector && !allowConnectors) continue;
-      if (walkways && !walkways.has(e.walkway)) continue;
+      if (e.snappable === false) continue; // side branches: pass through, never start/end
+      if (walkways && !walkways.has(e.walkway)) continue; // side branches: pass through, never start/end
+      //       if (walkways && !walkways.has(e.walkway)) continue;
       const g = e.geometry;
       let along = 0;
       for (let i = 0; i < g.length - 1; i++) {

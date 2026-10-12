@@ -22,10 +22,13 @@ export const TOURS = TOUR_GRAPH.tours;
 export const TOUR_NODES = TOUR_GRAPH.nodes;
 export const NODE_BY_ID = TOUR_GRAPH.byId;
 
-// How close (metres) the user must be to a GPS-tagged panorama for
-// "Walk there!" to start from it instead of the origin building / Gate.
-// Covers someone standing between two buildings (e.g. Gate ↔ CEA).
+// Kept for existing imports. "Walk there!" no longer uses it — it now
+// always starts at the nearest reachable PATHWAY photo, however far.
 export const GPS_START_RADIUS = 150;
+
+// "Walk there!": if the nearest reachable pathway photo is farther than
+// this (metres), the walk still starts there but the Map shows a notice.
+export const WALK_START_MAX_METERS = 40;
 
 // "360° near me": farther than this from every panorama = probably off campus.
 export const NEAR_ME_RADIUS = 300;
@@ -64,6 +67,37 @@ export const hasTour = (id) => Boolean(resolveTourId(id));
 
 export const tourOfNode = (nodeId) => TOURS[NODE_BY_ID[nodeId]?.data.tour] || null;
 
+/** True when a node belongs to an outdoor pathway tour (not a building interior). */
+export const isPathwayNode = (node) => tourOfNode(node?.id)?.kind === 'pathway';
+
+/** Readable place name for a node, e.g. "Gate – CEA Pathway · Walkway 3". */
+export function nodeLabel(nodeId) {
+  const node = NODE_BY_ID[nodeId];
+  if (!node) return '';
+  const title = tourOfNode(nodeId)?.title;
+  if (!title || title === node.name) return node.name || title || nodeId;
+  return node.name ? `${title} · ${node.name}` : title;
+}
+
+/**
+ * Pathway photos that still have no GPS coordinates (GPS_TODO).
+ * These can never be picked as a "Walk there!" start until they get [lat, lng].
+ * @returns [{ id, tour, name }]
+ */
+export function pathwayNodesMissingGps() {
+  return TOUR_NODES
+    .filter((n) => isPathwayNode(n) && !Array.isArray(n.data?.gps))
+    .map((n) => ({ id: n.id, tour: n.data.tour, name: n.name }));
+}
+
+if (import.meta.env?.DEV) {
+  const missing = pathwayNodesMissingGps();
+  if (missing.length) {
+    console.info(`[tour] ${missing.length} pathway photo(s) have no GPS yet — "Walk there!" cannot start from them:`);
+    console.table(missing);
+  }
+}
+
 /**
  * Node a tour should open on.
  * `startNode` may be a node id ('coed-07') or an old-style file name
@@ -82,47 +116,103 @@ export function getTourStart(tourId, startNode = null) {
 /** Shortest list of node ids from one panorama to another, or null. */
 export const findPath = (fromId, toId) => shortestPath(NODE_BY_ID, fromId, toId);
 
+// Reverse adjacency (who links TO each node), built once on first use.
+let reverseLinks = null;
+function getReverseLinks() {
+  if (reverseLinks) return reverseLinks;
+  reverseLinks = {};
+  for (const node of TOUR_NODES) {
+    for (const l of node.links) {
+      (reverseLinks[l.nodeId] ||= []).push(node.id);
+    }
+  }
+  return reverseLinks;
+}
+
+/** Set of node ids that have a link path INTO `targetId` (including itself). */
+function nodesThatCanReach(targetId) {
+  const rev = getReverseLinks();
+  const seen = new Set([targetId]);
+  const queue = [targetId];
+  while (queue.length) {
+    const id = queue.shift();
+    for (const from of rev[id] || []) {
+      if (!seen.has(from)) {
+        seen.add(from);
+        queue.push(from);
+      }
+    }
+  }
+  return seen;
+}
+
 /**
  * Plans a guided "Walk there!" route to a building.
+ *
  * Start node priority:
- *   1. GPS-tagged panoramas near the user, closest first — the first one
- *      that has a route to the destination wins (so a nearby photo with
- *      no connection doesn't send the user back to the Gate)
- *   2. the arrival node of the building the user is standing at
+ *   1. If an origin position is known (GPS, VITE_TEST_LOCATION, or the
+ *      picked origin building's coordinates): the PATHWAY photo with GPS
+ *      that is closest to it AND has a link path to the destination.
+ *      Building-interior photos are never used as the GPS start.
+ *   2. the arrival node of the origin building (no reachable GPS photo)
  *   3. the route's own startNode
  *   4. WALK_DEFAULT_START (Main Gate)
- * Returns { startNode, arriveNode, path, label, via, startDistance } or null.
- * `startDistance` is metres from the user to the start photo (null when
- * the start wasn't chosen by GPS).
+ *
+ * Returns null when the destination has no walk route, otherwise:
+ *   { startNode, arriveNode, path, steps, label, via,
+ *     startLabel, startSource: 'gps' | 'origin' | 'route' | 'gate',
+ *     startDistance (m, only for 'gps'), withinThreshold, maxStartMeters }
  */
-export function planWalk(destinationId, { userLocation = null, originBuildingId = null } = {}) {
+export function planWalk(
+  destinationId,
+  { userLocation = null, originBuildingId = null, maxStartMeters = WALK_START_MAX_METERS } = {}
+) {
   const route = WALK_ROUTES[destinationId];
   if (!route || !NODE_BY_ID[route.arriveNode]) return null;
 
-  const candidates = [];
-  const gpsDistance = {};
-  nodesNear(userLocation, GPS_START_RADIUS).forEach(({ node, distance }) => {
-    candidates.push(node.id);
-    gpsDistance[node.id] = distance;
+  const destTour = tourOfNode(route.arriveNode);
+  const base = {
+    arriveNode: route.arriveNode,
+    label: destTour?.kind === 'building' ? destTour.title : NODE_BY_ID[route.arriveNode].name,
+    via: TOURS[route.pathway]?.title || null,
+    maxStartMeters,
+  };
+  const build = (startNode, path, startSource, startDistance = null) => ({
+    ...base,
+    startNode,
+    path,
+    steps: path.length - 1,
+    startLabel: nodeLabel(startNode),
+    startSource,
+    startDistance,
+    withinThreshold: startDistance === null ? null : startDistance <= maxStartMeters,
   });
-  const origin = WALK_ROUTES[originBuildingId];
-  if (origin && originBuildingId !== destinationId) candidates.push(origin.arriveNode);
-  if (route.startNode) candidates.push(route.startNode);
-  candidates.push(WALK_DEFAULT_START);
 
-  for (const startNode of candidates) {
-    const path = findPath(startNode, route.arriveNode);
-    if (path) {
-      const destTour = tourOfNode(route.arriveNode);
-      return {
-        startNode,
-        arriveNode: route.arriveNode,
-        path,
-        label: destTour?.kind === 'building' ? destTour.title : NODE_BY_ID[route.arriveNode].name,
-        via: TOURS[route.pathway]?.title || null,
-        startDistance: gpsDistance[startNode] ?? null,
-      };
+  // 1) Nearest reachable pathway photo to the origin position.
+  if (Array.isArray(userLocation) && userLocation.length >= 2) {
+    const reachable = nodesThatCanReach(route.arriveNode);
+    let best = null;
+    for (const node of TOUR_NODES) {
+      if (!Array.isArray(node.data?.gps) || !isPathwayNode(node) || !reachable.has(node.id)) continue;
+      const distance = metersBetween(userLocation, node.data.gps);
+      if (!best || distance < best.distance) best = { node, distance };
     }
+    if (best) {
+      const path = findPath(best.node.id, route.arriveNode);
+      if (path) return build(best.node.id, path, 'gps', best.distance);
+    }
+  }
+
+  // 2–4) Fallbacks when no reachable pathway photo has coordinates.
+  const fallbacks = [];
+  const origin = WALK_ROUTES[originBuildingId];
+  if (origin && originBuildingId !== destinationId) fallbacks.push([origin.arriveNode, 'origin']);
+  if (route.startNode) fallbacks.push([route.startNode, 'route']);
+  fallbacks.push([WALK_DEFAULT_START, 'gate']);
+
+  for (const [startNode, source] of fallbacks) {
+    const path = findPath(startNode, route.arriveNode);
+    if (path) return build(startNode, path, source);
   }
   return null;
 }
