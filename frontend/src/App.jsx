@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UIProvider } from "./user-dashboard/context/UIContext";
 
 import Home from "./user-dashboard/pages/Home";
@@ -29,9 +29,24 @@ import {
 } from "./user-dashboard/components";
 import AdminLayout from "./admin-dashboard/components/AdminLayout";
 
+// User side: the address bar always stays "https://nwssu-campustour.vercel.app"
+// (pages are tracked in memory, so /map, /about … never show).
+// Admin side: opening /admin/... keeps normal URLs so admins can still
+// type the address, bookmark it, and refresh.
+const isAdminUrl = window.location.pathname.startsWith("/admin");
+const Router = isAdminUrl ? BrowserRouter : MemoryRouter;
+
+// If someone opens an old link like /map, start on that page but clean the
+// address bar back to "/".
+const startPath = isAdminUrl ? undefined : window.location.pathname || "/";
+if (!isAdminUrl && window.location.pathname !== "/") {
+  window.history.replaceState(null, "", "/");
+}
+const routerProps = isAdminUrl ? {} : { initialEntries: [startPath] };
+
 const App = () => {
   return (
-    <BrowserRouter>
+    <Router {...routerProps}>
       <UIProvider>
         <Routes>
           {/* User Routes Start */}
@@ -60,10 +75,8 @@ const App = () => {
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* This app is admin-only now — anything else (including "/")
-              lands on the dashboard, which itself redirects to login
-              if there's no authenticated admin session. */}
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          {/* Unknown paths: admin side → dashboard, user side → home */}
+          <Route path="*" element={<Navigate to={isAdminUrl ? "/admin" : "/"} replace />} />
           {/* Admin Routes End */}
         </Routes>
         
@@ -78,7 +91,7 @@ const App = () => {
         <Toast/>
         {/* UI Components End */}
       </UIProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
 
