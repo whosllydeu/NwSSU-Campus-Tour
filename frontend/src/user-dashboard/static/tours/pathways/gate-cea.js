@@ -11,7 +11,11 @@ const PATH_GATE_CEA = {
   folder: 'pathways/gate-cea',
   defaultName: 'Pathway',
   nodes: [
-    { id: 'pathway-gate-cea-01', yaw: -9, gps: [12.07089, 124.59679] },
+    // Main Gate: extra arrow (no pin) → Gate → College of Education photo 03
+    {
+      id: 'pathway-gate-cea-01', yaw: -9, gps: [12.07089, 124.59679],
+      links: [{ nodeId: 'pathway-gate-coed-03', dir: 'back' }], // TODO tune if needed
+    },
     { id: 'pathway-gate-cea-02', yaw: -9, gps: [12.07109, 124.59684] },
     { id: 'pathway-gate-cea-03', yaw: -9, gps: [12.07118, 124.59691] },
     { id: 'pathway-gate-cea-04', yaw: -9, gps: [12.07111, 124.59656] },

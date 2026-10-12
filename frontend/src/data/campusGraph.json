@@ -8,7 +8,8 @@
     {"id":"GATE-CEA","name":"Main Gate to CEA","points":11},
     {"id":"COM-SAS","name":"COM to SAS","points":12},
     {"id":"LIB-REG","name":"Library to Registrar","points":11},
-    {"id":"CCIS-ALUMNI","name":"CCIS to Alumni","points":21}
+    {"id":"CCIS-ALUMNI","name":"CCIS to Alumni","points":21},
+    {"id":"GATE-COED","name":"Gate to College of Education","points":23}
   ],
   "nodes": [
     {"id":"GATE-CEA:1","coord":[12.07089,124.59679],"kind":"junction","walkways":["GATE-CEA"]},
@@ -18,18 +19,27 @@
     {"id":"LIB-REG:11","coord":[12.07095,124.59666],"kind":"junction","walkways":["LIB-REG"]},
     {"id":"CCIS-ALUMNI:1","coord":[12.07086,124.59671],"kind":"junction","walkways":["CCIS-ALUMNI"]},
     {"id":"CCIS-ALUMNI:21","coord":[12.07039,124.59548],"kind":"endpoint","walkways":["CCIS-ALUMNI"]},
+    {"id":"GATE-COED:1","coord":[12.07098,124.59678],"kind":"junction","walkways":["GATE-COED"]},
+    {"id":"GATE-COED:23","coord":[12.070254,124.595648],"kind":"junction","walkways":["GATE-COED"]},
     {"id":"CCIS-ALUMNI:2","coord":[12.07091,124.5967],"kind":"junction","walkways":["CCIS-ALUMNI"]},
+    {"id":"GATE-CEA:2","coord":[12.07109,124.59684],"kind":"junction","walkways":["GATE-CEA"]},
+    {"id":"CCIS-ALUMNI:19","coord":[12.07034,124.59563],"kind":"junction","walkways":["CCIS-ALUMNI"]},
     {"id":"X:COM-SAS:5-6:LIB-REG:1-2","coord":[12.0719428,124.5964271],"kind":"intersection","walkways":["COM-SAS","LIB-REG"]}
   ],
   "edges": [
-    {"id":"GATE-CEA#1","from":"GATE-CEA:1","to":"GATE-CEA:11","walkway":"GATE-CEA","length":148.95,"geometry":[[12.07089,124.59679],[12.07109,124.59684],[12.07118,124.59691],[12.07148,124.59709],[12.07153,124.59718],[12.07164,124.5972],[12.07167,124.59725],[12.07174,124.59722],[12.07184,124.59718],[12.07193,124.59713],[12.07204,124.59709]]},
-    {"id":"COM-SAS#1","from":"GATE-CEA:11","to":"X:COM-SAS:5-6:LIB-REG:1-2","walkway":"COM-SAS","length":94.65,"geometry":[[12.07204,124.59709],[12.07208,124.59706],[12.07219,124.597],[12.07215,124.59688],[12.07201,124.59674],[12.07204,124.5965],[12.0719428,124.5964271]]},
-    {"id":"COM-SAS#2","from":"X:COM-SAS:5-6:LIB-REG:1-2","to":"COM-SAS:12","walkway":"COM-SAS","length":111.69,"geometry":[[12.0719428,124.5964271],[12.07188,124.59638],[12.07183,124.59633],[12.07182,124.59622],[12.07196,124.59608],[12.07177,124.59604],[12.07172,124.59592],[12.07157,124.59574]]},
+    {"id":"GATE-CEA#1","from":"GATE-CEA:1","to":"GATE-CEA:2","walkway":"GATE-CEA","length":22.89,"geometry":[[12.07089,124.59679],[12.07109,124.59684]]},
+    {"id":"GATE-CEA#2","from":"GATE-CEA:2","to":"GATE-CEA:11","walkway":"GATE-CEA","length":123.07,"geometry":[[12.07109,124.59684],[12.07167,124.59725],[12.07204,124.59709]]},
+    {"id":"COM-SAS#1","from":"GATE-CEA:11","to":"X:COM-SAS:5-6:LIB-REG:1-2","walkway":"COM-SAS","length":93.69,"geometry":[[12.07204,124.59709],[12.07219,124.597],[12.07201,124.59674],[12.07204,124.5965],[12.0719428,124.5964271]]},
+    {"id":"COM-SAS#2","from":"X:COM-SAS:5-6:LIB-REG:1-2","to":"COM-SAS:12","walkway":"COM-SAS","length":111.23,"geometry":[[12.0719428,124.5964271],[12.07183,124.59633],[12.07182,124.59622],[12.07196,124.59608],[12.07177,124.59604],[12.07157,124.59574]]},
     {"id":"LIB-REG#1","from":"LIB-REG:1","to":"X:COM-SAS:5-6:LIB-REG:1-2","walkway":"LIB-REG","length":14.17,"geometry":[[12.07207,124.59642],[12.0719428,124.5964271]]},
-    {"id":"LIB-REG#2","from":"X:COM-SAS:5-6:LIB-REG:1-2","to":"LIB-REG:11","walkway":"LIB-REG","length":147.06,"geometry":[[12.0719428,124.5964271],[12.07171,124.59644],[12.07165,124.59642],[12.07168,124.59648],[12.07161,124.5965],[12.07147,124.59642],[12.07139,124.59652],[12.07123,124.59646],[12.07119,124.59665],[12.0711,124.59666],[12.07095,124.59666]]},
+    {"id":"LIB-REG#2","from":"X:COM-SAS:5-6:LIB-REG:1-2","to":"LIB-REG:11","walkway":"LIB-REG","length":146.65,"geometry":[[12.0719428,124.5964271],[12.07165,124.59642],[12.07168,124.59648],[12.07161,124.5965],[12.07147,124.59642],[12.07139,124.59652],[12.07123,124.59646],[12.07119,124.59665],[12.07095,124.59666]]},
     {"id":"CCIS-ALUMNI#1","from":"CCIS-ALUMNI:1","to":"CCIS-ALUMNI:2","walkway":"CCIS-ALUMNI","length":5.67,"geometry":[[12.07086,124.59671],[12.07091,124.5967]]},
-    {"id":"CCIS-ALUMNI#2","from":"CCIS-ALUMNI:2","to":"CCIS-ALUMNI:21","walkway":"CCIS-ALUMNI","length":233.11,"geometry":[[12.07091,124.5967],[12.07067,124.59642],[12.07068,124.59644],[12.07064,124.59634],[12.07066,124.59638],[12.07067,124.59639],[12.07067,124.5964],[12.07042,124.59633],[12.07022,124.59619],[12.07019,124.5962],[12.07008,124.59616],[12.07011,124.59601],[12.07027,124.59592],[12.07025,124.59584],[12.07021,124.59576],[12.07034,124.59573],[12.07034,124.59563],[12.07037,124.59555],[12.07039,124.59548]]},
+    {"id":"CCIS-ALUMNI#2","from":"CCIS-ALUMNI:2","to":"CCIS-ALUMNI:19","walkway":"CCIS-ALUMNI","length":208.54,"geometry":[[12.07091,124.5967],[12.07064,124.59634],[12.07067,124.5964],[12.07008,124.59616],[12.07011,124.59601],[12.07027,124.59592],[12.07021,124.59576],[12.07034,124.59573],[12.07034,124.59563]]},
+    {"id":"CCIS-ALUMNI#3","from":"CCIS-ALUMNI:19","to":"CCIS-ALUMNI:21","walkway":"CCIS-ALUMNI","length":17.23,"geometry":[[12.07034,124.59563],[12.07039,124.59548]]},
+    {"id":"GATE-COED#1","from":"GATE-COED:1","to":"GATE-COED:23","walkway":"GATE-COED","length":232.07,"geometry":[[12.07098,124.59678],[12.07072,124.59676],[12.0706,124.5966],[12.06992,124.59633],[12.070111,124.595592],[12.070254,124.595648]]},
     {"id":"CONNECTOR#1","from":"LIB-REG:11","to":"CCIS-ALUMNI:1","walkway":"CONNECTOR","connector":true,"note":"LIB-REG end joins CCIS-ALUMNI start","length":11.39,"geometry":[[12.07095,124.59666],[12.07086,124.59671]]},
-    {"id":"CONNECTOR#2","from":"CCIS-ALUMNI:2","to":"GATE-CEA:1","walkway":"CONNECTOR","connector":true,"note":"CCIS-ALUMNI point 2 joins the main gate","length":10.04,"geometry":[[12.07091,124.5967],[12.07089,124.59679]]}
+    {"id":"CONNECTOR#2","from":"CCIS-ALUMNI:2","to":"GATE-CEA:1","walkway":"CONNECTOR","connector":true,"note":"CCIS-ALUMNI point 2 joins the main gate","length":10.04,"geometry":[[12.07091,124.5967],[12.07089,124.59679]]},
+    {"id":"CONNECTOR#3","from":"GATE-COED:1","to":"GATE-CEA:2","walkway":"CONNECTOR","connector":true,"note":"photo gate-coed-01 links to gate-cea-02","length":13.86,"geometry":[[12.07098,124.59678],[12.07109,124.59684]]},
+    {"id":"CONNECTOR#4","from":"GATE-COED:23","to":"CCIS-ALUMNI:19","walkway":"CONNECTOR","connector":true,"note":"GATE-COED end goes straight north to CCIS-ALUMNI","length":9.76,"geometry":[[12.070254,124.595648],[12.07034,124.59563]]}
   ]
 }

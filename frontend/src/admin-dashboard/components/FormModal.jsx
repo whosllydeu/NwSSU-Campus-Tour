@@ -5,6 +5,10 @@ import PathwayLinkField, { initialPathwayLinkValue } from "./PathwayLinkField.js
 import { fromEditableValue, isValidCoordinate, toEditableValue } from "../utils/admin-map-leaflet.js";
 import { getPreparedInfo } from "../utils/image-compress.js";
 
+// Native dropdown lists ignore the dark admin theme, so give every
+// <option> an explicit readable colour (dark text on white).
+const OPTION_STYLE = { color: '#111827', backgroundColor: '#ffffff' };
+
 let uidCounter = 0;
 const nextUid = () => {
   uidCounter += 1;
@@ -485,8 +489,8 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                   />
                 ) : field.type === 'select' ? (
                   <select value={values[field.key] ?? ''} disabled={submitting} onChange={(e) => handleChange(field.key, e.target.value)}>
-                    <option value="" disabled>Select…</option>
-                    {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                    <option value="" disabled style={OPTION_STYLE}>Select…</option>
+                    {field.options.map((option) => <option key={option} value={option} style={OPTION_STYLE}>{option}</option>)}
                   </select>
                 ) : (
                   <input

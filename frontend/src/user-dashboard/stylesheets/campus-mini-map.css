@@ -1,0 +1,72 @@
+/* Real campus map inside the "Campus Overview" card */
+.cmm {
+  position: relative;
+  height: 150px;
+  margin: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cmm-map {
+  width: 100%;
+  height: 100%;
+  background: #14251a;
+}
+/* Darken the street map so it blends with the green glass theme */
+.cmm-map .leaflet-tile-pane {
+  filter: brightness(0.55) saturate(0.6) sepia(0.25) hue-rotate(60deg);
+}
+.cmm-label-wrap {
+  background: none;
+  border: none;
+}
+.cmm-label {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.cmm-credit {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  z-index: 500;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.cmm-link {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  z-index: 500;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+}
+.cmm:hover .cmm-link {
+  color: #d4b25a;
+}
+
+/* Show the Campus Overview card on phones too (it was hidden on mobile) */
+@media (max-width: 900px) {
+  .hero-card-wrap {
+    display: block !important;
+    width: 100%;
+    max-width: 480px;
+    margin: 24px auto 0;
+  }
+  .hero-card-wrap .hero-card {
+    width: 100%;
+  }
+  .cmm {
+    height: 170px;
+    margin: 12px;
+  }
+}

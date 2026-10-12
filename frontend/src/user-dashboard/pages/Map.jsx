@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "../stylesheets/map.css";
+import "../stylesheets/map-actions.css";
 import {
   MapContainer,
   Marker,
@@ -578,7 +579,7 @@ export default function Map() {
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', columnGap: 6 }}>
+            <div className="map-btn-row">
               <button
                 type="button"
                 className={loader === "location" ? "get-location-btn-loader" : "get-location-btn"}
@@ -601,7 +602,7 @@ export default function Map() {
               onClick={handleNavigateHere}
             ><Globe size={18} style={{ marginRight: 6 }}/>Walk there!</button>
 
-            <div style={{ display: 'flex', alignItems: 'center', columnGap: 6 }}>
+            <div className="map-btn-row">
               <button
                 type="button"
                 className={showGraph ? "destination-route-btn" : "get-location-btn"}

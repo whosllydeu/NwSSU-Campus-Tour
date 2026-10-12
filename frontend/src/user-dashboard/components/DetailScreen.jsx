@@ -1,7 +1,7 @@
 import { useUI } from '../context/UIContext';
 import { useCampusData } from '../context/DataContext';
 import { capitalize } from '../utils/helpers';
-import { hasTour, PATH_LINKS } from '../static/nwssuTour';
+import { hasTour } from '../static/nwssuTour';
 import { resolveImage } from '../utils/assets';
 import { findBuildingTourId } from '../utils/panorama';
 import { Building2, GraduationCap } from 'lucide-react';
@@ -92,7 +92,6 @@ function BuildingDetail({ id }) {
   if (!b) return null;
 
   const tourId = findBuildingTourId(b, departments, hasTour);
-  const walks = PATH_LINKS[b.id] || PATH_LINKS[tourId] || [];
 
   const startTour = () => {
     if (tourId) openTour(tourId);
@@ -135,18 +134,11 @@ function BuildingDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
-          {walks.map((w) => (
-            <button key={w.id} className="btn-ghost ds-tour-btn" onClick={() => openTour(w.id)}>
-              🚶 {w.label}
-            </button>
-          ))}
         </div>
 
         <div className="ds-photo-row">
-          <Photo photo={rawPhoto} color={b.color} name={b.name} context="hero" tourId={tourId || undefined} />
-          {tourId
-            ? <div className="ds-photo-note"><p>🌐 <strong>Tap the photo to start the virtual tour.</strong></p></div>
-            : <PhotoNote rawPhoto={rawPhoto} />}
+          <Photo photo={rawPhoto} color={b.color} name={b.name} context="hero" />
+          <PhotoNote rawPhoto={rawPhoto} />
         </div>
 
         <BuildingGallery building={b} />
@@ -192,7 +184,6 @@ function DeptDetail({ id }) {
   const organizations = asList(d.organizations);
   const offices = asList(d.offices).length ? d.offices : asList(building?.offices);
   const tourId = hasTour(d.id) ? d.id : (findBuildingTourId(building, [d], hasTour) || undefined);
-  const walks = PATH_LINKS[building?.id] || PATH_LINKS[tourId] || [];
 
   const startTour = () => {
     if (tourId) openTour(tourId);
@@ -231,18 +222,11 @@ function DeptDetail({ id }) {
       <div className="ds-body">
         <div className="ds-primary-actions">
           <button className="btn-primary ds-tour-btn" onClick={startTour}>🌐 Start Virtual Tour</button>
-          {walks.map((w) => (
-            <button key={w.id} className="btn-ghost ds-tour-btn" onClick={() => openTour(w.id)}>
-              🚶 {w.label}
-            </button>
-          ))}
         </div>
 
         <div className="ds-photo-row">
-          <Photo photo={rawPhoto} color={d.color} name={building?.name || d.name} context="hero" tourId={tourId} />
-          {tourId
-            ? <div className="ds-photo-note"><p>🌐 <strong>Tap the photo to start the virtual tour.</strong></p></div>
-            : <PhotoNote rawPhoto={rawPhoto} />}
+          <Photo photo={rawPhoto} color={d.color} name={building?.name || d.name} context="hero" />
+          <PhotoNote rawPhoto={rawPhoto} />
         </div>
 
         {building && <BuildingGallery building={building} />}

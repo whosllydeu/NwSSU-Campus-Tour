@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { COLLEGES, MINI_MAP, QUICK } from "../static/campusData";
+import { COLLEGES, QUICK } from "../static/campusData";
 import { useUI } from "../context/UIContext";
 import { Navbar } from "../components";
+import CampusMiniMap from "../components/CampusMiniMap";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -40,22 +41,7 @@ export default function Home() {
                   <div className="hs-div" />
                   <div className="hs-item"><b>50+</b><span>Offices</span></div>
                 </div>
-                <div className="hcard-mini-map" onClick={() => navigate('/map')}>
-                  <div className="hmm-inner">
-                    <div className="hmm-road rh" />
-                    <div className="hmm-road rv" />
-                    {MINI_MAP.map((m) => (
-                      <div
-                        key={m.code}
-                        className={`hmm-b${m.big ? ' big' : ''}`}
-                        style={{ left: m.left, top: m.top, background: m.bg }}
-                      >
-                        {m.code}
-                      </div>
-                    ))}
-                    <div className="hmm-tap">View all buildings →</div>
-                  </div>
-                </div>
+                <CampusMiniMap onOpen={() => navigate('/map')} />
               </div>
             </div>
           </div>

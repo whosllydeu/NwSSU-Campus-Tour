@@ -26,17 +26,20 @@ export const CONNECTIONS = [
   { from: 'pathway-library-registrar-11', to: 'pathway-ccis-alumni-01', fromDir: 'forward', toDir: 'back' },
   // 3
   { from: 'pathway-library-registrar-10', to: 'con-02', fromDir: 'left', toDir: 'right' }, // TODO tune
-  // 4
-  { from: 'pathway-gate-coed-14', to: 'coed-07', fromDir: 'left', toDir: 'right' }, // TODO tune toDir
-  // 5
+  // 4 — "Walk to College of Education" pin on Gate→COED photo 13
+  //     (-145° = on the building, 45° clear of the forward arrow at -100°)
+  { from: 'pathway-gate-coed-13', to: 'coed-07', fromYaw: -145, toDir: 'right', label: 'Walk to College of Education' }, // TODO tune toDir
+  // 5 — Gate→COED ends (photo 25) where CCIS→Alumni photo 27 is
   { from: 'pathway-ccis-alumni-27', to: 'pathway-gate-coed-25', fromDir: 'left', toDir: 'forward' }, // TODO tune fromDir
+  // 5b — Gate→COED side path: photo 17's forward arrow leads to CCIS→Alumni photo 21
+  { from: 'pathway-gate-coed-17', to: 'pathway-ccis-alumni-21', fromDir: 'forward', toDir: 'left' }, // TODO tune toDir
   // 6
   { from: 'pathway-ccis-alumni-09', to: 'ccis-08', fromDir: 'left', toDir: 'right' }, // TODO tune
   // 7 + 8 — enter CCJS from node 25, leave CCJS toward node 26
   { from: 'pathway-ccis-alumni-25', to: 'ccjs-06', fromDir: 'left', oneWay: true }, // TODO tune
   { from: 'ccjs-06', to: 'pathway-ccis-alumni-26', fromDir: 'right', oneWay: true, label: 'Exit to Pathway' }, // TODO tune
-  // 9
-  { from: 'pathway-gate-cea-01', to: 'pathway-gate-coed-03', fromDir: 'back', toDir: 'right' }, // TODO tune toDir
+  // 9 — Main Gate (Gate→CEA photo 01) → Gate→COED photo 03 is a plain arrow
+  //     (no pin); it is set in pathways/gate-cea.js.
   // 10
   { from: 'pathway-gate-cea-08', to: 'cea-25', fromDir: 'right', toDir: 'left' }, // TODO tune
   // 11
