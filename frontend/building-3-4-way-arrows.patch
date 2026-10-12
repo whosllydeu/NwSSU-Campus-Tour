@@ -1,0 +1,244 @@
+diff --git a/frontend/src/admin-dashboard/components/FormModal.jsx b/frontend/src/admin-dashboard/components/FormModal.jsx
+index e790813..b827d4c 100644
+--- a/frontend/src/admin-dashboard/components/FormModal.jsx
++++ b/frontend/src/admin-dashboard/components/FormModal.jsx
+@@ -31,6 +31,7 @@ function initialGalleryValue(raw) {
+       // undefined for images saved before the 360° flag existed
+       panorama: typeof img.panorama === 'boolean' ? img.panorama : undefined,
+       heading: Number.isFinite(Number(img.heading)) && img.heading !== null ? img.heading : '',
++      links: Array.isArray(img.links) ? img.links.map((l) => ({ to: l.to || '', yaw: l.yaw ?? '' })) : [],
+     }));
+ }
+ 
+@@ -154,6 +155,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
+       caption: '',
+       panorama: Boolean(getPreparedInfo(file)?.panorama),
+       heading: '',
++      links: [],
+     }));
+     updateGallery(key, (items) => [...items, ...additions]);
+   }, [makePreview, updateGallery]);
+@@ -225,6 +227,10 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
+           if (item.heading !== '' && item.heading !== undefined && !inRange(item.heading, -360, 360)) {
+             e.heading = 'Must be between -360 and 360';
+           }
++          (item.links || []).forEach((l) => {
++            if (!l.to) e.links = 'Choose where each extra arrow goes';
++            else if (l.yaw === '' || !inRange(l.yaw, -360, 360)) e.links = 'Each extra arrow needs a direction between -360 and 360';
++          });
+           if (Object.keys(e).length) itemErrors[item.uid] = e;
+         });
+         if (Object.keys(itemErrors).length) {
+@@ -295,6 +301,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
+ 
+         if (field.type === 'gallery') {
+           const result = [];
++          const galleryIds = new Set((values[field.key] || []).map((g) => g.id || g.uid));
+           for (const item of values[field.key] || []) {
+             let { url, path } = item;
+             if (item.file) {
+@@ -314,6 +321,10 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
+               ...(item.heading !== '' && item.heading !== undefined && Number.isFinite(Number(item.heading))
+                 ? { heading: Number(item.heading) }
+                 : {}),
++              // extra arrows (3–4 way junctions); drop arrows to removed images
++              links: (item.links || [])
++                .filter((l) => l.to && galleryIds.has(l.to) && Number.isFinite(Number(l.yaw)))
++                .map((l) => ({ to: l.to, yaw: Number(l.yaw) })),
+             });
+           }
+           out[field.key] = result;
+diff --git a/frontend/src/admin-dashboard/components/ImageFields.jsx b/frontend/src/admin-dashboard/components/ImageFields.jsx
+index 8b3f97e..0e33416 100644
+--- a/frontend/src/admin-dashboard/components/ImageFields.jsx
++++ b/frontend/src/admin-dashboard/components/ImageFields.jsx
+@@ -290,6 +290,16 @@ export function GalleryField({
+                   </label>
+                 )}
+ 
++                {item.panorama === true && (
++                  <ExtraArrows
++                    item={item}
++                    items={items}
++                    error={itemErrors.links}
++                    disabled={disabled}
++                    onChange={(links) => onChangeItem(item.uid, { links })}
++                  />
++                )}
++
+                 <div className="ad-gallery-actions">
+                   <button
+                     type="button"
+@@ -384,4 +394,66 @@ export function GalleryField({
+       <input ref={replaceRef} type="file" accept={ACCEPT_ATTR} hidden onChange={handleReplace} />
+     </div>
+   );
+-}
+\ No newline at end of file
++}
++
++/* ──────────────────────────────────────────────────────────
++   Extra navigation arrows for one 360° image (junctions).
++   Forward/back arrows come from the gallery order; these add
++   up to 2 more so a view can have 3–4 directions in total.
++   Each arrow: { to: <id of another 360° image>, yaw: degrees }
++   ────────────────────────────────────────────────────────── */
++const MAX_EXTRA_ARROWS = 2;
++
++function ExtraArrows({ item, items, error, disabled, onChange }) {
++  const links = Array.isArray(item.links) ? item.links : [];
++  const selfId = item.id || item.uid;
++  const targets = items
++    .map((it, i) => ({ id: it.id || it.uid, label: it.caption || `Image ${i + 1}`, panorama: it.panorama }))
++    .filter((t) => t.id !== selfId && t.panorama === true);
++
++  const update = (index, patch) => onChange(links.map((l, i) => (i === index ? { ...l, ...patch } : l)));
++  const remove = (index) => onChange(links.filter((_, i) => i !== index));
++  const add = () => onChange([...links, { to: '', yaw: '' }]);
++
++  return (
++    <div className="ad-gallery-label">
++      <span>Extra arrows (for 3–4 way junctions)</span>
++      {links.map((link, index) => (
++        <div className="ad-gallery-coords" key={index}>
++          <select
++            value={link.to}
++            disabled={disabled}
++            onChange={(e) => update(index, { to: e.target.value })}
++            aria-label="Arrow goes to"
++          >
++            <option value="">Goes to…</option>
++            {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
++          </select>
++          <div style={{ display: 'flex', gap: 6 }}>
++            <input
++              type="number"
++              step="1"
++              min="-360"
++              max="360"
++              placeholder="Direction (°)"
++              value={link.yaw}
++              disabled={disabled}
++              onChange={(e) => update(index, { yaw: e.target.value })}
++              aria-label="Arrow direction in degrees"
++            />
++            <button type="button" className="btn-ghost btn-sm" disabled={disabled} onClick={() => remove(index)} aria-label="Remove arrow">✕</button>
++          </div>
++        </div>
++      ))}
++      {links.length < MAX_EXTRA_ARROWS && (
++        <button type="button" className="btn-ghost btn-sm" disabled={disabled || targets.length === 0} onClick={add}>
++          + Add arrow
++        </button>
++      )}
++      <span className="ad-field-help">
++        Use for a hallway or path that splits. Pick the image the arrow leads to and the direction (copy the "Facing …°" number). Add the matching arrow on that image too so users can come back.
++      </span>
++      {error && <span className="ad-error">{error}</span>}
++    </div>
++  );
++}
+diff --git a/frontend/src/admin-dashboard/services/buildings.service.js b/frontend/src/admin-dashboard/services/buildings.service.js
+index 651aa23..c902db0 100644
+--- a/frontend/src/admin-dashboard/services/buildings.service.js
++++ b/frontend/src/admin-dashboard/services/buildings.service.js
+@@ -20,9 +20,18 @@ function cleanImages(images) {
+       ...(img.heading !== '' && img.heading !== undefined && img.heading !== null && Number.isFinite(Number(img.heading))
+         ? { heading: Number(img.heading) }
+         : {}),
++      ...(cleanLinks(img.links).length ? { links: cleanLinks(img.links) } : {}),
+     }));
+ }
+ 
++// Extra navigation arrows of a 360° image: [{ to: <image id>, yaw: <degrees> }]
++function cleanLinks(links) {
++  if (!Array.isArray(links)) return [];
++  return links
++    .filter((l) => l && l.to && l.yaw !== '' && l.yaw !== null && Number.isFinite(Number(l.yaw)))
++    .map((l) => ({ to: String(l.to), yaw: Number(l.yaw) }));
++}
++
+ function fromDb(row) {
+   if (!row) return row;
+   const { description, department_id, images, ...rest } = row;
+diff --git a/frontend/src/user-dashboard/components/BuildingPanoramaViewer.jsx b/frontend/src/user-dashboard/components/BuildingPanoramaViewer.jsx
+index cf3b330..1889c92 100644
+--- a/frontend/src/user-dashboard/components/BuildingPanoramaViewer.jsx
++++ b/frontend/src/user-dashboard/components/BuildingPanoramaViewer.jsx
+@@ -39,6 +39,7 @@ import '../stylesheets/building-panorama.css';
+ const D2R = Math.PI / 180;
+ const R2D = 180 / Math.PI;
+ const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
++const MIN_ARROW_GAP = 25; // degrees — closer arrows would overlap
+ 
+ // Same chevron as SphereTour so both tours look alike.
+ const CHEVRON_SVG = `
+@@ -61,8 +62,13 @@ const headingOf = (item) => {
+ 
+ const labelOf = (item, index) => item.caption || `View ${index + 1}`;
+ 
+-/** Builds a simple chain: each view links to the previous and the next one. */
++/**
++ * Builds the tour graph: each view links to the previous and the next one
++ * (gallery order), plus any extra arrows the admin added for junctions
++ * (item.links = [{ to, yaw }]) — so one view can have 3–4 directions.
++ */
+ function buildNodes(items, buildingName) {
++  const ids = new Set(items.map((it) => it.id));
+   return items.map((item, index) => {
+     const forward = headingOf(item);
+     const links = [];
+@@ -81,6 +87,25 @@ function buildNodes(items, buildingName) {
+         data: { yaw: back, dir: 'back' },
+       });
+     }
++    for (const extra of item.links || []) {
++      const yaw = Number(extra?.yaw);
++      if (!ids.has(extra?.to) || extra.to === item.id || !Number.isFinite(yaw)) continue;
++      const existing = links.find((l) => l.nodeId === extra.to);
++      if (existing) { // admin set an exact direction for next/prev: use it
++        existing.position = { yaw: norm(yaw) * D2R, pitch: 0 };
++        existing.data = { ...existing.data, yaw: norm(yaw) };
++        continue;
++      }
++      // An admin arrow wins over an automatic forward/back arrow in the same spot.
++      for (let i = links.length - 1; i >= 0; i -= 1) {
++        if (links[i].data.dir !== 'branch' && Math.abs(norm(links[i].data.yaw - yaw)) < MIN_ARROW_GAP) links.splice(i, 1);
++      }
++      links.push({
++        nodeId: extra.to,
++        position: { yaw: norm(yaw) * D2R, pitch: 0 },
++        data: { yaw: norm(yaw), dir: 'branch' },
++      });
++    }
+     return {
+       id: item.id,
+       panorama: item.src,
+@@ -123,6 +148,13 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
+       // Face the way you were walking when you arrive on a view.
+       const arrivalYaw = (toNode, fromNode) => {
+         if (!fromNode) return toNode.data.forward;
++        // Came through a junction arrow: if the new view has an arrow back,
++        // face away from it (keep walking the same way).
++        const isChainStep = Math.abs(toNode.data.index - fromNode.data.index) === 1;
++        if (!isChainStep) {
++          const backLink = toNode.links.find((l) => l.nodeId === fromNode.id);
++          return backLink ? norm(backLink.data.yaw + 180) : toNode.data.forward;
++        }
+         const cameBack = toNode.data.index < fromNode.data.index;
+         return cameBack ? norm(toNode.data.forward + 180) : toNode.data.forward;
+       };
+diff --git a/frontend/src/user-dashboard/utils/assets.js b/frontend/src/user-dashboard/utils/assets.js
+index 30de58d..9e24087 100644
+--- a/frontend/src/user-dashboard/utils/assets.js
++++ b/frontend/src/user-dashboard/utils/assets.js
+@@ -67,6 +67,8 @@ export function buildingGallery(building) {
+       panorama: typeof item?.panorama === 'boolean' ? item.panorama : undefined,
+       // forward-arrow direction in degrees for the building 360° tour (0 = photo centre)
+       heading: Number.isFinite(Number(item?.heading)) ? Number(item.heading) : 0,
++      // extra arrows for junctions: [{ to: <image id>, yaw: degrees }]
++      links: Array.isArray(item?.links) ? item.links : [],
+     }))
+     .filter((item) => Boolean(item.src));
+ }
+\ No newline at end of file
