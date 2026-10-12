@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUI } from '../context/UIContext';
-
+import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
+const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 const LINKS = [
   { to: '/map', label: '🗺️ Campus Map' },
   { to: '/buildings', label: '🏛️ Buildings' },
@@ -43,7 +44,7 @@ export default function Drawer() {
       />
       <div className={`drawer${drawerOpen ? ' open' : ''}`} id="drawer">
         <div className="drawer-top">
-          <div className="brand-mark sm">N</div>
+          <div className="brand-mark sm"><img src={nwssuLogo} alt="NwSSU logo" style={LOGO_STYLE} /></div>
           <span className="drawer-title">NWSSU Campus</span>
           <button className="drawer-x" onClick={closeDrawer} aria-label="Close menu">✕</button>
         </div>

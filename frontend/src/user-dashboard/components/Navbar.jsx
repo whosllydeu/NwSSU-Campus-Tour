@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useUI } from '../context/UIContext';
-
+import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
+const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 const LINKS = [
   { to: '/map', label: 'Map' },
   { to: '/buildings', label: 'Buildings' },
@@ -21,7 +22,7 @@ export default function Navbar() {
         onClick={() => navigate('/')}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/')}
       >
-        <div className="brand-mark">N</div>
+        <div className="brand-mark"><img src={nwssuLogo} alt="NwSSU logo" style={LOGO_STYLE} /></div>
         <div className="brand-info">
           <span className="brand-name">NWSSU</span>
           <span className="brand-sub">Campus Tour</span>

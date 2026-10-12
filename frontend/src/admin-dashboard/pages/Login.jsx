@@ -2,6 +2,8 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/login.css';
+import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
+const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 
 export default function Login() {
   const { login } = useAuth();
@@ -31,7 +33,7 @@ export default function Login() {
     <div className="ad-login-screen">
       <form className="ad-login-card" onSubmit={handleSubmit}>
         <div className="ad-login-brand">
-          <div className="ad-login-mark">N</div>
+          <div className="ad-login-mark"><img src={nwssuLogo} alt="NwSSU logo" style={LOGO_STYLE} /></div>
           <h1>NWSSU Campus Tour</h1>
           <p className="ad-login-sub">Sign in to the Admin Dashboard</p>
         </div>

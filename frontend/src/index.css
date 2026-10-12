@@ -1111,12 +1111,11 @@ main { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
 .ds-photo-note {
   width: 100%; margin-top: 10px;
   padding: 12px 18px;
-  background: var(--glass); border: 1px solid var(--border);
   border-radius: 12px;
   font-size: 12px; color: var(--muted); line-height: 1.6;
   display: flex; align-items: center; gap: 10px;
 }
-.ds-photo-note p { margin: 0; flex: 1; }
+.ds-photo-note p { margin: 0; flex: 1;   text-align: center; }
 .ds-photo-note code {
   background: rgba(200,168,75,0.12); border: 1px solid rgba(200,168,75,0.2);
   color: var(--gold); padding: 1px 7px; border-radius: 5px;

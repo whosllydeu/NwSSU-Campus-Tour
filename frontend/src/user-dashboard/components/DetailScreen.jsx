@@ -252,7 +252,6 @@ function DeptDetail({ id }) {
         )}
 
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={closeDetail}>← Go Back</button>
         </div>
       </div>
     </>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-
+import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
+const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 export default function Splash() {
   const [gone, setGone] = useState(false);
 
@@ -24,7 +25,7 @@ export default function Splash() {
               strokeDasharray="100 240" strokeLinecap="round" className="spin-arc"
             />
           </svg>
-          <div className="splash-emblem">N</div>
+          <div className="splash-emblem"><img src={nwssuLogo} alt="NwSSU logo" style={LOGO_STYLE} /></div>
         </div>
         <h1 className="splash-title">
           Northwest Samar<br />State University

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-
+import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
+const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 const LINKS = [
   { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
   { to: '/admin/buildings', label: 'Buildings', icon: '🏛️' },
@@ -13,7 +14,7 @@ export default function Sidebar({ open, onNavigate }) {
   return (
     <aside className={`ad-sidebar${open ? ' open' : ''}`}>
       <div className="ad-sidebar-brand">
-        <div className="brand-mark sm">N</div>
+        <div className="brand-mark sm"><img src={nwssuLogo} alt="NwSSU logo" style={LOGO_STYLE} /></div>
         <div className="brand-info">
           <span className="brand-name">NWSSU</span>
           <span className="brand-sub">Admin Panel</span>
