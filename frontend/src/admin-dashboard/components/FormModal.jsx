@@ -31,6 +31,7 @@ function initialGalleryValue(raw) {
       // undefined for images saved before the 360° flag existed
       panorama: typeof img.panorama === 'boolean' ? img.panorama : undefined,
       heading: Number.isFinite(Number(img.heading)) && img.heading !== null ? img.heading : '',
+      links: Array.isArray(img.links) ? img.links.map((l) => ({ to: l.to || '', yaw: l.yaw ?? '' })) : [],
     }));
 }
 
@@ -154,6 +155,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
       caption: '',
       panorama: Boolean(getPreparedInfo(file)?.panorama),
       heading: '',
+      links: [],
     }));
     updateGallery(key, (items) => [...items, ...additions]);
   }, [makePreview, updateGallery]);
@@ -225,6 +227,10 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
           if (item.heading !== '' && item.heading !== undefined && !inRange(item.heading, -360, 360)) {
             e.heading = 'Must be between -360 and 360';
           }
+          (item.links || []).forEach((l) => {
+            if (!l.to) e.links = 'Choose where each extra arrow goes';
+            else if (l.yaw === '' || !inRange(l.yaw, -360, 360)) e.links = 'Each extra arrow needs a direction between -360 and 360';
+          });
           if (Object.keys(e).length) itemErrors[item.uid] = e;
         });
         if (Object.keys(itemErrors).length) {
@@ -295,6 +301,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
 
         if (field.type === 'gallery') {
           const result = [];
+          const galleryIds = new Set((values[field.key] || []).map((g) => g.id || g.uid));
           for (const item of values[field.key] || []) {
             let { url, path } = item;
             if (item.file) {
@@ -314,6 +321,10 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
               ...(item.heading !== '' && item.heading !== undefined && Number.isFinite(Number(item.heading))
                 ? { heading: Number(item.heading) }
                 : {}),
+              // extra arrows (3–4 way junctions); drop arrows to removed images
+              links: (item.links || [])
+                .filter((l) => l.to && galleryIds.has(l.to) && Number.isFinite(Number(l.yaw)))
+                .map((l) => ({ to: l.to, yaw: Number(l.yaw) })),
             });
           }
           out[field.key] = result;

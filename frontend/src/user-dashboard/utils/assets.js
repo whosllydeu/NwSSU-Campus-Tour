@@ -67,6 +67,8 @@ export function buildingGallery(building) {
       panorama: typeof item?.panorama === 'boolean' ? item.panorama : undefined,
       // forward-arrow direction in degrees for the building 360° tour (0 = photo centre)
       heading: Number.isFinite(Number(item?.heading)) ? Number(item.heading) : 0,
+      // extra arrows for junctions: [{ to: <image id>, yaw: degrees }]
+      links: Array.isArray(item?.links) ? item.links : [],
     }))
     .filter((item) => Boolean(item.src));
 }

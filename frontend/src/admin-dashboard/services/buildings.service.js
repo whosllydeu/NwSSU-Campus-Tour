@@ -20,7 +20,16 @@ function cleanImages(images) {
       ...(img.heading !== '' && img.heading !== undefined && img.heading !== null && Number.isFinite(Number(img.heading))
         ? { heading: Number(img.heading) }
         : {}),
+      ...(cleanLinks(img.links).length ? { links: cleanLinks(img.links) } : {}),
     }));
+}
+
+// Extra navigation arrows of a 360° image: [{ to: <image id>, yaw: <degrees> }]
+function cleanLinks(links) {
+  if (!Array.isArray(links)) return [];
+  return links
+    .filter((l) => l && l.to && l.yaw !== '' && l.yaw !== null && Number.isFinite(Number(l.yaw)))
+    .map((l) => ({ to: String(l.to), yaw: Number(l.yaw) }));
 }
 
 function fromDb(row) {

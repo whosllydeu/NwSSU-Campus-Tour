@@ -39,6 +39,7 @@ import '../stylesheets/building-panorama.css';
 const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
 const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
+const MIN_ARROW_GAP = 25; // degrees — closer arrows would overlap
 
 // Same chevron as SphereTour so both tours look alike.
 const CHEVRON_SVG = `
@@ -61,8 +62,13 @@ const headingOf = (item) => {
 
 const labelOf = (item, index) => item.caption || `View ${index + 1}`;
 
-/** Builds a simple chain: each view links to the previous and the next one. */
+/**
+ * Builds the tour graph: each view links to the previous and the next one
+ * (gallery order), plus any extra arrows the admin added for junctions
+ * (item.links = [{ to, yaw }]) — so one view can have 3–4 directions.
+ */
 function buildNodes(items, buildingName) {
+  const ids = new Set(items.map((it) => it.id));
   return items.map((item, index) => {
     const forward = headingOf(item);
     const links = [];
@@ -79,6 +85,25 @@ function buildNodes(items, buildingName) {
         nodeId: items[index - 1].id,
         position: { yaw: back * D2R, pitch: 0 },
         data: { yaw: back, dir: 'back' },
+      });
+    }
+    for (const extra of item.links || []) {
+      const yaw = Number(extra?.yaw);
+      if (!ids.has(extra?.to) || extra.to === item.id || !Number.isFinite(yaw)) continue;
+      const existing = links.find((l) => l.nodeId === extra.to);
+      if (existing) { // admin set an exact direction for next/prev: use it
+        existing.position = { yaw: norm(yaw) * D2R, pitch: 0 };
+        existing.data = { ...existing.data, yaw: norm(yaw) };
+        continue;
+      }
+      // An admin arrow wins over an automatic forward/back arrow in the same spot.
+      for (let i = links.length - 1; i >= 0; i -= 1) {
+        if (links[i].data.dir !== 'branch' && Math.abs(norm(links[i].data.yaw - yaw)) < MIN_ARROW_GAP) links.splice(i, 1);
+      }
+      links.push({
+        nodeId: extra.to,
+        position: { yaw: norm(yaw) * D2R, pitch: 0 },
+        data: { yaw: norm(yaw), dir: 'branch' },
       });
     }
     return {
@@ -123,6 +148,13 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
       // Face the way you were walking when you arrive on a view.
       const arrivalYaw = (toNode, fromNode) => {
         if (!fromNode) return toNode.data.forward;
+        // Came through a junction arrow: if the new view has an arrow back,
+        // face away from it (keep walking the same way).
+        const isChainStep = Math.abs(toNode.data.index - fromNode.data.index) === 1;
+        if (!isChainStep) {
+          const backLink = toNode.links.find((l) => l.nodeId === fromNode.id);
+          return backLink ? norm(backLink.data.yaw + 180) : toNode.data.forward;
+        }
         const cameBack = toNode.data.index < fromNode.data.index;
         return cameBack ? norm(toNode.data.forward + 180) : toNode.data.forward;
       };

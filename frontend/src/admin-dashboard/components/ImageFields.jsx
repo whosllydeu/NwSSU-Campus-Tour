@@ -290,6 +290,16 @@ export function GalleryField({
                   </label>
                 )}
 
+                {item.panorama === true && (
+                  <ExtraArrows
+                    item={item}
+                    items={items}
+                    error={itemErrors.links}
+                    disabled={disabled}
+                    onChange={(links) => onChangeItem(item.uid, { links })}
+                  />
+                )}
+
                 <div className="ad-gallery-actions">
                   <button
                     type="button"
@@ -382,6 +392,68 @@ export function GalleryField({
 
       <input ref={addRef} type="file" accept={ACCEPT_ATTR} multiple hidden onChange={handleAdd} />
       <input ref={replaceRef} type="file" accept={ACCEPT_ATTR} hidden onChange={handleReplace} />
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+   Extra navigation arrows for one 360° image (junctions).
+   Forward/back arrows come from the gallery order; these add
+   up to 2 more so a view can have 3–4 directions in total.
+   Each arrow: { to: <id of another 360° image>, yaw: degrees }
+   ────────────────────────────────────────────────────────── */
+const MAX_EXTRA_ARROWS = 2;
+
+function ExtraArrows({ item, items, error, disabled, onChange }) {
+  const links = Array.isArray(item.links) ? item.links : [];
+  const selfId = item.id || item.uid;
+  const targets = items
+    .map((it, i) => ({ id: it.id || it.uid, label: it.caption || `Image ${i + 1}`, panorama: it.panorama }))
+    .filter((t) => t.id !== selfId && t.panorama === true);
+
+  const update = (index, patch) => onChange(links.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  const remove = (index) => onChange(links.filter((_, i) => i !== index));
+  const add = () => onChange([...links, { to: '', yaw: '' }]);
+
+  return (
+    <div className="ad-gallery-label">
+      <span>Extra arrows (for 3–4 way junctions)</span>
+      {links.map((link, index) => (
+        <div className="ad-gallery-coords" key={index}>
+          <select
+            value={link.to}
+            disabled={disabled}
+            onChange={(e) => update(index, { to: e.target.value })}
+            aria-label="Arrow goes to"
+          >
+            <option value="">Goes to…</option>
+            {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input
+              type="number"
+              step="1"
+              min="-360"
+              max="360"
+              placeholder="Direction (°)"
+              value={link.yaw}
+              disabled={disabled}
+              onChange={(e) => update(index, { yaw: e.target.value })}
+              aria-label="Arrow direction in degrees"
+            />
+            <button type="button" className="btn-ghost btn-sm" disabled={disabled} onClick={() => remove(index)} aria-label="Remove arrow">✕</button>
+          </div>
+        </div>
+      ))}
+      {links.length < MAX_EXTRA_ARROWS && (
+        <button type="button" className="btn-ghost btn-sm" disabled={disabled || targets.length === 0} onClick={add}>
+          + Add arrow
+        </button>
+      )}
+      <span className="ad-field-help">
+        Use for a hallway or path that splits. Pick the image the arrow leads to and the direction (copy the "Facing …°" number). Add the matching arrow on that image too so users can come back.
+      </span>
+      {error && <span className="ad-error">{error}</span>}
     </div>
   );
 }
