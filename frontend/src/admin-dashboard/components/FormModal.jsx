@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import LocationPicker from "./LocationPicker.jsx";
 import { ImageUploadField, GalleryField } from "./ImageFields.jsx";
+import PathwayLinkField, { initialPathwayLinkValue } from "./PathwayLinkField.jsx";
 import { fromEditableValue, isValidCoordinate, toEditableValue } from "../utils/admin-map-leaflet.js";
 import { getPreparedInfo } from "../utils/image-compress.js";
 
@@ -46,6 +47,8 @@ function inRange(value, min, max) {
  * Field types: text | number | color | select | textarea | list | map
  *              image   — single file upload (uploads on save)
  *              gallery — multiple images, each with its own lat/lng
+ *              pathwayLink — connects the gallery's 360° images to a pathway
+ *                            photo (uses field.galleryKey, default 'images')
  *
  * `onUploadImage(file, values)` is required when the form has image or
  * gallery fields; it must resolve to `{ url, path }`.
@@ -63,6 +66,10 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
       }
       if (field.type === 'gallery') {
         next[field.key] = initialGalleryValue(initialValues?.[field.key]);
+        return;
+      }
+      if (field.type === 'pathwayLink') {
+        next[field.key] = initialPathwayLinkValue(initialValues?.[field.key]);
         return;
       }
       next[field.key] = toEditableValue(field, initialValues?.[field.key]);
@@ -244,6 +251,23 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
         return;
       }
 
+      if (field.type === 'pathwayLink') {
+        const link = values[field.key] || {};
+        if (!link.pathwayNode) return; // not connected — nothing to check
+        const gallery = values[field.galleryKey || 'images'] || [];
+        const entry = gallery.find((item) => (item.id || item.uid) === link.entryImage);
+        if (!link.entryImage || !entry) {
+          nextErrors[field.key] = 'Choose the entrance photo (one of the 360° images above).';
+        } else if (entry.panorama !== true) {
+          nextErrors[field.key] = 'The entrance photo must be an image marked as a 360° panorama.';
+        } else if (link.pinYaw !== '' && !inRange(link.pinYaw, -360, 360)) {
+          nextErrors[field.key] = 'Pin direction must be between -360 and 360 (or blank).';
+        } else if (link.returnYaw !== '' && !inRange(link.returnYaw, -360, 360)) {
+          nextErrors[field.key] = 'Return arrow direction must be between -360 and 360 (or blank).';
+        }
+        return;
+      }
+
       if (field.required && !String(values[field.key] ?? '').trim()) {
         nextErrors[field.key] = 'Required';
       }
@@ -331,6 +355,21 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
           continue;
         }
 
+        if (field.type === 'pathwayLink') {
+          const link = values[field.key] || {};
+          const num = (v) => (v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)) ? Number(v) : null);
+          out[field.key] = link.pathwayNode
+            ? {
+                pathwayNode: link.pathwayNode,
+                entryImage: link.entryImage,
+                label: String(link.label || '').trim(),
+                pinYaw: num(link.pinYaw),
+                returnYaw: num(link.returnYaw),
+              }
+            : null;
+          continue;
+        }
+
         out[field.key] = fromEditableValue(field, values[field.key]);
       }
 
@@ -408,6 +447,26 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                     onError={(msg) => handleFieldError(field.key, msg)}
                   />
                   {galleryError && <span className="ad-error">{errorText(galleryError)}</span>}
+                </div>
+              );
+            }
+
+            if (field.type === 'pathwayLink') {
+              return (
+                <div key={field.key} className={`ad-field wide${errors[field.key] ? ' has-error' : ''}`}>
+                  <label>{field.label}</label>
+                  {field.help && <span className="ad-field-help">{field.help}</span>}
+                  <PathwayLinkField
+                    value={values[field.key]}
+                    onChange={(next) => handleChange(field.key, next)}
+                    galleryItems={values[field.galleryKey || 'images'] || []}
+                    buildingLat={values.lat}
+                    buildingLng={values.lng}
+                    buildingName={values.name}
+                    recordId={initialValues?._id}
+                    disabled={submitting}
+                  />
+                  {errors[field.key] && <span className="ad-error">{errorText(errors[field.key])}</span>}
                 </div>
               );
             }

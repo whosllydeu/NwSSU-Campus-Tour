@@ -10,19 +10,19 @@ import {
   Tooltip,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { 
-  allLocationIcon, 
-  findBuildingAtLocation, 
-  getWalkingRoute, 
-  RouteFitter, 
+import {
+  allLocationIcon,
+  findBuildingAtLocation,
+  getWalkingRoute,
+  RouteFitter,
   selectedLocationIcon,
-  TILELAYER_URL, 
+  TILELAYER_URL,
   userLocationIcon,
   transformedObjectBuilding,
   VIRTUAL_LOCATIONS,
 } from "../utils/map-leaflet";
 import { campusRouter, formatDistance } from "../../utils/campusRouting";
-import { Globe, LocateFixed, Network, Road } from "lucide-react";
+import { Globe, LocateFixed, Network, Road, RotateCcw } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
 import { planWalk, WALK_ROUTES } from "../static/nwssuTour";
@@ -141,7 +141,25 @@ export default function Map() {
     console.log(selectedBuilding);
   }, [selectedBuilding]);
 
+  // "Reset" — clears the route, origin, destination and messages so the
+  // user can start a new trip from scratch.
+  const handleReset = () => {
+    setRoute(EMPTY_ROUTE);
+    setSelectedBuilding(null);
+    setUserLocation(null);
+    setOriginBuildingId(null);
+    setLocationSource(null);
+    setPickMode("destination");
+    setSearch("");
+    setAlertMsg({ success: false, message: "" });
+  };
+
+  const hasTripState = Boolean(route.coordinates || selectedBuilding || userLocation);
+
+  // A new origin or destination makes the drawn route outdated, so every
+  // handler that changes them also clears the route (no effect needed).
   const handleBuildingClick = (building) => {
+    setRoute(EMPTY_ROUTE);
     if (pickMode === "origin") {
       setUserLocation(building.position);
       setOriginBuildingId(building.id);
@@ -155,6 +173,7 @@ export default function Map() {
   // Saves a location as the user's origin and detects which building it is at.
   const applyLocation = (location) => {
     const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
+    setRoute(EMPTY_ROUTE);
     setUserLocation(location);
     setOriginBuildingId(building?.id || null);
     setLocationSource('gps');
@@ -212,6 +231,8 @@ export default function Map() {
     const plan = planWalk(walkRouteKey(selectedBuilding.id) || selectedBuilding.id, {
       userLocation: location,
       originBuildingId: walkRouteKey(originId),
+      destinationLatLng: selectedBuilding.position,
+      destinationName: selectedBuilding.name,
     });
 
     if (!plan) {
@@ -221,7 +242,11 @@ export default function Map() {
 
     const originBuilding = originId ? CAMPUS_BUILDING.find((b) => b.id === originId) : null;
     const nearWhat = source === "origin" && originBuilding ? originBuilding.name : "you";
-    const stepsText = `${plan.steps} ${plan.steps === 1 ? "step" : "steps"} to ${selectedBuilding.name}`;
+    const arriveNote =
+      plan.arriveDistance !== null
+        ? ` (the 360° walk ends on the pathway ${Math.round(plan.arriveDistance)} m from it)`
+        : "";
+    const stepsText = `${plan.steps} ${plan.steps === 1 ? "step" : "steps"} to ${selectedBuilding.name}${arriveNote}`;
 
     if (plan.startSource === "gps") {
       const meters = Math.round(plan.startDistance);
@@ -302,7 +327,7 @@ export default function Map() {
         success: true,
         message: `🚶 Route to ${selectedBuilding.name} found along campus walkways.${snapNote}`,
       });
-    } 
+    }
     catch (error) {
       setRoute(EMPTY_ROUTE);
       setAlertMsg({ message: error.message });
@@ -387,6 +412,7 @@ export default function Map() {
                     setSearch(inputValue);
                     if (!inputValue.trim()) {
                       setSelectedBuilding(null);
+                      setRoute(EMPTY_ROUTE);
                     }
                   }}
                 />
@@ -398,6 +424,7 @@ export default function Map() {
                     onClick={() => {
                       setSearch("");
                       setSelectedBuilding(null);
+                      setRoute(EMPTY_ROUTE);
                     }}
                     aria-label="Clear search"
                   >
@@ -533,7 +560,7 @@ export default function Map() {
                       opacity: 0.85,
                     }}
                   />
-                  
+
                   <RouteFitter route={route.coordinates}/>
                 </>
               )}
@@ -574,12 +601,23 @@ export default function Map() {
               onClick={handleNavigateHere}
             ><Globe size={18} style={{ marginRight: 6 }}/>Walk there!</button>
 
-            <button
-              type="button"
-              className={showGraph ? "destination-route-btn" : "get-location-btn"}
-              onClick={() => setShowGraph((prev) => !prev)}
-              aria-pressed={showGraph}
-            ><Network size={18} style={{ marginRight: 6 }}/>{showGraph ? "Hide Graph" : "Show Graph"}</button>
+            <div style={{ display: 'flex', alignItems: 'center', columnGap: 6 }}>
+              <button
+                type="button"
+                className={showGraph ? "destination-route-btn" : "get-location-btn"}
+                onClick={() => setShowGraph((prev) => !prev)}
+                aria-pressed={showGraph}
+              ><Network size={18} style={{ marginRight: 6 }}/>{showGraph ? "Hide Graph" : "Show Graph"}</button>
+
+              <button
+                type="button"
+                className="get-location-btn"
+                onClick={handleReset}
+                disabled={!hasTripState || loader === "destination"}
+                title="Clear the route, origin and destination"
+                style={{ opacity: hasTripState ? 1 : 0.6 }}
+              ><RotateCcw size={18} style={{ marginRight: 6 }}/>Reset Route</button>
+            </div>
 
             {showGraph && (
               <small style={{ display: 'block', marginTop: 6, opacity: 0.75 }}>

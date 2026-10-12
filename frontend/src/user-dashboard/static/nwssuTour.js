@@ -30,6 +30,11 @@ export const GPS_START_RADIUS = 150;
 // this (metres), the walk still starts there but the Map shows a notice.
 export const WALK_START_MAX_METERS = 40;
 
+// "Walk there!" to a building with no WALK_ROUTES entry (e.g. one added from
+// the Admin Dashboard): the walk ends at the pathway photo nearest the
+// building, if one is within this many metres.
+export const WALK_DEST_MAX_METERS = 40;
+
 // "360° near me": farther than this from every panorama = probably off campus.
 export const NEAR_ME_RADIUS = 300;
 
@@ -98,6 +103,18 @@ if (import.meta.env?.DEV) {
   }
 }
 
+/** Closest GPS-tagged PATHWAY photo to `latLng` within `maxMeters`, or null. */
+export function nearestPathwayNode(latLng, maxMeters = Infinity) {
+  if (!Array.isArray(latLng) || latLng.length < 2) return null;
+  let best = null;
+  for (const node of TOUR_NODES) {
+    if (!Array.isArray(node.data?.gps) || !isPathwayNode(node)) continue;
+    const distance = metersBetween(latLng, node.data.gps);
+    if (distance <= maxMeters && (!best || distance < best.distance)) best = { node, distance };
+  }
+  return best;
+}
+
 /**
  * Node a tour should open on.
  * `startNode` may be a node id ('coed-07') or an old-style file name
@@ -118,6 +135,11 @@ export const findPath = (fromId, toId) => shortestPath(NODE_BY_ID, fromId, toId)
 
 // Reverse adjacency (who links TO each node), built once on first use.
 let reverseLinks = null;
+
+/** Call after nodes/links change at runtime (e.g. buildings connected from the Admin Dashboard). */
+export function resetTourCaches() {
+  reverseLinks = null;
+}
 function getReverseLinks() {
   if (reverseLinks) return reverseLinks;
   reverseLinks = {};
@@ -158,24 +180,44 @@ function nodesThatCanReach(targetId) {
  *   3. the route's own startNode
  *   4. WALK_DEFAULT_START (Main Gate)
  *
- * Returns null when the destination has no walk route, otherwise:
+ * Destination: the WALK_ROUTES entry for `destinationId`. If there is none
+ * (e.g. a building added from the Admin Dashboard), the walk ends at the
+ * pathway photo nearest `destinationLatLng`, within `maxDestMeters`.
+ *
+ * Returns null when no destination photo can be found, otherwise:
  *   { startNode, arriveNode, path, steps, label, via,
  *     startLabel, startSource: 'gps' | 'origin' | 'route' | 'gate',
- *     startDistance (m, only for 'gps'), withinThreshold, maxStartMeters }
+ *     startDistance (m, only for 'gps'), withinThreshold, maxStartMeters,
+ *     arriveDistance (m, only when the destination was found by GPS) }
  */
 export function planWalk(
   destinationId,
-  { userLocation = null, originBuildingId = null, maxStartMeters = WALK_START_MAX_METERS } = {}
+  {
+    userLocation = null,
+    originBuildingId = null,
+    maxStartMeters = WALK_START_MAX_METERS,
+    destinationLatLng = null,
+    destinationName = null,
+    maxDestMeters = WALK_DEST_MAX_METERS,
+  } = {}
 ) {
-  const route = WALK_ROUTES[destinationId];
-  if (!route || !NODE_BY_ID[route.arriveNode]) return null;
+  let route = WALK_ROUTES[destinationId];
+  let arriveDistance = null;
+  if (!route || !NODE_BY_ID[route.arriveNode]) {
+    const near = nearestPathwayNode(destinationLatLng, maxDestMeters);
+    if (!near) return null;
+    route = { arriveNode: near.node.id, pathway: near.node.data.tour };
+    arriveDistance = near.distance;
+  }
 
   const destTour = tourOfNode(route.arriveNode);
   const base = {
     arriveNode: route.arriveNode,
-    label: destTour?.kind === 'building' ? destTour.title : NODE_BY_ID[route.arriveNode].name,
+    label: destinationName
+      || (destTour?.kind === 'building' ? destTour.title : NODE_BY_ID[route.arriveNode].name),
     via: TOURS[route.pathway]?.title || null,
     maxStartMeters,
+    arriveDistance,
   };
   const build = (startNode, path, startSource, startDistance = null) => ({
     ...base,

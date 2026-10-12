@@ -32,26 +32,44 @@ function cleanLinks(links) {
     .map((l) => ({ to: String(l.to), yaw: Number(l.yaw) }));
 }
 
+const optionalNumber = (v) => (
+  v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)) ? Number(v) : null
+);
+
+// "360° Pathway Connection" → pathway_link jsonb (or null when not connected).
+function cleanPathwayLink(link) {
+  if (!link || !link.pathwayNode) return null;
+  return {
+    pathwayNode: String(link.pathwayNode),
+    entryImage: link.entryImage ? String(link.entryImage) : '',
+    label: link.label ? String(link.label).trim() : '',
+    pinYaw: optionalNumber(link.pinYaw),
+    returnYaw: optionalNumber(link.returnYaw),
+  };
+}
+
 function fromDb(row) {
   if (!row) return row;
-  const { description, department_id, images, ...rest } = row;
+  const { description, department_id, images, pathway_link, ...rest } = row;
   return {
     ...rest,
     desc: description,
     dept: department_id,
     images: Array.isArray(images) ? images : [],
+    pathwayLink: pathway_link || null,
     _id: row.id,
   };
 }
 
 function toDb(data) {
-  const { desc, dept, images, ...rest } = data;
+  const { desc, dept, images, pathwayLink, ...rest } = data;
   delete rest._id;
   return {
     ...rest,
     ...(desc !== undefined ? { description: desc } : {}),
     ...(dept !== undefined ? { department_id: dept || null } : {}),
     ...(images !== undefined ? { images: cleanImages(images) } : {}),
+    ...(pathwayLink !== undefined ? { pathway_link: cleanPathwayLink(pathwayLink) } : {}),
   };
 }
 

@@ -7,6 +7,7 @@ import {
 
 import { listBuildings } from "../services/buildings.service";
 import { listDepartments } from "../services/departments.service";
+import { applyAdminBuildingTours } from "../utils/adminTours";
 
 const DataContext = createContext(null);
 
@@ -40,6 +41,15 @@ export const DataProvider = ({ children }) => {
             listBuildings(),
             listDepartments(),
         ]);
+
+        // Buildings connected to a pathway from the Admin Dashboard join the
+        // 360° tour + "Walk there!" before anything renders with them.
+        try {
+          applyAdminBuildingTours(buildings);
+        } catch (tourErr) {
+          console.error("[admin-tour] could not connect admin buildings:", tourErr);
+        }
+
         setBuildings(buildings);
         setDepartments(departments);
 
