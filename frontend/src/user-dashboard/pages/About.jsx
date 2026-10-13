@@ -54,7 +54,7 @@ const TEAM = [
   { name: "Zj M. Mananguite", 
     role: "Documenter", 
     photo: "team-mananguite.jpg",
-    bio: "Every step of learning brings me closer to my goals.",
+    bio: "'' Every step of learning brings me closer to my goals. ''",
   },
 
 ];
