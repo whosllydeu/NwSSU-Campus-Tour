@@ -18,9 +18,25 @@ export default defineConfig({
         // The app itself — saved on the first visit so it opens offline.
         // (Big photos/panoramas are NOT pre-saved; they're saved when viewed.)
         globPatterns: ['**/*.{js,css,html,svg,ico,woff,woff2,json,webmanifest}'],
+        // The main app bundle is ~2.1 MB (Leaflet + Three.js + 360 viewer),
+        // above Workbox's 2 MB default — raise the limit so it's saved for offline.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          // 360° panoramas in public/panoramas — the viewer downloads them with
+          // fetch(), so they need their own rule (not caught by "image" below).
+          {
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              url.pathname.startsWith('/panoramas/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'panoramas',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * DAY },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           // Supabase data (buildings, departments): try online first,
           // fall back to the last saved copy when offline.
           {
@@ -58,7 +74,7 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // App images (building photos, 360° panoramas, team photos).
+          // App images (building photos, team photos, logo).
           {
             urlPattern: ({ request, url }) =>
               request.destination === 'image' && url.origin === self.location.origin,
@@ -66,6 +82,7 @@ export default defineConfig({
             options: {
               cacheName: 'app-images',
               expiration: { maxEntries: 400, maxAgeSeconds: 60 * DAY },
+              cacheableResponse: { statuses: [200] },
             },
           },
         ],
