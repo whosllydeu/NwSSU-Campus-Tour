@@ -1,7 +1,7 @@
 /* Compact action panel on the map (My Location / Get Route / Walk there! /
    Show Graph / Reset Route). Loaded after map.css so it overrides it. */
 .map-action-card {
-  padding: 8px !important;
+  padding: 6px !important;
   margin: 0 !important;
   max-height: 45vh;
   overflow-y: auto;
@@ -11,7 +11,7 @@
 .map-action-card .map-btn-row {
   display: flex;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 .map-action-card .map-btn-row > button {
   flex: 1 1 0;
@@ -25,7 +25,9 @@
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  padding: 7px 8px !important;
+  padding: 5px 8px !important;
+  height: 34px !important;
+  min-height: 0 !important;
   font-size: 0.82rem !important;
   line-height: 1.2;
   border-radius: 8px !important;
@@ -42,7 +44,7 @@
 /* "Walk there!" stays full width, between the two rows */
 .map-action-card > button {
   width: 100% !important;
-  margin: 0 0 6px !important;
+  margin: 0 0 5px !important;
 }
 
 .map-action-card .map-alert {
@@ -52,4 +54,8 @@
 }
 .map-action-card .route-info {
   font-size: 0.82rem;
+}
+
+.map-action-card .map-btn-row:last-of-type {
+  margin-bottom: 0;
 }
