@@ -48,13 +48,13 @@ const TEAM = [
       name: "Strawberry A. Ejoc",
       role: "Researcher",
       photo: "team-ejoc.jpg",
-      bio: "'hello'",
+      bio: "' The worst enemy to creativity is self-doubt. '",
     },
 
   { name: "Zj M. Mananguite", 
     role: "Documenter", 
     photo: "team-mananguite.jpg",
-    bio: "'' Every step of learning brings me closer to my goals. ''",
+    bio: `"The worst enemy to creativity is self-doubt."\n — Sylvia Plath`,
   },
 
 ];
