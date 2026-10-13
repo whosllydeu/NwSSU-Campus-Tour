@@ -48,17 +48,17 @@ const TEAM = [
       name: "Strawberry A. Ejoc",
       role: "Researcher",
       photo: "team-ejoc.jpg",
-      bio: "' The worst enemy to creativity is self-doubt. '",
+      bio: `"The worst enemy to creativity is self-doubt."\n — Sylvia Plath`,
     },
 
   { name: "Zj M. Mananguite", 
     role: "Documenter", 
     photo: "team-mananguite.jpg",
-    bio: `"The worst enemy to creativity is self-doubt."\n — Sylvia Plath`,
+    bio: “' Every step of learning brings me closer to my goals. '”,
   },
 
 ];
-// To add a bio for another member, give them a  bio: "..."  line like above.
+// To add a bio for another member, give them a  bio: "..."  liune like above.
 
 // ── Contact ─────────────────────────────────────────────────
 // Fill in your team's links. Leave a value as "" to hide that icon.
