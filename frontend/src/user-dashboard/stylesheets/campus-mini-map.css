@@ -13,9 +13,9 @@
   height: 100%;
   background: #14251a;
 }
-/* Darken the street map so it blends with the green glass theme */
+/* Slightly dim the satellite photo so the labels stand out on the glass card */
 .cmm-map .leaflet-tile-pane {
-  filter: brightness(0.55) saturate(0.6) sepia(0.25) hue-rotate(60deg);
+  filter: brightness(0.75) saturate(0.85);
 }
 .cmm-label-wrap {
   background: none;

@@ -13,6 +13,12 @@ export const MAX_SNAP_METERS = 60;
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
+// Satellite view (Esri World Imagery) — free, no API key; attribution required.
+export const SATELLITE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+export const SATELLITE_ATTRIBUTION =
+  'Imagery &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics';
+
 // Non-building pathway endpoints (e.g. the campus Gate) — not real
 // buildings in data.js, but still need to be detectable by GPS and
 // selectable as a route origin/destination, since several outdoor

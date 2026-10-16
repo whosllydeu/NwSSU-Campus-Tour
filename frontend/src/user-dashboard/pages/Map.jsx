@@ -5,6 +5,7 @@ import {
   MapContainer,
   Marker,
   TileLayer,
+  LayersControl,
   Popup,
   Polyline,
   CircleMarker,
@@ -18,6 +19,9 @@ import {
   RouteFitter,
   selectedLocationIcon,
   TILELAYER_URL,
+  TILELAYER_ATTRIBUTION,
+  SATELLITE_URL,
+  SATELLITE_ATTRIBUTION,
   userLocationIcon,
   transformedObjectBuilding,
   VIRTUAL_LOCATIONS,
@@ -491,9 +495,27 @@ export default function Map() {
               zoom={18}
               scrollWheelZoom={true}
             >
-              <TileLayer
-                url={TILELAYER_URL}
-              />
+              {/* Satellite / Map switch (top-right). Satellite is shown first. */}
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="Satellite">
+                  <TileLayer
+                    url={SATELLITE_URL}
+                    attribution={SATELLITE_ATTRIBUTION}
+                    // Esri may not have zoom-19 photos for every area; zoom 18
+                    // photos are enlarged instead of showing blank tiles.
+                    maxNativeZoom={18}
+                    maxZoom={21}
+                  />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Map">
+                  <TileLayer
+                    url={TILELAYER_URL}
+                    attribution={TILELAYER_ATTRIBUTION}
+                    maxNativeZoom={19}
+                    maxZoom={21}
+                  />
+                </LayersControl.BaseLayer>
+              </LayersControl>
 
               {/* Graph mode: campus walkway network (drawn under the route) */}
               {showGraph && (
@@ -551,7 +573,12 @@ export default function Map() {
                         }
                       },
                     }}
-                  />
+                  >
+                    {/* Building name when the cursor points at the pin */}
+                    <Tooltip direction="top" offset={[0, -36]}>
+                      {building.name}
+                    </Tooltip>
+                  </Marker>
                 );
               })}
 

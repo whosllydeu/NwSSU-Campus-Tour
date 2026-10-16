@@ -1,12 +1,13 @@
 // Real NwSSU map for the "Campus Overview" card on the home page.
 // Shows every building from the database as a small colored label
-// (its abbreviation) on the real OpenStreetMap map. Not draggable —
+// (its abbreviation) on a satellite view of the campus. Not draggable —
 // clicking it (or "View all buildings") goes to the full Map page.
 import { useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useCampusData } from "../context/DataContext";
+import { SATELLITE_URL } from "../utils/map-leaflet";
 import "../stylesheets/campus-mini-map.css";
 
 const NWSSU_CENTER = [12.0712, 124.5965];
@@ -55,12 +56,12 @@ export default function CampusMiniMap({ onOpen }) {
         attributionControl={false}
         className="cmm-map"
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />
+        <TileLayer url={SATELLITE_URL} maxNativeZoom={18} maxZoom={21} />
         {points.map((b) => (
           <Marker key={b.id} position={[b.lat, b.lng]} icon={labelIcon(b.abbr, b.color)} interactive={false} />
         ))}
       </MapContainer>
-      <span className="cmm-credit">© OpenStreetMap</span>
+      <span className="cmm-credit">Imagery © Esri</span>
       {onOpen && <span className="cmm-link">View all buildings →</span>}
     </div>
   );
