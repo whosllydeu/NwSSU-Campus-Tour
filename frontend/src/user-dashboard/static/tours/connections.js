@@ -66,4 +66,21 @@ export const CONNECTIONS = [
   },
   // "Walk to Library" pin sits on the Library passage (yaw -79°, tuned on-site with 🧭)
   { from: 'pathway-com-sas-07', to: 'pathway-library-registrar-01', fromYaw: -79, toDir: 'left', label: 'Walk to Library' },
+
+  // Main Gate ↔ CCIS → Alumni photo 02 (≈10 m apart). Same link the Map's
+  // walkway graph uses (CONNECTOR#2: GATE-CEA:1 ↔ CCIS-ALUMNI:2), so a route
+  // from the Gate toward the Library / Registrar / Nursing side can be walked
+  // in 360° the same way the Map draws it.
+  {
+    from: 'pathway-gate-cea-01', to: 'pathway-ccis-alumni-02', fromDir: 'left', toDir: 'right', // TODO tune both on-site with 🧭
+    label: 'Walk toward Library / Registrar', returnLabel: 'Back to Main Gate',
+  },
+
+  // Registrar waiting area (Library → Registrar photo 11) straight down the
+  // corridor to the IMCO office photo. Same link as the Map's CONNECTOR#5,
+  // so Nursing / Library → CCIS no longer zig-zags out to the road.
+  {
+    from: 'pathway-library-registrar-11', to: 'pathway-ccis-alumni-02b', fromDir: 'left', toDir: 'back', // TODO tune both on-site with 🧭
+    label: 'Walk toward CCIS', returnLabel: 'Walk to Registrar / Library',
+  },
 ];

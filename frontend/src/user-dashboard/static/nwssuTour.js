@@ -8,13 +8,13 @@
 //   TOURS / NODE_BY_ID   → PanoramaTour / SphereTour
 //   getTourStart(id)     → which node a tour opens on
 //   planWalk(destId)     → Map "Walk there!" guided route
+//   setWalkCorridor(pts) → makes the 360° walk follow the Map route
 //   nodesNear(latLng)    → Map "360° near me" (closest panoramas first)
 // Existing imports keep working unchanged.
 // ============================================================
 import {
   TOUR_GRAPH, CONNECTIONS, WALK_ROUTES, WALK_DEFAULT_START, PATH_LINKS,
 } from './tourNodes';
-import { shortestPath } from '../utils/tourGraph';
 
 export { CONNECTIONS, WALK_ROUTES, WALK_DEFAULT_START, PATH_LINKS };
 
@@ -130,8 +130,116 @@ export function getTourStart(tourId, startNode = null) {
   return NODE_BY_ID[tourId] ? tourId : null; // a node id was passed directly
 }
 
-/** Shortest list of node ids from one panorama to another, or null. */
-export const findPath = (fromId, toId) => shortestPath(NODE_BY_ID, fromId, toId);
+// ------------------------------------------------------------------
+// Route-following 360° walk
+// ------------------------------------------------------------------
+// The Map draws its route with A* on the walkway graph (campusGraph.json).
+// "Walk there!" must show the SAME route in 360°, so the Map hands that
+// route's line to setWalkCorridor() before opening the walk. findPath()
+// then picks the chain of photos that stays on that line:
+//   cost of a step = metres walked
+//                  + a big penalty for every metre a photo is off the route
+//                  + a penalty for cutting through another building.
+// Without a corridor it is simply the shortest walk in metres.
+
+// Photos within this many metres of the route line count as "on the route"
+// (phone GPS on the photos is a few metres off).
+export const CORRIDOR_TOLERANCE_M = 15;
+const OFF_ROUTE_PENALTY = 25; // per metre beyond the tolerance
+const BUILDING_PENALTY = 200; // passing through a building that is not the destination
+const NO_GPS_STEP_M = 8; // assumed length of a step to/from a photo with no GPS
+
+let walkCorridor = null;
+let pathCache = new Map();
+
+/**
+ * Sets the Map route the guided 360° walk must follow ([[lat, lng], …]),
+ * or clears it with null.
+ */
+export function setWalkCorridor(coordinates) {
+  walkCorridor = Array.isArray(coordinates) && coordinates.length > 1 ? coordinates : null;
+  pathCache = new Map();
+}
+
+/** Distance in metres from a point to the nearest point of a polyline. */
+function distanceToLine(point, line) {
+  const k = Math.cos((point[0] * Math.PI) / 180);
+  const M = 111320; // metres per degree of latitude
+  const px = point[1] * k * M;
+  const py = point[0] * M;
+  let best = Infinity;
+  for (let i = 0; i < line.length - 1; i++) {
+    const ax = line[i][1] * k * M, ay = line[i][0] * M;
+    const bx = line[i + 1][1] * k * M, by = line[i + 1][0] * M;
+    const dx = bx - ax, dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    let t = len2 === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+    const d = Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+function offRoutePenalty(node) {
+  if (!walkCorridor || !Array.isArray(node.data?.gps)) return 0;
+  const off = distanceToLine(node.data.gps, walkCorridor) - CORRIDOR_TOLERANCE_M;
+  return off > 0 ? off * OFF_ROUTE_PENALTY : 0;
+}
+
+function stepCost(from, to, destTour) {
+  const a = from.data?.gps;
+  const b = to.data?.gps;
+  let cost = Array.isArray(a) && Array.isArray(b) ? metersBetween(a, b) : NO_GPS_STEP_M;
+  if (to.data.tour !== destTour && TOURS[to.data.tour]?.kind !== 'pathway') cost += BUILDING_PENALTY;
+  return cost + offRoutePenalty(to);
+}
+
+/**
+ * Best list of node ids from one panorama to another (follows the Map
+ * route when a corridor is set), or null when they are not connected.
+ */
+export function findPath(fromId, toId) {
+  if (!NODE_BY_ID[fromId] || !NODE_BY_ID[toId]) return null;
+  if (fromId === toId) return [fromId];
+  const key = `${fromId}>${toId}`;
+  if (pathCache.has(key)) return pathCache.get(key);
+
+  const destTour = NODE_BY_ID[toId].data.tour;
+  const dist = new Map([[fromId, 0]]);
+  const prev = new Map();
+  const done = new Set();
+  const open = [fromId];
+  while (open.length) {
+    // small graph (a few hundred photos) → a simple scan is fast enough
+    let bi = 0;
+    for (let i = 1; i < open.length; i++) if (dist.get(open[i]) < dist.get(open[bi])) bi = i;
+    const id = open.splice(bi, 1)[0];
+    if (id === toId) break;
+    if (done.has(id)) continue;
+    done.add(id);
+    const node = NODE_BY_ID[id];
+    for (const l of node.links) {
+      const next = NODE_BY_ID[l.nodeId];
+      if (!next || done.has(next.id)) continue;
+      const d = dist.get(id) + stepCost(node, next, destTour);
+      if (d < (dist.get(next.id) ?? Infinity)) {
+        dist.set(next.id, d);
+        prev.set(next.id, id);
+        open.push(next.id);
+      }
+    }
+  }
+
+  let path = null;
+  if (dist.has(toId)) {
+    path = [toId];
+    let cur = toId;
+    while (prev.has(cur)) { cur = prev.get(cur); path.unshift(cur); }
+  }
+  pathCache.set(key, path);
+  return path;
+}
 
 // Reverse adjacency (who links TO each node), built once on first use.
 let reverseLinks = null;
@@ -139,6 +247,7 @@ let reverseLinks = null;
 /** Call after nodes/links change at runtime (e.g. buildings connected from the Admin Dashboard). */
 export function resetTourCaches() {
   reverseLinks = null;
+  pathCache = new Map();
 }
 function getReverseLinks() {
   if (reverseLinks) return reverseLinks;
@@ -199,12 +308,21 @@ export function planWalk(
     destinationLatLng = null,
     destinationName = null,
     maxDestMeters = WALK_DEST_MAX_METERS,
+    routeCoordinates = null,
   } = {}
 ) {
+  // When the Map route is known, the walk starts and ends where that
+  // route starts and ends, so the 360° walk and the map line match.
+  const hasRoute = Array.isArray(routeCoordinates) && routeCoordinates.length > 1;
+  const routeStart = hasRoute ? routeCoordinates[0] : null;
+  const routeEnd = hasRoute ? routeCoordinates[routeCoordinates.length - 1] : null;
+
   let route = WALK_ROUTES[destinationId];
   let arriveDistance = null;
   if (!route || !NODE_BY_ID[route.arriveNode]) {
-    const near = nearestPathwayNode(destinationLatLng, maxDestMeters);
+    const near =
+      (routeEnd && nearestPathwayNode(routeEnd, maxDestMeters)) ||
+      nearestPathwayNode(destinationLatLng, maxDestMeters);
     if (!near) return null;
     route = { arriveNode: near.node.id, pathway: near.node.data.tour };
     arriveDistance = near.distance;
@@ -230,18 +348,22 @@ export function planWalk(
     withinThreshold: startDistance === null ? null : startDistance <= maxStartMeters,
   });
 
-  // 1) Nearest reachable pathway photo to the origin position.
-  if (Array.isArray(userLocation) && userLocation.length >= 2) {
+  // 1) Reachable pathway photo nearest to where the Map route starts
+  //    (or to the origin position when there is no route).
+  const anchor = routeStart || (Array.isArray(userLocation) && userLocation.length >= 2 ? userLocation : null);
+  if (anchor) {
     const reachable = nodesThatCanReach(route.arriveNode);
     let best = null;
     for (const node of TOUR_NODES) {
       if (!Array.isArray(node.data?.gps) || !isPathwayNode(node) || !reachable.has(node.id)) continue;
-      const distance = metersBetween(userLocation, node.data.gps);
+      const distance = metersBetween(anchor, node.data.gps);
       if (!best || distance < best.distance) best = { node, distance };
     }
     if (best) {
       const path = findPath(best.node.id, route.arriveNode);
-      if (path) return build(best.node.id, path, 'gps', best.distance);
+      const hasUser = Array.isArray(userLocation) && userLocation.length >= 2;
+      if (path && hasUser) return build(best.node.id, path, 'gps', metersBetween(userLocation, best.node.data.gps));
+      if (path) return build(best.node.id, path, 'route');
     }
   }
 

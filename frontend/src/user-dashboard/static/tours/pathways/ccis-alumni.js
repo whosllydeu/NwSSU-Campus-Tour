@@ -22,6 +22,12 @@ const PATH_CCIS_ALUMNI = {
   nodes: [
     { id: 'pathway-ccis-alumni-01', yaw: 0, gps: [12.07086, 124.59671] }, // TODO yaw
     { id: 'pathway-ccis-alumni-02', yaw: 0, gps: [12.07091, 124.59670] }, // TODO yaw
+    // IMCO office corridor, stairs ahead — between photos 02 and 03.
+    // Image: public/panoramas/pathways/coed-alumni/pathway-coed-alumni-02b.jpg
+    {
+      id: 'pathway-ccis-alumni-02b', yaw: 0, gps: [12.0709285, 124.5965891], // TODO yaw
+      file: 'pathway-coed-alumni-02b.jpg',
+    },
     { id: 'pathway-ccis-alumni-03', yaw: 0, gps: [12.07066, 124.59669] }, // TODO yaw
     { id: 'pathway-ccis-alumni-04', yaw: 0, gps: [12.07064, 124.59673] }, // TODO yaw
     { id: 'pathway-ccis-alumni-05', yaw: 0, gps: [12.07067, 124.59642] }, // TODO yaw

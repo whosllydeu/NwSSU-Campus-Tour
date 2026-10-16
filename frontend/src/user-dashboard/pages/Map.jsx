@@ -26,7 +26,7 @@ import { campusRouter, formatDistance } from "../../utils/campusRouting";
 import { Globe, LocateFixed, Network, Road, RotateCcw } from "lucide-react";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
-import { planWalk, WALK_ROUTES } from "../static/nwssuTour";
+import { planWalk, setWalkCorridor, WALK_ROUTES } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
 import { findBuildingTourId } from "../utils/panorama";
@@ -146,6 +146,7 @@ export default function Map() {
   // user can start a new trip from scratch.
   const handleReset = () => {
     setRoute(EMPTY_ROUTE);
+    setWalkCorridor(null);
     setSelectedBuilding(null);
     setUserLocation(null);
     setOriginBuildingId(null);
@@ -199,11 +200,10 @@ export default function Map() {
     }
   };
 
-  // "Walk there!" — opens the 360° tour on the PATHWAY photo closest to
-  // the user's origin (GPS / test location, or the picked origin
-  // building's coordinates) that can actually reach the destination,
-  // then guides along the shortest chain of photos to the destination's
-  // arrival photo. Main Gate is only used when there is no origin at all.
+  // "Walk there!" — computes the SAME walking route as "Get Route", draws
+  // it on the map, and makes the 360° walk follow that route photo by
+  // photo (setWalkCorridor), so the map and the 360° guide always agree.
+  // With no known origin the route starts at the Main Gate.
   const handleNavigateHere = async () => {
     if (!selectedBuilding) {
       setAlertMsg({ message: "Select a destination building first." });
@@ -229,11 +229,29 @@ export default function Map() {
       }
     }
 
+    const originBuilding = originId ? CAMPUS_BUILDING.find((b) => b.id === originId) : null;
+
+    // Same route as "Get Route" (Main Gate when the origin is unknown).
+    let mapRoute;
+    try {
+      const gate = VIRTUAL_LOCATIONS.find((v) => v.id === "gate");
+      const start =
+        source === "origin" && originBuilding
+          ? toRouteEndpoint(originBuilding, location)
+          : location ?? toRouteEndpoint(gate);
+      mapRoute = await getWalkingRoute(start, toRouteEndpoint(selectedBuilding));
+    } catch {
+      mapRoute = null; // no walkway route (e.g. too far) → 360° walk uses its own path
+    }
+    setRoute(mapRoute ?? EMPTY_ROUTE);
+    setWalkCorridor(mapRoute?.coordinates ?? null);
+
     const plan = planWalk(walkRouteKey(selectedBuilding.id) || selectedBuilding.id, {
       userLocation: location,
       originBuildingId: walkRouteKey(originId),
       destinationLatLng: selectedBuilding.position,
       destinationName: selectedBuilding.name,
+      routeCoordinates: mapRoute?.coordinates ?? null,
     });
 
     if (!plan) {
@@ -241,7 +259,6 @@ export default function Map() {
       return;
     }
 
-    const originBuilding = originId ? CAMPUS_BUILDING.find((b) => b.id === originId) : null;
     const nearWhat = source === "origin" && originBuilding ? originBuilding.name : "you";
     const arriveNote =
       plan.arriveDistance !== null
