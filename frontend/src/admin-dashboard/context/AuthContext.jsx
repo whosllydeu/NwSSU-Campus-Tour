@@ -87,7 +87,7 @@ export function AuthProvider({ children }) {
     if (!p) {
       await signOut().catch(() => {});
       setSession(null);
-      throw new Error('Signed in, but no profile record exists for this account yet.');
+      throw new Error('Signed out.');
     }
     if (p.role !== 'admin') {
       await signOut().catch(() => {});
