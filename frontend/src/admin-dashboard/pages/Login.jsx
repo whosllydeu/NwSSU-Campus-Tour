@@ -6,7 +6,7 @@ import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
 const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, notice, clearNotice } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -17,6 +17,7 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    clearNotice();
     setSubmitting(true);
     try {
       await login(email, password);
@@ -60,7 +61,7 @@ export default function Login() {
           />
         </label>
 
-        {error && <p className="ad-login-error">{error}</p>}
+        {(error || notice) && <p className="ad-login-error">{error || notice}</p>}
 
         <button className="ad-login-submit" type="submit" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign In'}
