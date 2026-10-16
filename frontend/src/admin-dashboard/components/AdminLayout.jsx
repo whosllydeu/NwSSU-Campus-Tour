@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
 import { AdminProvider } from '../context/AdminContext.jsx';
 import '../styles/admin.css';
+import '../styles/admin-flat.css';
 
 const TITLES = {
   '/admin': { title: 'Dashboard', subtitle: 'Overview of the campus tour system' },
@@ -18,6 +19,12 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const meta = TITLES[location.pathname] || { title: 'Admin', subtitle: '' };
+
+  // Square-corner (flat) look for the whole admin dashboard only.
+  useEffect(() => {
+    document.body.classList.add('admin-flat');
+    return () => document.body.classList.remove('admin-flat');
+  }, []);
 
   return (
     <AdminProvider>

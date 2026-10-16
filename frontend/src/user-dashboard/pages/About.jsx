@@ -4,7 +4,6 @@ import {
   Globe,
   Footprints,
   Building2,
-  WifiOff,
   MapPin,
   Navigation,
   GraduationCap,
@@ -88,7 +87,7 @@ const InstagramIcon = ({ size = 20 }) => (
 const CONTACT_ITEMS = [
   { key: "email", icon: Mail, label: "Email", href: (v) => `mailto:${v}` },
   { key: "phone", icon: Phone, label: "Call / Text", href: (v) => `tel:${v.replace(/\s+/g, "")}` },
-  { key: "facebook", icon: FacebookIcon, label: "Facebook", href: (v) => v, text: () => "Visit our page" },
+  { key: "facebook", icon: FacebookIcon, label: "Facebook", href: (v) => v, text: () => "Visit my page" },
   { key: "instagram", icon: InstagramIcon, label: "Instagram", href: (v) => v, text: () => "Follow us" },
   { key: "messenger", icon: MessageCircle, label: "Messenger", href: (v) => v, text: () => "Chat with us" },
   {
@@ -117,11 +116,6 @@ const FEATURES = [
     icon: Building2,
     title: "Buildings & Departments",
     text: "See each building’s offices, programs, and photos, and every college and department in one place.",
-  },
-  {
-    icon: WifiOff,
-    title: "Works Offline",
-    text: "Once opened, the map and campus routes keep working even without a stable internet connection.",
   },
 ];
 

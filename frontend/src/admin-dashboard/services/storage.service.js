@@ -67,7 +67,7 @@ export async function uploadBuildingImage(file, folderKey) {
 
   const { error } = await supabase.storage
     .from(BUILDING_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+    .upload(path, file, { cacheControl: '31536000', upsert: false, contentType: file.type });
 
   if (error) {
     throw new Error(`Image upload failed: ${error.message}`);

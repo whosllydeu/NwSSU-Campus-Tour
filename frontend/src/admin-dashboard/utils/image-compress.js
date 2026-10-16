@@ -10,24 +10,15 @@
 // ============================================================
 
 export const IMAGE_LIMITS = {
-  // Largest file the admin may SELECT (before optimisation).
   maxSourceMB: 60,
+  maxUploadMB: 5,          // was 15
 
-  // Largest file that may be UPLOADED (after optimisation).
-  // Must be ≤ the bucket's file_size_limit in Supabase (see the SQL file).
-  maxUploadMB: 15,
-
-  // Normal photos: longest side in pixels, and the size we aim for.
   photoMaxEdge: 2560,
   photoTargetMB: 2,
 
-  // 360° panoramas (equirectangular, ~2:1): width in pixels and target size.
-  // 6144 keeps good detail and loads well on phones. 8192 = sharper but
-  // ~1.8× heavier; 4096 = lightest, a bit soft when zoomed in.
-  panoramaMaxWidth: 6144,
-  panoramaTargetMB: 8,
+  panoramaMaxWidth: 4096,  // was 6144 — same as your built-in tours
+  panoramaTargetMB: 2,     // was 8
 
-  // JPEG quality steps tried from best to smallest.
   qualitySteps: [0.86, 0.8, 0.74, 0.68, 0.62],
 };
 

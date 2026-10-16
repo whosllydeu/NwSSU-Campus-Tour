@@ -1,0 +1,21 @@
+/* Admin Dashboard — flat, square-corner look (colors unchanged).
+   Removes border-radius from EVERY element in the admin dashboard,
+   including avatars, badges, buttons, inputs, toggles and modals.
+   Active only while <body> has the "admin-flat" class (set in
+   AdminLayout.jsx), so the user side of the app stays rounded. */
+
+body.admin-flat *,
+body.admin-flat *::before,
+body.admin-flat *::after {
+  border-radius: 0 !important;
+}
+
+/* Native form controls (checkbox/radio/range/scrollbar) */
+body.admin-flat input,
+body.admin-flat select,
+body.admin-flat textarea,
+body.admin-flat button,
+body.admin-flat ::-webkit-scrollbar-thumb,
+body.admin-flat ::-webkit-scrollbar-track {
+  border-radius: 0 !important;
+}

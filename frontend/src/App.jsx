@@ -28,7 +28,6 @@ import {
   Toast,
 } from "./user-dashboard/components";
 import AdminLayout from "./admin-dashboard/components/AdminLayout";
-import OfflineBanner from "./user-dashboard/components/OfflineBanner";
 
 // User side: the address bar always stays "https://nwssu-campustour.vercel.app"
 // (pages are tracked in memory, so /map, /about … never show).
@@ -90,7 +89,6 @@ const App = () => {
         <Unavailable/>
         <Lightbox/>
         <Toast/>
-        <OfflineBanner/>
         {/* UI Components End */}
       </UIProvider>
     </Router>
