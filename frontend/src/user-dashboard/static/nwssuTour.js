@@ -241,6 +241,20 @@ export function findPath(fromId, toId) {
   return path;
 }
 
+/** Total cost of a path from findPath() (same costs findPath uses). */
+function pathCost(path) {
+  if (!path || path.length < 2) return 0;
+  const destTour = NODE_BY_ID[path[path.length - 1]].data.tour;
+  let total = 0;
+  for (let i = 1; i < path.length; i++) total += stepCost(NODE_BY_ID[path[i - 1]], NODE_BY_ID[path[i]], destTour);
+  return total;
+}
+
+// Start-photo choice: photos up to this many metres farther than the
+// nearest one are also considered, and the one with the cheapest walk
+// along the route wins (two pathways can have photos at the same spot).
+const START_CANDIDATE_SLACK_M = 15;
+
 // Reverse adjacency (who links TO each node), built once on first use.
 let reverseLinks = null;
 
@@ -353,11 +367,21 @@ export function planWalk(
   const anchor = routeStart || (Array.isArray(userLocation) && userLocation.length >= 2 ? userLocation : null);
   if (anchor) {
     const reachable = nodesThatCanReach(route.arriveNode);
-    let best = null;
+    const candidates = [];
     for (const node of TOUR_NODES) {
       if (!Array.isArray(node.data?.gps) || !isPathwayNode(node) || !reachable.has(node.id)) continue;
-      const distance = metersBetween(anchor, node.data.gps);
-      if (!best || distance < best.distance) best = { node, distance };
+      candidates.push({ node, distance: metersBetween(anchor, node.data.gps) });
+    }
+    const nearest = Math.min(...candidates.map((c) => c.distance));
+    let best = null;
+    for (const c of candidates) {
+      if (c.distance > nearest + START_CANDIDATE_SLACK_M) continue;
+      const p = findPath(c.node.id, route.arriveNode);
+      if (!p) continue;
+      // reaching the photo counts double, so the walk never "jumps ahead"
+      // past the photo nearest the user just to save a few steps
+      const score = 2 * c.distance + offRoutePenalty(c.node) + pathCost(p);
+      if (!best || score < best.score) best = { ...c, score };
     }
     if (best) {
       const path = findPath(best.node.id, route.arriveNode);

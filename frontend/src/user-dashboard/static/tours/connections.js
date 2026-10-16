@@ -83,4 +83,13 @@ export const CONNECTIONS = [
     from: 'pathway-library-registrar-11', to: 'pathway-ccis-alumni-02b', fromDir: 'left', toDir: 'back', // TODO tune both on-site with 🧭
     label: 'Walk toward CCIS', returnLabel: 'Walk to Registrar / Library',
   },
+
+  // Gate → College of Education photo 01 (inside the Main Gate) ↔ Gate → CEA
+  // photo 02. Same link as the Map's CONNECTOR#3 (GATE-COED:1 ↔ GATE-CEA:2).
+  // Without it, a walk from the COED / CCIS side toward CEA had to loop
+  // around through CCIS → Alumni and the Registrar to reach the Gate.
+  {
+    from: 'pathway-gate-coed-01', to: 'pathway-gate-cea-02', fromDir: 'back', toDir: 'left', // TODO tune both on-site with 🧭
+    label: 'Walk toward CEA / COM', returnLabel: 'Walk toward College of Education',
+  },
 ];
