@@ -46,11 +46,6 @@ function GalleryThumb({ item, name, active, onSelect }) {
   );
 }
 
-/**
- * Additional building images, each with its own coordinates.
- * By default a click opens the global lightbox; pass `onSelect` to
- * handle it yourself (e.g. inside an overlay that sits above the lightbox).
- */
 export default function BuildingGallery({ building, title = '🖼️ Photo Gallery', onSelect, activeId }) {
   const { openLightbox } = useUI();
   const items = buildingGallery(building);

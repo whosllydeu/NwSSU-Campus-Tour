@@ -27,7 +27,6 @@ L.Icon.Default.mergeOptions({
   ).href,
 });
 
-// Default campus center
 const DEFAULT_POSITION = [12.07113, 124.59621];
 
 export default function LocationPicker({

@@ -25,8 +25,6 @@ export const useCampusData = () => {
 };
 
 const connectTours = (buildings) => {
-  // Buildings connected to a pathway from the Admin Dashboard join the
-  // 360° tour + "Walk there!" before anything renders with them.
   try {
     applyAdminBuildingTours(buildings);
   } catch (tourErr) {
@@ -40,7 +38,6 @@ export const DataProvider = ({ children }) => {
   const [buildings, setBuildings] = useState([]);
   const [departments, setDepartments] = useState([]);
 
-  // Load buildings and departments from Supabase once.
   useEffect(() => {
     let active = true;
 

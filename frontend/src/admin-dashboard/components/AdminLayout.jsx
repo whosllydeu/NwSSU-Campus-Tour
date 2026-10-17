@@ -20,7 +20,6 @@ export default function AdminLayout() {
   const location = useLocation();
   const meta = TITLES[location.pathname] || { title: 'Admin', subtitle: '' };
 
-  // Square-corner (flat) look for the whole admin dashboard only.
   useEffect(() => {
     document.body.classList.add('admin-flat');
     return () => document.body.classList.remove('admin-flat');

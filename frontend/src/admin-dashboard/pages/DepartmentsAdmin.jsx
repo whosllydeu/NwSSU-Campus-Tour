@@ -41,7 +41,6 @@ export default function DepartmentsAdmin() {
   function openCreate() { setEditing(null); setFormSession((n) => n + 1); setFormOpen(true); }
   function openEdit(row) { setEditing(row); setFormSession((n) => n + 1); setFormOpen(true); }
 
-  // Errors are thrown back to FormModal, which shows them in the form.
   async function handleSubmit(data) {
     if (editing) {
       await updateRecord('departments', 'Department', editing._id, data);

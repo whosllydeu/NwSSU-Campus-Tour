@@ -1,7 +1,3 @@
-// Real NwSSU map for the "Campus Overview" card on the home page.
-// Shows every building from the database as a small colored label
-// (its abbreviation) on a satellite view of the campus. Not draggable —
-// clicking it (or "View all buildings") goes to the full Map page.
 import { useMemo } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";

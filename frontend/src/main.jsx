@@ -7,9 +7,6 @@ import { AuthProvider } from './admin-dashboard/context/AuthContext'
 import { ToastProvider } from './admin-dashboard/context/ToastContext'
 import { TourProvider } from './user-dashboard/context/TourContext'
 
-// CampusTour is a plain web app (no PWA, no offline mode). Older versions
-// installed a service worker; this removes it and its saved caches from
-// browsers that visited before, so they always load the latest version.
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations()
     .then((registrations) => registrations.forEach((r) => r.unregister()))
@@ -20,11 +17,9 @@ if ('caches' in window) {
     .then((keys) => keys.forEach((key) => caches.delete(key)))
     .catch(() => {});
 }
-// Remove the campus data copy that older versions saved for offline use.
 try {
   localStorage.removeItem('nwssu-campus-data-v1');
 } catch {
-  /* storage blocked — nothing to remove */
 }
 
 createRoot(document.getElementById('root')).render(

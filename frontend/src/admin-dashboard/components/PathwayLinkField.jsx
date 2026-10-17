@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { TOUR_NODES, TOURS, isPathwayNode, metersBetween } from '../../user-dashboard/static/nwssuTour';
 import { isBuiltInTourBuilding } from '../../user-dashboard/utils/adminTours';
 
-/** Empty value for the "360° Pathway Connection" field. */
 // eslint-disable-next-line react-refresh/only-export-components
 export const EMPTY_PATHWAY_LINK = { pathwayNode: '', entryImage: '', label: '', pinYaw: '', returnYaw: '' };
 
@@ -23,17 +22,10 @@ const photoNumber = (id) => {
   return m ? Number(m[1]) : id;
 };
 
-// Native dropdown lists ignore the dark admin theme, so give the
-// options explicit readable colours.
 const OPTION_STYLE = { color: '#111827', backgroundColor: '#ffffff' };
 
 const isCoord = (v) => v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v));
 
-/**
- * Admin form field: connects a building's uploaded 360° images to an
- * outdoor pathway photo, so the building gets a pathway pin and a
- * "Walk there!" route without any code edits.
- */
 export default function PathwayLinkField({
   value,
   onChange,
@@ -49,7 +41,6 @@ export default function PathwayLinkField({
 
   const hasCoords = isCoord(buildingLat) && isCoord(buildingLng);
 
-  // Every pathway photo; the ones with GPS are sorted by distance from the building.
   const options = useMemo(() => {
     const list = TOUR_NODES.filter((n) => isPathwayNode(n)).map((n) => {
       const distance = hasCoords && Array.isArray(n.data.gps)
@@ -68,7 +59,6 @@ export default function PathwayLinkField({
 
   const closest = options.find((o) => o.distance !== null) || null;
 
-  // Only images marked as 360° panoramas can be walked into.
   const panoramas = galleryItems
     .map((item, index) => ({ key: item.id || item.uid, item, index }))
     .filter(({ item }) => item.panorama === true);

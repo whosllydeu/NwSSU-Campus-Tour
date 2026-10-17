@@ -9,7 +9,7 @@ export default function Users() {
   const { showToast } = useUI();
   const [profiles, setProfiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [pending, setPending] = useState(null); // { id, email, nextRole }
+  const [pending, setPending] = useState(null);
 
   const refetch = useCallback(async () => {
     setIsLoading(true);

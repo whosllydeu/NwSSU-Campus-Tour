@@ -1,5 +1,3 @@
-/* About page — scoped to .about-page so it doesn't affect other pages.
-   Matches the app's dark green + gold theme (glass cards over the campus photo). */
 .about-page {
   --about-gold: #d4b25a;
   --about-gold-soft: rgba(212, 178, 90, 0.14);
@@ -18,7 +16,6 @@
   line-height: 1.6;
 }
 
-/* Intro */
 .about-hero {
   text-align: center;
   padding: 32px 16px 24px;
@@ -47,7 +44,6 @@
   font-size: 1.05rem;
 }
 
-/* Sections */
 .about-section {
   margin-top: 40px;
 }
@@ -58,7 +54,6 @@
   margin: 0 0 16px;
 }
 
-/* Shared glass card look */
 .about-card,
 .about-step,
 .about-member,
@@ -78,7 +73,6 @@
   transform: translateY(-2px);
 }
 
-/* Feature cards */
 .about-features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -111,7 +105,6 @@
   flex-shrink: 0;
 }
 
-/* Steps */
 .about-steps {
   list-style: none;
   padding: 0;
@@ -156,7 +149,6 @@
   font-size: 0.95rem;
 }
 
-/* Project */
 .about-project {
   display: flex;
   gap: 16px;
@@ -170,7 +162,6 @@
   color: var(--about-muted);
 }
 
-/* Team */
 .about-team {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -236,7 +227,6 @@
   font-size: 0.95rem;
 }
 
-/* Contact */
 .about-contact-intro {
   margin: -6px 0 16px;
   color: var(--about-muted);
@@ -280,7 +270,6 @@
   color: #1a1a1a;
 }
 
-/* Footer */
 .about-footer {
   margin-top: 48px;
   padding-top: 20px;

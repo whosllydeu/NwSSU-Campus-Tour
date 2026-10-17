@@ -17,8 +17,7 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
   const { openTour } = useTour();
   const { departments } = useCampusData();
   const [mainErrored, setMainErrored] = useState(false);
-  // Standalone viewer for this building's uploaded panoramas.
-  const [panoramaView, setPanoramaView] = useState(null); // { buildingId, items }
+  const [panoramaView, setPanoramaView] = useState(null);
   const [checkingPanoramas, setCheckingPanoramas] = useState(false);
   const closePanoramaView = useCallback(() => setPanoramaView(null), []);
 
@@ -29,12 +28,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
   const mainPhoto = resolveImage(building.photo);
   const shownPhoto = mainErrored ? "" : mainPhoto;
 
-  // "Open 360 Tour":
-  //  1. panoramas uploaded for THIS building (Admin → Buildings) open in a
-  //     standalone viewer — only this building, no pathway links;
-  //  2. otherwise the building's existing tour from static/tourNodes.js
-  //     (found by building id, linked department or abbreviation);
-  //  3. otherwise the "not available" screen.
   const inTour = async () => {
     if (checkingPanoramas) return;
     setCheckingPanoramas(true);
@@ -47,7 +40,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
       setCheckingPanoramas(false);
     }
 
-    // Same lookup the Departments page uses, so both buttons agree.
     const tourId = findBuildingTourId(building, departments, hasTour);
 
     if (items.length > 0) {
@@ -66,7 +58,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
   return (
     <div className="building-modal-overlay">
       <div className="building-modal" onClick={(event) => event.stopPropagation()}>
-        {/* HEADER */}
         <div className="building-modal-header">
           <div className="building-modal-title">
             <div
@@ -84,7 +75,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
               <h2>{building.name}</h2>
             </div>
           </div>
-          {/* CLOSE BUTTON */}
           <button
             type="button"
             className="building-modal-close"
@@ -94,9 +84,7 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
             <X size={22}/>
           </button> 
         </div>
-        {/* BODY */}
         <div className="building-modal-body">
-          {/* PHOTO */}
           {shownPhoto && (
             <div className="building-modal-photo">
               <img
@@ -106,17 +94,12 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
               />
             </div>
           )}
-          {/* Additional images / panoramas are not listed here — they open
-              in the 360° tour via "Open 360 Tour", so a building with many
-              panoramas doesn't flood this popup. */}
-          {/* DESCRIPTION */}
           {building.desc && (
             <div className="building-modal-section">
               <h3>About</h3>
               <p>{building.desc}</p>
             </div>
           )}
-          {/* LOCATION */}
           <div className="building-modal-info-grid">
             {building.location && (
               <div className="building-info-card">
@@ -127,7 +110,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
                 </div>
               </div>
             )}
-            {/* HOURS */}
             {building.hours && (
               <div className="building-info-card">
                 <Clock size={18} />
@@ -137,7 +119,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
                 </div>
               </div>
             )}
-            {/* TYPE */}
             {building.type && (
               <div className="building-info-card">
                 <Building2 size={18} />
@@ -149,7 +130,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
                 </div>
               </div>
             )}
-            {/* COORDINATES */}
             <div className="building-info-card">
               <MapPin size={18} />
               <div>
@@ -158,7 +138,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
               </div>
             </div>
           </div>
-          {/* OFFICES */}
           {Array.isArray(building.offices) &&
             building.offices.length > 0 && (
               <section className="building-modal-section">
@@ -177,7 +156,6 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
                 </div>
               </section>
             )}
-            {/* PROGRAMS */}
             {Array.isArray(building.programs) &&
               building.programs.length > 0 && (
               <section className="building-modal-section">
@@ -198,18 +176,7 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
             )
           }
         </div>
-        {/* FOOTER */}
-        {/* <div className="building-modal-footer"></div> */}
         <div className="building-modal-footer">
-          {/* <button
-            type="button"
-            className="building-modal-route-btn"
-            onClick={onRoute}
-            disabled={routeLoading}
-          >
-            <Road size={18} />
-            {routeLoading ? "Getting Route..." : "Get Destination Route"}
-          </button> */}
           <button
             type="button"
             className="building-modal-navigate-btn"

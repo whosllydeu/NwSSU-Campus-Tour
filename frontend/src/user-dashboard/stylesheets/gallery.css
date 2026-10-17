@@ -1,7 +1,3 @@
-/* ══════════════════════════════════════════════════════
-   Building photo gallery (DetailScreen + map BuildingInfoModal)
-   ══════════════════════════════════════════════════════ */
-
 .bg-section { margin-bottom: 28px; }
 
 .bg-grid {
@@ -52,7 +48,6 @@
 }
 .bg-coords:hover { color: var(--gold, #c8a84b); }
 
-/* ── Header thumbnail that replaced the emoji icon ── */
 .bim-header-thumb {
   width: 100%;
   height: 100%;

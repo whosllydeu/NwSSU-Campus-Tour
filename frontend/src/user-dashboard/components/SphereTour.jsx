@@ -1,31 +1,3 @@
-// ============================================================
-// SphereTour — the ONE 360° renderer for the whole app.
-//
-// Photo Sphere Viewer + VirtualTourPlugin (the engine the CAT tour
-// already used), fed with the single campus graph from
-// static/tourNodes.js. Because every building AND pathway is in the
-// same graph, walking from a pathway into a building is just another
-// arrow click — same viewer, no remount, no flicker.
-//
-// Street-View behaviour:
-//  - Arrows are drawn on the ground in 3D (renderMode '3d') at each
-//    link's real yaw, so they rotate with the panorama and slide out
-//    of view when you look away — never pinned to the screen.
-//  - Only the links that exist on the current node are drawn.
-//  - On arrival the camera faces the next step of the guided route,
-//    otherwise the direction you were walking (away from the photo
-//    you came from), otherwise the node's own `yaw`.
-//  - Transitions fade without spinning: the new photo is pre-aligned
-//    to where you were looking, then the view settles on the arrival
-//    direction. Linked photos are preloaded.
-//  - Cross-tour links get a floating "Enter …" pin anchored in 3D.
-//
-// Usually used through PanoramaTour.jsx (the overlay UI). Props:
-//   startNodeId      node to open on
-//   destinationNode  optional — guided "Walk there!" target
-//   apiRef           ref that receives { goTo, step, getNodeId }
-//   onNodeChange(node), onYaw(deg), onPick({ yaw, pitch })
-// ============================================================
 import { useEffect, useRef } from 'react';
 import { Viewer } from '@photo-sphere-viewer/core';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
@@ -42,14 +14,12 @@ const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
 const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
-// Ground chevron (points "up" = toward the link's yaw once laid flat).
 const CHEVRON_SVG = `
 <svg viewBox="0 0 100 100" aria-hidden="true">
   <circle class="tour-arrow-ring" cx="50" cy="50" r="44" />
   <path class="tour-arrow-chev" d="M27 60 L50 37 L73 60" />
 </svg>`;
 
-// PSV may mutate node objects; give each viewer its own copy.
 const cloneNodes = () => TOUR_NODES.map((n) => ({
   ...n,
   links: n.links.map((l) => ({ ...l, position: { ...l.position }, data: { ...l.data } })),
@@ -66,7 +36,6 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
 
   useEffect(() => { cbRef.current = { onNodeChange, onYaw, onPick }; });
 
-  // Next node on the guided route from `fromId`, or null.
   const nextHop = (fromId) => {
     const dest = destRef.current;
     if (!dest || fromId === dest) return null;
@@ -75,7 +44,6 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
     return hopCache.current[key];
   };
 
-  // Re-highlight arrows when the destination changes (e.g. guide ended).
   useEffect(() => {
     destRef.current = destinationNode;
     const tour = viewerRef.current?.getPlugin(VirtualTourPlugin);
@@ -89,14 +57,13 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
   useEffect(() => {
     const start = NODE_BY_ID[startNodeId] ? startNodeId : TOUR_NODES[0].id;
 
-    // Which way to face when arriving on `toNode` (degrees).
     const arrivalYaw = (toNode, fromNode) => {
       const linkTo = (id) => toNode.links.find((l) => l.nodeId === id);
       const hop = nextHop(toNode.id);
       if (hop && linkTo(hop)) return linkTo(hop).data.yaw;
       if (fromNode && fromNode.data?.tour === toNode.data?.tour) {
         const back = linkTo(fromNode.id);
-        if (back) return norm(back.data.yaw + 180); // keep walking the same way
+        if (back) return norm(back.data.yaw + 180);
       }
       return toNode.data?.yaw ?? 0;
     };
@@ -160,7 +127,6 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
       cbRef.current.onNodeChange?.(node);
     });
 
-    // "Enter …" pins jump through their link.
     markers.addEventListener('select-marker', ({ marker }) => {
       const goto = marker.data?.goto;
       if (goto) goVia(goto);
@@ -182,8 +148,6 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
       apiRef.current = {
         getNodeId: () => tour.getCurrentNode()?.id || null,
         goTo: (nodeId) => goVia(nodeId),
-        // Street-View keyboard walking: take the arrow closest to where
-        // you're looking (or to directly behind you for 'back').
         step: (direction = 'forward') => {
           const current = tour.getCurrentNode();
           if (!current?.links.length) return;
@@ -203,7 +167,6 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
       viewerRef.current = null;
       viewer.destroy();
     };
-    // Viewer is created once per opened tour (PanoramaTour remounts on a new tour).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startNodeId]);
 

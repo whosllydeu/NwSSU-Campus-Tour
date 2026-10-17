@@ -1,14 +1,6 @@
-// ============================================================
-// Tour registry — every tour file is listed here exactly once.
-//
-// ADD A TOUR:    create buildings/<name>.js or pathways/<name>.js
-//                (copy an existing one), then import it below and
-//                add it to TOUR_DEFS.
-// DISABLE A TOUR while debugging: comment out its line in TOUR_DEFS.
-// ============================================================
 import CAT from './buildings/cat';
 import CCIS from './buildings/ccis';
-import CON from './buildings/nursing'; // not 'con.js' — CON is a reserved file name on Windows
+import CON from './buildings/nursing';
 import ADMIN from './buildings/admin';
 import COED from './buildings/coed';
 import CCJS from './buildings/ccjs';
@@ -29,7 +21,6 @@ export const PATHWAY_TOURS = [
   PATH_GATE_COED, PATH_CCIS_ALUMNI, PATH_GATE_CEA, PATH_LIBRARY_REGISTRAR, PATH_COM_SAS,
 ];
 
-// Order doesn't matter.
 export const TOUR_DEFS = [...BUILDING_TOURS, ...PATHWAY_TOURS];
 
 export { CONNECTIONS } from './connections';

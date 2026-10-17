@@ -31,14 +31,6 @@ export const MINI_MAP = [
   { code: 'CCJS', left: '83%', top: '42%', bg: '#8b1a1a' },
 ];
 
-/* 
-  Mock data la ine pero an position property dapat sugad an implementation 
-  para dire marubat sa map or mag error 
-
-  pwede liwat an implementation is sugadsine
-  position: [buildings.lat, buildings.long] 
-  from useCampusData() na hook
-*/
 export const CAMPUS_BUILDING = [
   {
     abbr: "OVL",

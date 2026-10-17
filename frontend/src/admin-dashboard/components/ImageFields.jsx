@@ -13,10 +13,6 @@ const validLng = (v) => isNum(v) && Math.abs(Number(v)) <= 180;
 
 const LIMIT_HINT = `JPG, PNG, WEBP or GIF · up to ${IMAGE_LIMITS.maxSourceMB} MB · large photos and 360° panoramas are optimised automatically`;
 
-/**
- * Validates and optimises selected files one by one (keeps memory low
- * for big panoramas). Returns the ready files and any error messages.
- */
 async function prepareFiles(files) {
   const ready = [];
   const problems = [];
@@ -38,7 +34,6 @@ async function prepareFiles(files) {
   return { ready, problems };
 }
 
-// "3.1 MB · 6144×3072 · 360° (was 24.8 MB)"
 function fileSummary(file) {
   if (!file) return '';
   const info = getPreparedInfo(file);
@@ -50,10 +45,6 @@ function fileSummary(file) {
   return text;
 }
 
-/* ──────────────────────────────────────────────────────────
-   Single image upload (main building photo)
-   value: { url: string, file: File|null, preview: string }
-   ────────────────────────────────────────────────────────── */
 export function ImageUploadField({ value, disabled, onSelectFile, onClear, onError }) {
   const inputRef = useRef(null);
   const [processing, setProcessing] = useState(false);
@@ -119,10 +110,6 @@ export function ImageUploadField({ value, disabled, onSelectFile, onClear, onErr
   );
 }
 
-/* ──────────────────────────────────────────────────────────
-   Multiple images, each with its own coordinates
-   items: [{ uid, id, url, path, file, preview, lat, lng, caption }]
-   ────────────────────────────────────────────────────────── */
 export function GalleryField({
   items,
   errors = {},
@@ -145,8 +132,6 @@ export function GalleryField({
 
   const hasBuildingCoords = validLat(buildingLat) && validLng(buildingLng);
 
-  // Older images were saved without the 360° flag — detect it from the
-  // image's 2:1 shape once, so the checkbox shows the right state.
   const detected = useRef(new Set());
   useEffect(() => {
     items.forEach((item) => {
@@ -396,12 +381,6 @@ export function GalleryField({
   );
 }
 
-/* ──────────────────────────────────────────────────────────
-   Extra navigation arrows for one 360° image (junctions).
-   Forward/back arrows come from the gallery order; these add
-   up to 2 more so a view can have 3–4 directions in total.
-   Each arrow: { to: <id of another 360° image>, yaw: degrees }
-   ────────────────────────────────────────────────────────── */
 const MAX_EXTRA_ARROWS = 2;
 
 function ExtraArrows({ item, items, error, disabled, onChange }) {

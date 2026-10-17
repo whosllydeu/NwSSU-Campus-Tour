@@ -12,7 +12,6 @@ export default function Home() {
     <>
       <Navbar/>
       <main className="page active" id="page-home">
-        {/* ── Hero ── */}
         <div className="hero">
           <div className="hero-content">
             <div className="hero-text">
@@ -47,7 +46,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Quick Access ── */}
         <div className="home-section">
           <div className="sec-hd"><h2>Quick Access</h2><p>Jump to key locations</p></div>
           <div className="quick-grid">
@@ -61,7 +59,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Academic Colleges ── */}
         <div className="home-section alt">
           <div className="sec-hd"><h2>Academic Colleges</h2><p>Seven colleges offering diverse programs</p></div>
           <div className="college-grid">

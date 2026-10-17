@@ -1,15 +1,9 @@
-/* ══════════════════════════════════════════════════════
-   Admin Dashboard — extends the public site's design tokens
-   (see src/styles/style.css :root) with layout-specific rules.
-   ══════════════════════════════════════════════════════ */
-
 .ad-shell {
   display: flex;
   min-height: 100vh;
   background: var(--bg);
 }
 
-/* ── Sidebar ── */
 .ad-sidebar {
   width: 260px;
   flex-shrink: 0;
@@ -54,7 +48,6 @@
   display: none;
 }
 
-/* ── Main column ── */
 .ad-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ad-topbar {
   display: flex; align-items: center; gap: 16px;
@@ -82,7 +75,6 @@
 
 .ad-content { padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 20px; }
 
-/* ── Panels & grids ── */
 .ad-panel {
   background: var(--glass);
   border: 1px solid var(--border);
@@ -97,7 +89,6 @@
 .ad-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .ad-muted { color: var(--muted); font-size: 13px; }
 
-/* ── Stat cards ── */
 .ad-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .ad-stat-card {
   display: flex; align-items: center; gap: 14px;
@@ -112,7 +103,6 @@
 .ad-stat-card.accent-blue { border-left: 3px solid var(--blue); }
 .ad-stat-card.accent-teal { border-left: 3px solid var(--teal); }
 
-/* ── Bar list (overview breakdown) ── */
 .ad-bar-list { display: flex; flex-direction: column; gap: 10px; }
 .ad-bar-row { display: grid; grid-template-columns: 80px 1fr 30px; align-items: center; gap: 10px; }
 .ad-bar-label { font-size: 12px; color: var(--text2); text-transform: capitalize; }
@@ -120,7 +110,6 @@
 .ad-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green3), var(--gold)); border-radius: 6px; }
 .ad-bar-value { font-size: 12px; color: var(--muted); text-align: right; }
 
-/* ── Activity feed ── */
 .ad-activity-feed { display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto; }
 .ad-activity-feed li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text2); }
 .ad-activity-icon { font-size: 14px; }
@@ -130,7 +119,6 @@
 
 .ad-quicklinks { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* ── Data table ── */
 .ad-table-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
 .ad-search-box {
   display: flex; align-items: center; gap: 8px;
@@ -171,13 +159,11 @@
 
 .ad-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-size: 12px; color: var(--muted); }
 
-/* ── Loading / skeleton ── */
 .ad-loading { padding: 40px; text-align: center; color: var(--muted); }
 .ad-skeleton-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .ad-skeleton-card { height: 84px; border-radius: var(--r2); background: linear-gradient(90deg, var(--glass) 25%, var(--surface2) 50%, var(--glass) 75%); background-size: 200% 100%; animation: adShimmer 1.4s infinite; }
 @keyframes adShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ── Overlay / modal / confirm (shared) ── */
 .ad-overlay {
   position: fixed; inset: 0; z-index: 2000;
   background: rgba(5,14,4,0.7); backdrop-filter: blur(4px);
@@ -200,7 +186,6 @@
 }
 .ad-btn-danger:hover { filter: brightness(1.15); }
 
-/* ── Form ── */
 .ad-form-box { max-width: 680px; max-height: 88vh; overflow-y: auto; }
 .ad-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .ad-form-header h3 { font-family: var(--ff-h); font-size: 20px; color: var(--text); }
@@ -217,14 +202,12 @@
 .ad-field input[type="color"] { padding: 4px; height: 38px; }
 .ad-error { font-size: 11px; color: #e06060; }
 
-/* ── Filters / reports ── */
 .ad-filters-row { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
 .ad-filters-row label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text2); font-weight: 600; }
 .ad-filters-row select { background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; }
 .ad-filters-actions { display: flex; gap: 10px; margin-left: auto; }
 .ad-chart-box { width: 100%; }
 
-/* ── Settings ── */
 .ad-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ad-info-grid > div { display: flex; flex-direction: column; gap: 4px; }
 .ad-info-label { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: .04em; }
@@ -234,7 +217,6 @@
   flex-wrap: wrap;
 }
 
-/* ── Responsive ── */
 @media (max-width: 900px) {
   .ad-two-col { grid-template-columns: 1fr; }
   .ad-stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -268,7 +250,6 @@
   .ad-panel { break-inside: avoid; border: 1px solid #ccc; background: #fff; color: #111; }
   .ad-panel h2, .ad-topbar-title h1 { color: #111; }
 }
-/* ── Flat look: no rounded corners anywhere in the admin dashboard ── */
 .ad-shell,
 .ad-shell *,
 .ad-shell *::before,

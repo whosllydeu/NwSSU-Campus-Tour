@@ -35,9 +35,6 @@ import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
 import { findBuildingTourId } from "../utils/panorama";
 
-// DEV ONLY: pretend to stand somewhere on campus while testing at home.
-// Put  VITE_TEST_LOCATION=12.071414,124.595566  in .env.local, restart
-// `npm run dev`, and remove it again before deploying.
 const TEST_LOCATION = (() => {
   const raw = import.meta.env.VITE_TEST_LOCATION;
   if (!raw) return null;
@@ -59,7 +56,6 @@ const EMPTY_ROUTE = {
   edges: [],
 };
 
-/** Asks the browser for the user's position. Resolves to [lat, lng]. */
 function requestLocation() {
   if (TEST_LOCATION) return Promise.resolve(TEST_LOCATION);
   return new Promise((resolve, reject) => {
@@ -79,20 +75,11 @@ export default function Map() {
   const { buildings, departments } = useCampusData();
 
   const { openUnavailable, openTour } = useUI();
-  // Real buildings PLUS lightweight virtual locations (e.g. the Gate) —
-  // so GPS detection, the sidebar list, and map markers all treat both
-  // the same way for routing/pathway purposes.
-  // Memoised so it only rebuilds when `buildings` changes — otherwise the
-  // useMemo below (filteredBuildings) would recompute on every render.
   const CAMPUS_BUILDING = useMemo(
     () => [...transformedObjectBuilding(buildings), ...VIRTUAL_LOCATIONS],
     [buildings]
   );
 
-  // WALK_ROUTES (tours/walkRoutes.js) are keyed by short ids like 'ccis'.
-  // Buildings added from the Admin Dashboard get name-based ids, so also
-  // try the linked department and the abbreviation (same lookup the
-  // "Open 360 Tour" button uses).
   const walkRouteKey = (id) => {
     if (!id) return null;
     if (WALK_ROUTES[id]) return id;
@@ -103,20 +90,11 @@ export default function Map() {
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => !isMobile());
   const [modalBuilding, setModalBuilding] = useState(null);
-  // Where userLocation came from: 'gps' (real current location) or
-  // 'origin' (picked from the list — temporary testing tool).
   const [locationSource, setLocationSource] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
-  // Which building the current userLocation corresponds to, if any —
-  // set either from GPS detection or from manually picking a building
-  // as the origin. Needed to look up a direct pathway tour for "Walk There".
   const [originBuildingId, setOriginBuildingId] = useState(null);
-  // 'destination' (default, existing behavior) or 'origin' — controls
-  // what clicking a building in the sidebar list does. This is really
-  // just a manual override/testing tool now — normally "My Location"
-  // alone is enough to set your origin automatically.
   const [pickMode, setPickMode] = useState("destination");
   const [loader, setLoader] = useState(null);
   const [alertMsg, setAlertMsg] = useState({
@@ -124,7 +102,6 @@ export default function Map() {
     message: ""
   });
   const [route, setRoute] = useState(EMPTY_ROUTE);
-  // Graph mode: overlays the campus walkway graph (nodes + edges).
   const [showGraph, setShowGraph] = useState(false);
   const graphStats = useMemo(() => campusRouter.analyze(), []);
 
@@ -146,8 +123,6 @@ export default function Map() {
     console.log(selectedBuilding);
   }, [selectedBuilding]);
 
-  // "Reset" — clears the route, origin, destination and messages so the
-  // user can start a new trip from scratch.
   const handleReset = () => {
     setRoute(EMPTY_ROUTE);
     setWalkCorridor(null);
@@ -162,8 +137,6 @@ export default function Map() {
 
   const hasTripState = Boolean(route.coordinates || selectedBuilding || userLocation);
 
-  // A new origin or destination makes the drawn route outdated, so every
-  // handler that changes them also clears the route (no effect needed).
   const handleBuildingClick = (building) => {
     setRoute(EMPTY_ROUTE);
     if (pickMode === "origin") {
@@ -176,7 +149,6 @@ export default function Map() {
     }
   };
 
-  // Saves a location as the user's origin and detects which building it is at.
   const applyLocation = (location) => {
     const { building } = findBuildingAtLocation(location, CAMPUS_BUILDING);
     setRoute(EMPTY_ROUTE);
@@ -204,19 +176,12 @@ export default function Map() {
     }
   };
 
-  // "Walk there!" — computes the SAME walking route as "Get Route", draws
-  // it on the map, and makes the 360° walk follow that route photo by
-  // photo (setWalkCorridor), so the map and the 360° guide always agree.
-  // With no known origin the route starts at the Main Gate.
   const handleNavigateHere = async () => {
     if (!selectedBuilding) {
       setAlertMsg({ message: "Select a destination building first." });
       return;
     }
 
-    // First-time visitors may not know where they are — if no origin was
-    // set yet, quietly try GPS so the walk starts from the photo nearest
-    // to them instead of always from the Gate.
     let location = userLocation;
     let originId = originBuildingId;
     let source = locationSource;
@@ -227,7 +192,7 @@ export default function Map() {
         originId = applyLocation(location)?.id || null;
         source = "gps";
       } catch {
-        location = null; // no permission / no GPS → fall back below
+        location = null;
       } finally {
         setLoader(null);
       }
@@ -235,7 +200,6 @@ export default function Map() {
 
     const originBuilding = originId ? CAMPUS_BUILDING.find((b) => b.id === originId) : null;
 
-    // Same route as "Get Route" (Main Gate when the origin is unknown).
     let mapRoute;
     try {
       const gate = VIRTUAL_LOCATIONS.find((v) => v.id === "gate");
@@ -245,7 +209,7 @@ export default function Map() {
           : location ?? toRouteEndpoint(gate);
       mapRoute = await getWalkingRoute(start, toRouteEndpoint(selectedBuilding));
     } catch {
-      mapRoute = null; // no walkway route (e.g. too far) → 360° walk uses its own path
+      mapRoute = null;
     }
     setRoute(mapRoute ?? EMPTY_ROUTE);
     setWalkCorridor(mapRoute?.coordinates ?? null);
@@ -296,16 +260,12 @@ export default function Map() {
     });
   }
 
-  // A building's walkway entrance, if one is set. transformedObjectBuilding()
-  // copies entranceNodeId, but also check the raw record to be safe.
   const getEntranceNodeId = (building) => {
     if (!building) return null;
     const raw = buildings.find((item) => item.id === building.id);
     return building.entranceNodeId ?? raw?.entranceNodeId ?? null;
   };
 
-  // What the router should start/end at: the building's entrance node when
-  // it has one, otherwise a position that gets snapped to the nearest walkway.
   const toRouteEndpoint = (building, fallbackPosition) => {
     const entranceNodeId = getEntranceNodeId(building);
     if (entranceNodeId && campusRouter.getNode(entranceNodeId)) {
@@ -314,7 +274,6 @@ export default function Map() {
     return fallbackPosition ?? building?.position ?? null;
   };
 
-  // On-campus route along the real walkways (computed in the browser).
   const handleGetRoute = async () => {
     if (!userLocation) {
       setAlertMsg({ message: "Please get your current location first" });
@@ -328,8 +287,6 @@ export default function Map() {
 
     setLoader("destination");
     try {
-      // A building picked as the origin starts from its entrance;
-      // a real GPS position is snapped onto the nearest walkway.
       const originBuilding =
         locationSource === "origin"
           ? CAMPUS_BUILDING.find((item) => item.id === originBuildingId)
@@ -401,8 +358,6 @@ export default function Map() {
                 </button>
               </div>
 
-              {/* Current location — "Walk there!" then starts from the 360°
-                  photo nearest to where the user is standing. */}
               <div style={{ padding: '8px 12px 0' }}>
                 <button
                   type="button"
@@ -495,14 +450,11 @@ export default function Map() {
               zoom={18}
               scrollWheelZoom={true}
             >
-              {/* Satellite / Map switch (top-right). Satellite is shown first. */}
               <LayersControl position="topright">
                 <LayersControl.BaseLayer checked name="Satellite">
                   <TileLayer
                     url={SATELLITE_URL}
                     attribution={SATELLITE_ATTRIBUTION}
-                    // Esri may not have zoom-19 photos for every area; zoom 18
-                    // photos are enlarged instead of showing blank tiles.
                     maxNativeZoom={18}
                     maxZoom={21}
                   />
@@ -517,7 +469,6 @@ export default function Map() {
                 </LayersControl.BaseLayer>
               </LayersControl>
 
-              {/* Graph mode: campus walkway network (drawn under the route) */}
               {showGraph && (
                 <>
                   {campusRouter.graph.edges.map((edge) => (
@@ -574,7 +525,6 @@ export default function Map() {
                       },
                     }}
                   >
-                    {/* Building name when the cursor points at the pin */}
                     <Tooltip direction="top" offset={[0, -36]}>
                       {building.name}
                     </Tooltip>
@@ -695,7 +645,6 @@ export default function Map() {
         <BuildingInfoModal
           building={modalBuilding}
           onClose={() => setModalBuilding(null)}
-          // onNavigate={handleNavigateHere}
           navigateLoading={loader === "navigation"}
         />
       )}

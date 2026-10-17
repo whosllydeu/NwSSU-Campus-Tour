@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useMap, useMapEvents } from "react-leaflet";
 
-// FOR FORM MODAL
 export function toEditableValue(field, raw) {
   if (field.type === 'list') {
     return Array.isArray(raw) ? raw.join('\n') : '';
@@ -25,7 +24,6 @@ export function fromEditableValue(field, raw) {
   return raw;
 }
 
-// FOR LOCATION PICKER
 export function isValidCoordinate(value) {
   if (value === '' || value === null || value === undefined) {
     return false;
@@ -33,7 +31,6 @@ export function isValidCoordinate(value) {
   return Number.isFinite(Number(value));
 }
 
-// Handles clicking anywhere on the map.
 export function MapClickHandler({ onChange }) {
   useMapEvents({
     click(event) {

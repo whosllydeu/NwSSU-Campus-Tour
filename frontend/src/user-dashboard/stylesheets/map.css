@@ -24,12 +24,6 @@
   filter: hue-rotate(160deg) saturate(3);
 }
 
-/*
-=================================================
-  BUILDING INFORMATION MODAL STYLE START
-=================================================
-*/
-
 .building-modal-overlay {
   position: fixed;
   inset: 0;
@@ -54,10 +48,6 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   animation: buildingModalSlideIn 0.2s ease;
 }
-
-/* =========================
-   HEADER
-========================= */
 
 .building-modal-header {
   display: flex;
@@ -121,10 +111,6 @@
   color: #111827;
 }
 
-/* =========================
-   BODY
-========================= */
-
 .building-modal-body {
   padding: 22px;
   overflow-y: auto;
@@ -145,10 +131,6 @@
   display: block;
   object-fit: cover;
 }
-
-/* =========================
-   SECTIONS
-========================= */
 
 .building-modal-section {
   margin-bottom: 22px;
@@ -171,10 +153,6 @@
   line-height: 1.65;
   color: #4b5563;
 }
-
-/* =========================
-   INFO GRID
-========================= */
 
 .building-modal-info-grid {
   display: grid;
@@ -222,10 +200,6 @@
   overflow-wrap: anywhere;
 }
 
-/* =========================
-   TAGS
-========================= */
-
 .building-tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -243,15 +217,8 @@
   font-weight: 500;
 }
 
-/* =========================
-   FOOTER
-========================= */
-
 .building-modal-footer {
-  /* display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px; */
-  padding: 16px 22px;
+    padding: 16px 22px;
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
 }
@@ -291,10 +258,6 @@
   width: 100%;
 }
 
-/* =========================
-   ANIMATION
-========================= */
-
 @keyframes buildingModalFadeIn {
   from {
     opacity: 0;
@@ -316,12 +279,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-/* 
-=========================
-  MOBILE
-========================= 
-*/
 
 @media (max-width: 600px) {
   .building-modal-overlay {
@@ -359,18 +316,6 @@
     height: 180px;
   }
 }
-
-/*
-=================================================
-  BUILDING INFORMATION MODAL STYLE END
-=================================================
-*/
-
-/* 
-  ==============================
-  LOCATION ACTIONS
-  ============================== 
-*/
 
 .map-alert {
   width: 100%;
@@ -514,12 +459,6 @@
   background-color: var(--green);
 }
 
-/* 
-  ==============================
-  SIDEBAR
-  ============================== 
-*/
-
 .map-sidebar {
   position: relative;
   z-index: 10;
@@ -539,12 +478,6 @@
 .sidebar-closed .map-sidebar {
   width: var(--sidebar-collapsed-width);
 }
-
-/*
-  ==============================
-  SIDEBAR HEADER
-  ============================== 
-*/
 
 .sidebar-header {
   display: flex;
@@ -595,12 +528,6 @@
   color: #111827;
   background-color: #e5e7eb;
 }
-
-/* 
-  ==============================
-  SEARCH
-  ============================== 
-*/
 
 .building-search {
   position: relative;
@@ -656,12 +583,6 @@
   color: #111827;
   background-color: #e5e7eb;
 }
-
-/* 
-  ==============================
-  BUILDING LIST
-  ==============================
-*/
 
 .building-list {
   display: flex;
@@ -751,12 +672,6 @@
   white-space: nowrap;
 }
 
-/* 
-  ==============================
-  EMPTY SEARCH RESULT
-  ============================== 
-*/
-
 .no-results {
   display: flex;
   flex-direction: column;
@@ -783,12 +698,6 @@
   font-size: 11px;
 }
 
-/* 
-  ==============================
-  MAP CONTENT
-  ============================== 
-*/
-
 .map-content {
   position: relative;
   flex: 1;
@@ -811,12 +720,6 @@
   width: 100%;
   height: 100%;
 }
-
-/* 
-  ==============================
-  SELECTED BUILDING
-  ============================== 
-*/
 
 .selected-building {
   position: absolute;
@@ -868,12 +771,6 @@
   font-size: 10px;
 }
 
-/* 
-  ==============================
-  MOBILE
-  ============================== 
-*/
-
 @media (max-width: 768px) {
   .container {
     --sidebar-width: 280px;
@@ -900,7 +797,6 @@
   }
 }
 
-/**/
 .ad-location-picker {
   width: 100%;
 }
@@ -960,18 +856,11 @@
   font-size: 12px;
 }
 
-/* ============================================================
-   MOBILE RESPONSIVENESS FIXES
-   ============================================================ */
-
-/* Map page fills exactly the screen below the navbar */
 main.container {
   height: calc(100vh - var(--nav-h));
   height: calc(100dvh - var(--nav-h));
   min-height: 0;
-  /* Own stacking layer: nothing inside the map (sidebar z-index 1000,
-     Leaflet panes/controls 400–1000) can rise above the navbar drawer */
-  isolation: isolate;
+    isolation: isolate;
   z-index: 0;
 }
 .container .map-sidebar {
@@ -980,19 +869,16 @@ main.container {
 }
 
 @media (max-width: 768px) {
-  /* Sidebar floats OVER the map instead of squeezing it */
-  .container .map-sidebar {
+    .container .map-sidebar {
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 1000; /* above Leaflet panes (400–700) */
-    width: min(300px, 86vw);
+    z-index: 1000;     width: min(300px, 86vw);
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
   }
 
-  /* Collapsed = small floating menu button */
-  .container.sidebar-closed .map-sidebar {
+    .container.sidebar-closed .map-sidebar {
     width: 52px;
     height: 52px;
     top: 10px;
@@ -1008,11 +894,9 @@ main.container {
 
   .container .map-content { width: 100%; }
 
-  /* Leaflet zoom buttons sit below the menu button */
-  .leaflet-top.leaflet-left { top: 66px; }
+    .leaflet-top.leaflet-left { top: 66px; }
 
-  /* Action card becomes a full-width bottom sheet */
-  .map-action-card {
+    .map-action-card {
     position: absolute;
     left: 10px;
     right: 10px;
@@ -1023,8 +907,7 @@ main.container {
   }
   .map-action-card > div { flex-wrap: wrap; }
 
-  /* Finger-friendly tap targets */
-  .get-location-btn, .get-location-btn-loader,
+    .get-location-btn, .get-location-btn-loader,
   .destination-route-btn, .destination-route-btn-loader,
   .navigate-btn, .navigate-btn-loader {
     min-height: 44px;
@@ -1032,8 +915,7 @@ main.container {
   }
   .sidebar-toggle { min-width: 40px; min-height: 40px; font-size: 18px; }
   .building-item { min-height: 48px; }
-  .building-search input { font-size: 16px; } /* no iOS auto-zoom */
-  .route-info { font-size: 14px; }
+  .building-search input { font-size: 16px; }   .route-info { font-size: 14px; }
 }
 
 @media (max-width: 380px) {
@@ -1042,7 +924,6 @@ main.container {
   .destination-route-btn, .destination-route-btn-loader { font-size: 13px; }
 }
 
-/* Building modal never hides behind the browser bar */
 .building-modal { max-height: calc(100dvh - 48px); }
 @media (max-width: 600px) {
   .building-modal { max-height: calc(100dvh - 24px); }

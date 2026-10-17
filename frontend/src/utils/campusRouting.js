@@ -1,21 +1,5 @@
-// On-campus pedestrian routing — fully client-side, no external services.
-//
-//  * A* over src/data/campusGraph.json with a haversine heuristic.
-//  * Edge lengths (metres) are the traversal costs.
-//  * Arbitrary points are snapped onto the nearest point of the nearest
-//    walkway edge (not just the nearest node) and the snapped edge is
-//    traversed "virtually", so the shared graph is never mutated.
-//  * Buildings route from/to their `entranceNodeId`, so they are never
-//    snapped to a nearby but inaccessible walkway.
-//  * The returned geometry is the concatenation of the full walkway
-//    geometries, so distance, duration, directions and the drawn polyline
-//    all come from the same path.
-
 import campusGraph from '../data/campusGraph.json';
 
-// ---------------------------------------------------------------------------
-// Geometry helpers
-// ---------------------------------------------------------------------------
 const EARTH_RADIUS_M = 6371008.8;
 const toRad = (d) => (d * Math.PI) / 180;
 const toDeg = (r) => (r * 180) / Math.PI;
@@ -46,7 +30,6 @@ export function bearing(a, b) {
 
 const sameCoord = (a, b) => Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;
 
-/** Accepts [lat, lng], {lat, lng}, {lat, lon} or a Leaflet LatLng. */
 export function toLatLng(p) {
   if (!p) return null;
   if (Array.isArray(p) && p.length >= 2) return [Number(p[0]), Number(p[1])];
@@ -54,7 +37,6 @@ export function toLatLng(p) {
   return null;
 }
 
-// Project point P onto segment AB in a local metric plane.
 function projectOnSegment(p, a, b) {
   const k = Math.cos(toRad(p[0]));
   const ax = a[1] * k, ay = a[0];
@@ -68,9 +50,6 @@ function projectOnSegment(p, a, b) {
   return { t, point, distance: haversine(p, point) };
 }
 
-// ---------------------------------------------------------------------------
-// Minimal binary heap for the A* open set
-// ---------------------------------------------------------------------------
 class MinHeap {
   constructor() { this.items = []; }
   get size() { return this.items.length; }
@@ -106,10 +85,7 @@ class MinHeap {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Router
-// ---------------------------------------------------------------------------
-export const DEFAULT_WALKING_SPEED_MPS = 1.33; // ≈ 80 m per minute
+export const DEFAULT_WALKING_SPEED_MPS = 1.33;
 const START = '__start__';
 const END = '__end__';
 
@@ -135,7 +111,6 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
   const resolveNodeId = (id) => (id == null ? null : alias.get(String(id)) ?? null);
   const coordOf = (id, extra) => extra?.coords.get(id) ?? nodes.get(id)?.coord;
 
-  /** Nearest point on the nearest walkway edge. */
   function snap(input, opts = {}) {
     const p = toLatLng(input);
     if (!p) return null;
@@ -145,9 +120,8 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     let best = null;
     for (const e of graph.edges) {
       if (e.connector && !allowConnectors) continue;
-      if (e.snappable === false) continue; // side branches: pass through, never start/end
-      if (walkways && !walkways.has(e.walkway)) continue; // side branches: pass through, never start/end
-      //       if (walkways && !walkways.has(e.walkway)) continue;
+      if (e.snappable === false) continue;
+      if (walkways && !walkways.has(e.walkway)) continue;
       const g = e.geometry;
       let along = 0;
       for (let i = 0; i < g.length - 1; i++) {
@@ -161,7 +135,7 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
             t: pr.t,
             point: pr.point,
             distance: pr.distance,
-            offset: along + segLen * pr.t, // metres from edge.from
+            offset: along + segLen * pr.t,
           };
         }
         along += segLen;
@@ -172,17 +146,15 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     return best;
   }
 
-  // Split an edge's geometry at a snap position (never mutates the edge).
   function splitGeometry(s) {
     const g = s.edge.geometry;
     const head = g.slice(0, s.segIndex + 1);
     if (!sameCoord(head[head.length - 1], s.point)) head.push(s.point);
     const tail = [s.point];
     for (let i = s.segIndex + 1; i < g.length; i++) if (!sameCoord(tail[tail.length - 1], g[i])) tail.push(g[i]);
-    return { toFrom: head.slice().reverse(), toTo: tail }; // both start at the snap point
+    return { toFrom: head.slice().reverse(), toTo: tail };
   }
 
-  // Normalise a route endpoint into { nodeId } or { snap }.
   function resolveEndpoint(input, opts) {
     if (input == null) return { error: 'missing', message: 'No start or destination was given.' };
     if (typeof input === 'string') {
@@ -223,13 +195,11 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     };
     push(virtualId, outFrom);
     push(virtualId, outTo);
-    // reverse links so the virtual END node can be reached from the graph
     push(s.edge.from, { ...outFrom, to: virtualId, edge: { ...outFrom.edge, geometry: toFrom.slice().reverse() } });
     push(s.edge.to, { ...outTo, to: virtualId, edge: { ...outTo.edge, geometry: toTo.slice().reverse() } });
   }
 
   function sameEdgeLink(extra, a, b) {
-    // Both snaps on one edge: direct sub-path between them along the walkway.
     const g = a.edge.geometry;
     const forward = a.segIndex < b.segIndex || (a.segIndex === b.segIndex && a.t <= b.t);
     const [p, q] = forward ? [a, b] : [b, a];
@@ -280,11 +250,6 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     return { cost: g.get(goalId), steps: path.reverse() };
   }
 
-  /**
-   * Route between two places.
-   * from / to may be: a node id string, a building ({ entranceNodeId }),
-   * { nodeId }, or a free coordinate ([lat,lng] / {lat,lng}) to be snapped.
-   */
   function route(from, to, opts = {}) {
     const a = resolveEndpoint(from, opts);
     if (a.error) return { ok: false, reason: a.error, message: a.message, which: 'start', snap: a.snap };
@@ -333,9 +298,9 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
     const distance = routeEdges.reduce((s, e) => s + e.length, 0);
     return {
       ok: true,
-      distance, // metres along the walkways
-      duration: distance / walkingSpeed, // seconds
-      coordinates, // one continuous polyline for Leaflet
+      distance,
+      duration: distance / walkingSpeed,
+      coordinates,
       edges: routeEdges,
       nodeIds: nodeIds.filter((id) => id !== START && id !== END),
       startSnap: ends.a.snap ?? null,
@@ -366,11 +331,7 @@ export function createCampusRouter(graph = campusGraph, options = {}) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Turn-by-turn directions from the route edges
-// ---------------------------------------------------------------------------
 function pointBack(coords, metres) {
-  // coordinate roughly `metres` before the end of coords
   let acc = 0;
   for (let i = coords.length - 1; i > 0; i--) {
     acc += haversine(coords[i - 1], coords[i]);
@@ -400,7 +361,6 @@ function turnPhrase(delta) {
 
 export function buildDirections(routeEdges, totalDistance) {
   if (!routeEdges.length) return [];
-  // group consecutive edges on the same walkway (connectors join the next run)
   const runs = [];
   for (const e of routeEdges) {
     const key = e.connector ? '__connector__' : e.walkway;
@@ -412,8 +372,6 @@ export function buildDirections(routeEdges, totalDistance) {
       runs.push({ key, name: e.connector ? 'the connecting path' : e.walkwayName, length: e.length, coords: [...e.geometry] });
     }
   }
-  // Fold very short runs (e.g. a 6 m hop through the gate plaza) into the
-  // following run so directions are not cluttered with tiny steps.
   const MIN_STEP_M = 15;
   for (let i = runs.length - 2; i >= 0; i--) {
     if (runs[i].length < MIN_STEP_M) {
@@ -459,9 +417,6 @@ export function buildDirections(routeEdges, totalDistance) {
   return steps;
 }
 
-// ---------------------------------------------------------------------------
-// Connectivity analysis (used by Graph mode and the verify script)
-// ---------------------------------------------------------------------------
 export function analyzeConnectivity(graph = campusGraph) {
   const adj = new Map(graph.nodes.map((n) => [n.id, new Set()]));
   for (const e of graph.edges) {
@@ -492,15 +447,11 @@ export function analyzeConnectivity(graph = campusGraph) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------------------
 export const formatDistance = (m) => (m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m)} m`);
 export function formatDuration(seconds) {
   const min = Math.max(1, Math.round(seconds / 60));
   return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${min % 60} min`;
 }
 
-// Shared default instance
 export const campusRouter = createCampusRouter();
 export default campusRouter;

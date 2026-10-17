@@ -14,23 +14,20 @@ export function UIProvider({ children }) {
   const navigate = useNavigate();
   const { departments } = useCampusData();
 
-  // ── Overlay state ──
-  const [detail, setDetail] = useState(null); // { kind:'building'|'dept', id }
-  const [tour, setTour] = useState(null); // { id, startNode, destinationNode, destinationLabel } — the active 360 tour, or null
-  const [lightbox, setLightbox] = useState(null); // { src, caption }
-  const [unavailable, setUnavailable] = useState(null); // { message } — full-screen "not ready yet" state
+  const [detail, setDetail] = useState(null);
+  const [tour, setTour] = useState(null);
+  const [lightbox, setLightbox] = useState(null);
+  const [unavailable, setUnavailable] = useState(null);
   const [toast, setToast] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const toastTimer = useRef(null);
 
-  // ── Mobile drawer ──
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const toggleDrawer = useCallback(() => setDrawerOpen((o) => !o), []);
 
-  // ── Detail screen ──
   const openBuilding = useCallback((id) => setDetail({ kind: 'building', id }), []);
 
   const openDept = useCallback(
@@ -39,7 +36,6 @@ export function UIProvider({ children }) {
       if (exists) {
         setDetail({ kind: 'dept', id });
       } else {
-        // Fallback mirrors the original: no dept entry → go to the list page.
         navigate('/departments');
       }
     },
@@ -48,13 +44,6 @@ export function UIProvider({ children }) {
 
   const closeDetail = useCallback(() => setDetail(null), []);
 
-  // ── Virtual tour overlay (the ONE 360° system — see PanoramaTour.jsx) ──
-  // opts.startNode: open on a specific panorama node id (e.g. 'cat-09').
-  //   Old opts.startFile ('cat-09.jpg') is still accepted.
-  // opts.destinationNode / opts.destinationLabel: guided "Walk there!"
-  //   route — arrows along the shortest path are highlighted.
-  // (opts.reverse is no longer needed: the walking direction is now
-  //  detected automatically from which arrow you came through.)
   const openTour = useCallback((id, opts = {}) => {
     setTour({
       id,
@@ -65,26 +54,20 @@ export function UIProvider({ children }) {
   }, []);
   const closeTour = useCallback(() => setTour(null), []);
 
-  // ── "Currently unavailable" full-screen overlay ──
-  // Used instead of a toast whenever the person taps something (Start
-  // Virtual Tour, etc.) that has no tour data configured for that place yet.
   const openUnavailable = useCallback((message) => {
     setUnavailable({ message: message || 'This feature is not available for this location yet.' });
   }, []);
   const closeUnavailable = useCallback(() => setUnavailable(null), []);
 
-  // ── Lightbox ──
   const openLightbox = useCallback((src, caption = '') => setLightbox({ src, caption }), []);
   const closeLightbox = useCallback(() => setLightbox(null), []);
 
-  // ── Toast ──
   const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(''), 3000);
   }, []);
 
-  // ── Body scroll lock while a full-screen overlay is open ──
   useEffect(() => {
     const locked = Boolean(detail || lightbox || tour || unavailable);
     document.body.style.overflow = locked ? 'hidden' : '';
@@ -93,7 +76,6 @@ export function UIProvider({ children }) {
     };
   }, [detail, lightbox, tour, unavailable]);
 
-  // ── Close overlays on Escape (mirrors the original keydown handlers) ──
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
@@ -105,15 +87,6 @@ export function UIProvider({ children }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [lightbox, detail, unavailable, closeLightbox, closeDetail, closeUnavailable]);
 
-  // ── Trap the device/browser back button so it closes the topmost
-  // overlay instead of leaving the app or changing pages. Overlays can
-  // nest (e.g. a lightbox opened from inside a Detail screen), so this
-  // tracks the REAL order things were opened in — a true stack —
-  // rather than a fixed priority guess.
-  // Each nested open pushes one history entry (same URL, just a
-  // marker); back pops exactly one layer at a time, so a single
-  // overlay closes in one press and reveals the actual previous page
-  // immediately, since the route underneath never changed.
   const overlayOrderRef = useRef([]);
   const prevOverlaysRef = useRef({});
   const fromPopRef = useRef(false);
@@ -147,10 +120,6 @@ export function UIProvider({ children }) {
 
     for (let i = 0; i < pushed; i++) window.history.pushState({ appOverlay: true }, '');
     if (popped > 0 && pushed === 0 && !fromPopRef.current) {
-      // A close button/gesture removed an overlay that owns one or more
-      // history entries. Move the browser history back to remove those
-      // marker entries, but do not close the overlay underneath it when
-      // the resulting popstate event fires.
       skipPopRef.current += popped;
       for (let i = 0; i < popped; i++) window.history.back();
     }
@@ -173,8 +142,6 @@ export function UIProvider({ children }) {
       const order = overlayOrderRef.current;
       const topKey = order[order.length - 1];
       if (topKey && closers[topKey]) closers[topKey]();
-      // Nothing open — this is a normal route/history Back and React
-      // Router is allowed to handle it.
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);

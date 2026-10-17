@@ -5,8 +5,6 @@ import PathwayLinkField, { initialPathwayLinkValue } from "./PathwayLinkField.js
 import { fromEditableValue, isValidCoordinate, toEditableValue } from "../utils/admin-map-leaflet.js";
 import { getPreparedInfo } from "../utils/image-compress.js";
 
-// Native dropdown lists ignore the dark admin theme, so give every
-// <option> an explicit readable colour (dark text on white).
 const OPTION_STYLE = { color: '#111827', backgroundColor: '#ffffff' };
 
 let uidCounter = 0;
@@ -33,7 +31,6 @@ function initialGalleryValue(raw) {
       lat: img.lat ?? '',
       lng: img.lng ?? '',
       caption: img.caption || '',
-      // undefined for images saved before the 360° flag existed
       panorama: typeof img.panorama === 'boolean' ? img.panorama : undefined,
       heading: Number.isFinite(Number(img.heading)) && img.heading !== null ? img.heading : '',
       links: Array.isArray(img.links) ? img.links.map((l) => ({ to: l.to || '', yaw: l.yaw ?? '' })) : [],
@@ -45,20 +42,6 @@ function inRange(value, min, max) {
   return isValidCoordinate(value) && n >= min && n <= max;
 }
 
-/**
- * Generic add/edit form used by every admin page.
- *
- * Field types: text | number | color | select | textarea | list | map
- *              image   — single file upload (uploads on save)
- *              gallery — multiple images, each with its own lat/lng
- *              pathwayLink — connects the gallery's 360° images to a pathway
- *                            photo (uses field.galleryKey, default 'images')
- *
- * `onUploadImage(file, values)` is required when the form has image or
- * gallery fields; it must resolve to `{ url, path }`.
- * `onDiscardUploads(paths)` (optional) is called with freshly-uploaded
- * storage paths if saving fails, so orphaned files can be cleaned up.
- */
 const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUploadImage, onDiscardUploads }) => {
   const [values, setValues] = useState(() => {
     const next = {};
@@ -87,7 +70,6 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Every blob: preview URL we create, so they can be released.
   const blobUrls = useRef(new Set());
 
   useEffect(() => {
@@ -121,7 +103,6 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
     setErrors((current) => ({ ...current, coordinates: undefined }));
   }, []);
 
-  // ── Single image handlers ──
   const handleImageSelect = useCallback((key, file) => {
     setValues((current) => {
       releasePreview(current[key]?.preview);
@@ -138,7 +119,6 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
     setErrors((current) => ({ ...current, [key]: undefined }));
   }, [releasePreview]);
 
-  // ── Gallery handlers ──
   const updateGallery = useCallback((key, updater) => {
     setValues((current) => ({ ...current, [key]: updater(current[key] || []) }));
   }, []);
@@ -184,7 +164,6 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
     clearGalleryError(key, uid);
   }, [updateGallery, clearGalleryError]);
 
-  // Gallery order = the order of the building's 360° tour.
   const handleGalleryMove = useCallback((key, uid, step) => {
     updateGallery(key, (items) => {
       const from = items.findIndex((item) => item.uid === uid);
@@ -257,7 +236,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
 
       if (field.type === 'pathwayLink') {
         const link = values[field.key] || {};
-        if (!link.pathwayNode) return; // not connected — nothing to check
+        if (!link.pathwayNode) return;
         const gallery = values[field.galleryKey || 'images'] || [];
         const entry = gallery.find((item) => (item.id || item.uid) === link.entryImage);
         if (!link.entryImage || !entry) {
@@ -349,7 +328,6 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
               ...(item.heading !== '' && item.heading !== undefined && Number.isFinite(Number(item.heading))
                 ? { heading: Number(item.heading) }
                 : {}),
-              // extra arrows (3–4 way junctions); drop arrows to removed images
               links: (item.links || [])
                 .filter((l) => l.to && galleryIds.has(l.to) && Number.isFinite(Number(l.yaw)))
                 .map((l) => ({ to: l.to, yaw: Number(l.yaw) })),

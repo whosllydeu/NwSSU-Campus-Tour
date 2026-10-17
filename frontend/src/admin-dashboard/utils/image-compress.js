@@ -1,30 +1,18 @@
-// ============================================================
-// Browser-side image optimisation for the admin upload fields.
-//
-// Big photos (and especially 360° panoramas from a phone or camera,
-// often 15–40 MB) are resized and re-encoded as JPEG in the browser
-// BEFORE they are uploaded, so Supabase Storage only receives a
-// web-friendly file. No extra npm packages — just <canvas>.
-//
-// ▸ Want sharper or lighter images? Change IMAGE_LIMITS below.
-// ============================================================
-
 export const IMAGE_LIMITS = {
   maxSourceMB: 60,
-  maxUploadMB: 5,          // was 15
+  maxUploadMB: 5,
 
   photoMaxEdge: 2560,
   photoTargetMB: 2,
 
-  panoramaMaxWidth: 4096,  // was 6144 — same as your built-in tours
-  panoramaTargetMB: 2,     // was 8
+  panoramaMaxWidth: 4096,
+  panoramaTargetMB: 2,
 
   qualitySteps: [0.86, 0.8, 0.74, 0.68, 0.62],
 };
 
 const MB = 1024 * 1024;
 
-// Info about each optimised file (original size, dimensions, panorama?).
 const preparedInfo = new WeakMap();
 
 export function getPreparedInfo(file) {
@@ -37,7 +25,6 @@ export function formatBytes(bytes) {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-/** True for equirectangular 360° panoramas (about twice as wide as tall). */
 export function isPanoramaSize(width, height) {
   if (!width || !height) return false;
   const ratio = width / height;
@@ -49,7 +36,6 @@ async function decodeImage(file) {
     try {
       return await createImageBitmap(file, { imageOrientation: 'from-image' });
     } catch {
-      // fall through to the <img> path (older browsers)
     }
   }
   return new Promise((resolve, reject) => {
@@ -77,13 +63,13 @@ function encode(source, width, height, quality) {
       reject(new Error('Your browser could not process this image.'));
       return;
     }
-    ctx.fillStyle = '#ffffff'; // transparent PNG areas become white, not black
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(source, 0, 0, width, height);
     canvas.toBlob((blob) => {
-      canvas.width = 0; // free memory right away
+      canvas.width = 0;
       canvas.height = 0;
       if (blob) resolve(blob);
       else reject(new Error('Image is too large for the browser to resize. Try a smaller export.'));
@@ -96,12 +82,6 @@ function jpgName(name) {
   return `${base}.jpg`;
 }
 
-/**
- * Resizes / compresses an image for upload.
- * GIFs are returned unchanged (re-encoding would drop animation).
- * @param {File} file
- * @returns {Promise<File>}  the optimised file (or the original if it was already small)
- */
 export async function prepareImageForUpload(file) {
   const L = IMAGE_LIMITS;
 
@@ -122,7 +102,6 @@ export async function prepareImageForUpload(file) {
 
     let scale = Math.min(1, maxEdge / Math.max(srcW, srcH));
 
-    // Already small enough and the right size → keep the original file.
     if (scale === 1 && file.size <= targetBytes && file.type === 'image/jpeg') {
       preparedInfo.set(file, { originalBytes: file.size, width: srcW, height: srcH, panorama, optimized: false });
       return file;
@@ -132,7 +111,6 @@ export async function prepareImageForUpload(file) {
     let width = srcW;
     let height = srcH;
 
-    // Try each quality step; if still too big, shrink 15% and try again.
     for (let round = 0; round < 6; round += 1) {
       width = Math.max(1, Math.round(srcW * scale));
       height = Math.max(1, Math.round(srcH * scale));
@@ -144,7 +122,6 @@ export async function prepareImageForUpload(file) {
       scale *= 0.85;
     }
 
-    // Never upload something bigger than what the admin picked when it didn't need resizing.
     if (blob.size >= file.size && srcW <= maxEdge && srcH <= maxEdge && file.size <= maxUploadBytes) {
       preparedInfo.set(file, { originalBytes: file.size, width: srcW, height: srcH, panorama, optimized: false });
       return file;

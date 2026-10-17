@@ -1,41 +1,17 @@
-// ============================================================
-// tourGraph.js — turns the human-friendly tour data in
-// static/tourNodes.js into the node graph Photo Sphere Viewer's
-// VirtualTourPlugin expects (the same shape the CAT tour used):
-//
-//   { id, panorama, name, caption,
-//     links: [{ nodeId, position: { yaw: '90deg', pitch: '0deg' } }],
-//     markers: [...], data: { tour, yaw, gps, office, ... } }
-//
-// You normally never edit this file. Add/tune panoramas in
-// static/tourNodes.js instead.
-//
-// ALL ANGLES IN THIS PROJECT ARE DEGREES, measured the Photo
-// Sphere Viewer way: 0 = centre of the panorama image, +90 = a
-// quarter-turn to the right, -90 = a quarter-turn to the left,
-// 180 = directly behind the image centre. Turn on the 🧭 button in
-// the tour to read the live yaw of any node.
-// ============================================================
-
 const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
 const IS_DEV = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 
-// Relative angle of each named direction from a node's forward yaw.
 const DIR_OFFSET = { forward: 0, right: 90, back: 180, left: -90 };
 const DIR_FALLBACK_ORDER = ['forward', 'right', 'left', 'back'];
-// Two arrows closer than this on the same node count as overlapping.
 const MIN_ARROW_GAP = 25;
 
-/** Wraps any angle to the range (-180, 180]. */
 export const normDeg = (deg) => {
   const x = ((((deg + 180) % 360) + 360) % 360) - 180;
   return x === -180 ? 180 : x;
 };
 
-/** Smallest absolute difference between two angles, in degrees. */
 export const angleGap = (a, b) => Math.abs(normDeg(a - b));
 
-/** Accepts 90, '90', '90deg' or '1.57rad' — always returns degrees. */
 export const toDeg = (value) => {
   if (value === null || value === undefined || value === '') return null;
   if (typeof value === 'number') return value;
@@ -50,7 +26,6 @@ const warn = (...args) => { if (IS_DEV) console.warn('[tour]', ...args); };
 const escapeHtml = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** Yaw (degrees) of a named direction ('forward' | 'back' | 'left' | 'right') at a node. */
 function dirYaw(node, dir) {
   const d = node.data;
   if (dir === 'back' && d.backYaw !== null) return normDeg(d.backYaw);
@@ -66,18 +41,12 @@ function findFreeYaw(node, preferredDir) {
   return { yaw: dirYaw(node, preferredDir), dir: preferredDir };
 }
 
-/**
- * Builds the whole campus graph.
- * @param {Array} tourDefs     tours from static/tourNodes.js
- * @param {Array} connections  cross-tour connections from static/tourNodes.js
- */
 export function buildTourGraph(tourDefs, connections = []) {
   const tours = {};
   const aliases = {};
   const byId = {};
   const nodes = [];
 
-  // 1) Create every node ------------------------------------------------
   for (const t of tourDefs) {
     const kind = t.kind || (t.id.startsWith('path-') ? 'pathway' : 'building');
     tours[t.id] = {
@@ -106,7 +75,7 @@ export function buildTourGraph(tourDefs, connections = []) {
           yaw: yaw ?? 0,
           yawIsDefault: yaw === null,
           backYaw: toDeg(n.backYaw),
-          gps: Array.isArray(n.gps) && n.gps.length >= 2 ? n.gps : null, // [lat, lng]
+          gps: Array.isArray(n.gps) && n.gps.length >= 2 ? n.gps : null,
           star: Boolean(n.star),
           office: n.office || null,
         },
@@ -120,7 +89,7 @@ export function buildTourGraph(tourDefs, connections = []) {
   const addLink = (node, targetId, yaw, extra = {}) => {
     if (!byId[targetId]) { warn(`Node "${node.id}" links to unknown node "${targetId}".`); return; }
     if (targetId === node.id) return;
-    if (node.links.some((l) => l.nodeId === targetId)) return; // one arrow per destination
+    if (node.links.some((l) => l.nodeId === targetId)) return;
     node.links.push({
       nodeId: targetId,
       position: { yaw: `${Math.round(normDeg(yaw) * 10) / 10}deg`, pitch: '0deg' },
@@ -128,7 +97,6 @@ export function buildTourGraph(tourDefs, connections = []) {
     });
   };
 
-  // 2) Explicit per-node links, then automatic forward/back links --------
   for (const t of tourDefs) {
     for (const n of t.nodes) {
       const node = byId[n.id];
@@ -151,7 +119,6 @@ export function buildTourGraph(tourDefs, connections = []) {
     });
   }
 
-  // 3) Cross-tour connections (pathway ↔ building ↔ pathway) -------------
   const labelFor = (target) => {
     const t = tours[target.data.tour];
     if (!t) return 'Continue';
@@ -176,7 +143,6 @@ export function buildTourGraph(tourDefs, connections = []) {
     }
   }
 
-  // 4) Floating "Enter …" pins for cross-tour links + overlap check ------
   for (const node of nodes) {
     node.links.forEach((l, i) => {
       node.links.slice(i + 1).forEach((o) => {
@@ -196,7 +162,6 @@ export function buildTourGraph(tourDefs, connections = []) {
   return { tours, aliases, nodes, byId };
 }
 
-/** Shortest walk (fewest panoramas) between two nodes, or null. */
 export function shortestPath(byId, fromId, toId) {
   if (!byId[fromId] || !byId[toId]) return null;
   if (fromId === toId) return [fromId];
@@ -227,7 +192,6 @@ const metersBetween = ([lat1, lng1], [lat2, lng2]) => {
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-/** Closest node that has GPS coordinates, within maxMeters. */
 export function nearestNode(nodes, latLng, maxMeters = Infinity) {
   if (!latLng) return null;
   let best = null;

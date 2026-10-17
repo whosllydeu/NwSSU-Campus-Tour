@@ -15,10 +15,6 @@ import { Navbar } from "../components";
 import { img } from "../utils/assets";
 import "../stylesheets/about.css";
 
-// ── Team ────────────────────────────────────────────────────
-// Put each member's photo in  src/assets/images/  using the file
-// name below (square photos look best, e.g. 400×400). Until a photo
-// exists, the card shows the member's initials instead.
 const TEAM = [
   { 
     name: "John Lloyd Timan", 
@@ -34,7 +30,6 @@ const TEAM = [
     bio: "'' You never know how strong you are until being strong is your only choice. ''",
  },
     
-    
     {
       name: "Fritz Anthony A. Teoxon",
       role: "Researcher",
@@ -42,7 +37,6 @@ const TEAM = [
       bio: "'' Success is not final, and failure is not the end. What matters is having the courage to continue. ''",
     },
     
-
     {
       name: "Strawberry A. Ejoc",
       role: "Researcher",
@@ -57,17 +51,13 @@ const TEAM = [
   },
 
 ];
-// To add a bio for another member, give them a  bio: "..."  liune like above.
 
-// ── Contact ─────────────────────────────────────────────────
-// Fill in your team's links. Leave a value as "" to hide that icon.
-// Clicking a card opens that account / app directly.
 const CONTACT = {
-  email: "timanjohnlloyd@gmail.com",      // e.g. "nwssu.campustour@gmail.com"
-  phone: "+63 991 185 7880",      // e.g. "09123456789"
-  facebook: "https://www.facebook.com/Imllyd.lwky",   // full link, e.g. "https://facebook.com/yourpage"
-  instagram: "",  // full link, e.g. "https://instagram.com/yourpage"
-  messenger: "",  // e.g. "https://m.me/yourpage"
+  email: "timanjohnlloyd@gmail.com",
+  phone: "+63 991 185 7880",
+  facebook: "https://www.facebook.com/Imllyd.lwky",
+  instagram: "",
+  messenger: "",
   address: "Northwest Samar State University, Rueda St., Calbayog City, Samar",
 };
 
@@ -157,7 +147,6 @@ export default function About() {
     <>
       <Navbar />
       <main className="about-page">
-        {/* Intro */}
         <section className="about-hero">
           <span className="about-eyebrow">About the System</span>
           <h1>NwSSU Campus Tour</h1>
@@ -168,7 +157,6 @@ export default function About() {
           </p>
         </section>
 
-        {/* Features */}
         <section className="about-section">
           <h2>What you can do</h2>
           <div className="about-features">
@@ -182,7 +170,6 @@ export default function About() {
           </div>
         </section>
 
-        {/* How to use */}
         <section className="about-section">
           <h2>How to use it</h2>
           <ol className="about-steps">
@@ -198,7 +185,6 @@ export default function About() {
           </ol>
         </section>
 
-        {/* Project */}
         <section className="about-section about-project">
           <span className="about-card-icon"><GraduationCap size={22} /></span>
           <div>
@@ -213,7 +199,6 @@ export default function About() {
           </div>
         </section>
 
-        {/* Team */}
         <section className="about-section">
           <h2>Meet the team</h2>
           <div className="about-team">
@@ -232,7 +217,6 @@ export default function About() {
           </p>
         </section>
 
-        {/* Contact */}
         {CONTACT_ITEMS.length > 0 && (
           <section className="about-section">
             <h2>Contact us</h2>

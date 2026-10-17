@@ -29,15 +29,9 @@ import {
 } from "./user-dashboard/components";
 import AdminLayout from "./admin-dashboard/components/AdminLayout";
 
-// User side: the address bar always stays "https://nwssu-campustour.vercel.app"
-// (pages are tracked in memory, so /map, /about … never show).
-// Admin side: opening /admin/... keeps normal URLs so admins can still
-// type the address, bookmark it, and refresh.
 const isAdminUrl = window.location.pathname.startsWith("/admin");
 const Router = isAdminUrl ? BrowserRouter : MemoryRouter;
 
-// If someone opens an old link like /map, start on that page but clean the
-// address bar back to "/".
 const startPath = isAdminUrl ? undefined : window.location.pathname || "/";
 if (!isAdminUrl && window.location.pathname !== "/") {
   window.history.replaceState(null, "", "/");
@@ -49,15 +43,12 @@ const App = () => {
     <Router {...routerProps}>
       <UIProvider>
         <Routes>
-          {/* User Routes Start */}
           <Route path="/" element={<Home/>}/>
           <Route path="/map" element={<Map/>}/>
           <Route path="/buildings" element={<Buildings/>}/>
           <Route path="/departments" element={<Departments/>}/>
           <Route path="/about" element={<About/>}/>
-          {/* User Routes End */}
 
-          {/* Admin Routes Start */}
           <Route path="/admin/login" element={<Login/>}/>
           <Route
             path="/admin"
@@ -75,12 +66,9 @@ const App = () => {
             <Route path="settings" element={<Settings />} />
           </Route>
 
-          {/* Unknown paths: admin side → dashboard, user side → home */}
           <Route path="*" element={<Navigate to={isAdminUrl ? "/admin" : "/"} replace />} />
-          {/* Admin Routes End */}
         </Routes>
         
-        {/* UI Components Start */}
         <Splash/>
         <Drawer/>
         <SearchPanel/>
@@ -89,7 +77,6 @@ const App = () => {
         <Unavailable/>
         <Lightbox/>
         <Toast/>
-        {/* UI Components End */}
       </UIProvider>
     </Router>
   );

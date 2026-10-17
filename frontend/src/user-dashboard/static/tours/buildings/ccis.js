@@ -1,9 +1,3 @@
-// ============================================================
-// Building tour: ccis
-// One tour per file — edit ONLY this file to fix this tour.
-// Format, angles and the 🧭 tuning guide: see ../../tourNodes.js
-// Registered in ../index.js · cross-tour links live in ../connections.js
-// ============================================================
 import { GPS_TODO } from '../shared';
 
 const CCIS = {

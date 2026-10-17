@@ -25,9 +25,6 @@ export async function updateDepartment(id, data) {
   const { _id, ...rest } = data;
   const { data: rows, error } = await supabase.from(TABLE).update(rest).eq('id', id).select();
   if (error) throw error;
-  // RLS blocks a write by silently matching 0 rows, not by returning an
-  // error � an empty result here means the update didn't actually happen
-  // (usually: not signed in as an admin, or the session expired).
   if (!rows || rows.length === 0) {
     throw new Error('Update was blocked � you may not be signed in as an admin, or your session expired.');
   }

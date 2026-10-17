@@ -1,18 +1,3 @@
-// ============================================================
-// PanoramaTour — full-screen 360° tour overlay (Street View style).
-//
-// This is now just the UI shell (title, controls, stops menu, office
-// cards, guided-walk banner). The 360° rendering, arrows and
-// transitions are done by SphereTour.jsx, so there is only ONE
-// panorama engine in the app.
-//
-// Opened from anywhere through UIContext:
-//   openTour('ccis')                                  // a building
-//   openTour('path-gate-cea')                         // a pathway
-//   openTour('cat', { startNode: 'cat-09' })          // a specific node
-//   openTour(id, { startNode, destinationNode,        // guided walk
-//                  destinationLabel })                //   (Map "Walk there!")
-// ============================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUI } from '../context/UIContext';
 import { TOURS, NODE_BY_ID, getTourStart, findPath, tourOfNode } from '../static/nwssuTour';
@@ -61,7 +46,6 @@ function TourScreen({ tour, closeTour }) {
     console.log(`[tour] ${id}: { nodeId: '<target-node-id>', position: { yaw: '${y}deg', pitch: '0deg' } }   (pitch here: ${pitch}deg)`);
   }, []);
 
-  // Keyboard: ↑/W walk forward, ↓/S walk back, Esc close.
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') closeTour();

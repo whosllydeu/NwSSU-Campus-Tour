@@ -1,29 +1,3 @@
-// ============================================================
-// adminTours.js — connects buildings added from the Admin Dashboard
-// to the campus 360° pathway tour, with no code edits.
-//
-// A building whose `pathway_link` column is set (Admin → Buildings →
-// "360° Pathway Connection") gets:
-//   • a building tour made from its uploaded 360° gallery images
-//     (gallery order = walking order, `heading` = forward arrow,
-//      per-image `links` = extra arrows)
-//   • a floating pin on the chosen pathway photo that enters the
-//     building, plus a return arrow back to the pathway
-//   • a "Walk there!" route (WALK_ROUTES[building.id])
-//
-// The shared TOUR_GRAPH from static/tourNodes.js is extended IN PLACE,
-// so PanoramaTour / SphereTour / nwssuTour keep working unchanged.
-// Calling applyAdminBuildingTours() again first removes everything it
-// added last time, so it is safe to call whenever buildings reload.
-// Buildings that already have a built-in tour in code are skipped.
-//
-// pathway_link (jsonb):
-//   { pathwayNode: 'pathway-ccis-alumni-28',  // pathway photo with the pin
-//     entryImage:  '<gallery image id>',      // first photo inside
-//     label:       'Enter Sports Complex',    // optional pin text
-//     pinYaw:      90,                        // optional, degrees
-//     returnYaw:   180 }                      // optional, degrees
-// ============================================================
 import { TOUR_GRAPH, WALK_ROUTES } from '../static/tourNodes';
 import { resetTourCaches } from '../static/nwssuTour';
 import { buildingGallery } from './assets';
@@ -31,7 +5,6 @@ import { buildingGallery } from './assets';
 const IS_DEV = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 const warn = (...args) => { if (IS_DEV) console.warn('[admin-tour]', ...args); };
 
-// Snapshot of what exists in code, taken before any admin building is added.
 const STATIC_WALK_KEYS = new Set(Object.keys(WALK_ROUTES));
 const STATIC_TOUR_IDS = new Set(Object.keys(TOUR_GRAPH.tours));
 const STATIC_ALIASES = new Set(Object.keys(TOUR_GRAPH.aliases || {}));
@@ -47,28 +20,23 @@ const finite = (v) => v !== '' && v !== null && v !== undefined && Number.isFini
 const escapeHtml = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** True when a building already has a 360° tour / walk route written in code. */
 export function isBuiltInTourBuilding(buildingId) {
   if (!buildingId) return false;
   return STATIC_WALK_KEYS.has(buildingId) || STATIC_TOUR_IDS.has(buildingId) || STATIC_ALIASES.has(buildingId);
 }
 
-/** Tour id used for an admin building's 360° tour. */
 export const adminTourId = (buildingId) => `admin-${buildingId}`;
 
-// Everything added by the last apply, so it can be removed again.
 let added = { tourIds: [], nodeIds: new Set(), walkKeys: [], foreign: [] };
 
 function removePrevious() {
   const { byId, nodes, tours } = TOUR_GRAPH;
-  // links + pins we put on built-in (pathway) photos
   for (const f of added.foreign) {
     const node = byId[f.nodeId];
     if (!node) continue;
     node.links = node.links.filter((l) => l.nodeId !== f.targetId);
     node.markers = (node.markers || []).filter((m) => m.id !== f.markerId);
   }
-  // our own nodes (same array instance, so imports stay valid)
   for (let i = nodes.length - 1; i >= 0; i--) {
     if (added.nodeIds.has(nodes[i].id)) nodes.splice(i, 1);
   }
@@ -101,7 +69,6 @@ function addPin(node, targetId, yaw, label) {
   return id;
 }
 
-/** A yaw on `node` that does not overlap its existing arrows (right, left, forward, back). */
 function freeYaw(node, preferredOffsets = [90, -90, 0, 180]) {
   const base = node.data?.yaw ?? 0;
   for (const off of preferredOffsets) {
@@ -111,11 +78,6 @@ function freeYaw(node, preferredOffsets = [90, -90, 0, 180]) {
   return normDeg(base + preferredOffsets[0]);
 }
 
-/**
- * Adds every admin-connected building to the shared 360° tour graph.
- * @param {Array} buildings rows from Supabase (camelCase or snake_case)
- * @returns {Array<string>} ids of the buildings that were connected
- */
 export function applyAdminBuildingTours(buildings = []) {
   removePrevious();
   const { byId, nodes, tours } = TOUR_GRAPH;
@@ -143,7 +105,6 @@ export function applyAdminBuildingTours(buildings = []) {
     const nodeIdOf = (imgId) => `${tourId}--${imgId}`;
     const imgIds = new Set(gallery.map((img) => img.id));
 
-    // 1) one node per 360° image, same shape utils/tourGraph.js produces
     const own = gallery.map((img) => {
       const node = {
         id: nodeIdOf(img.id),
@@ -168,7 +129,6 @@ export function applyAdminBuildingTours(buildings = []) {
       return { img, node };
     });
 
-    // 2) extra arrows set in the admin gallery, then forward/back in gallery order
     own.forEach(({ img, node }) => {
       (img.links || []).forEach((l) => {
         if (imgIds.has(String(l.to)) && finite(l.yaw)) addLink(node, nodeIdOf(String(l.to)), Number(l.yaw));
@@ -189,7 +149,6 @@ export function applyAdminBuildingTours(buildings = []) {
     };
     added.tourIds.push(tourId);
 
-    // 3) pathway photo ⇄ entrance photo
     const entry = own.find(({ img }) => img.id === String(cfg.entryImage))?.node || own[0].node;
     tours[tourId].startNode = entry.id;
     const pathTour = tours[pathNode.data.tour];
@@ -205,7 +164,6 @@ export function applyAdminBuildingTours(buildings = []) {
       addPin(entry, pathNode.id, returnYaw, backLabel);
     }
 
-    // 4) "Walk there!" ends at the entrance photo
     if (!STATIC_WALK_KEYS.has(b.id)) {
       WALK_ROUTES[b.id] = { pathway: pathNode.data.tour, arriveNode: entry.id };
       added.walkKeys.push(b.id);

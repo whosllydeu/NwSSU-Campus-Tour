@@ -1,15 +1,8 @@
-// ============================================================
-// NWSSU Campus Tour — Data Store
-// Migrated from js/data.js (now an ES module).
-// Photo paths are stored as filenames under src/assets/images/
-// and resolved at runtime via utils/assets.js → img().
-// ============================================================
-
 export const BUILDINGS = [
   {
     id: 'cat', name: 'College of Agriculture Building', abbr: 'CAT',
     type: 'academic', color: '#2d5a27', emoji: '🌾',
-    lat: 12.071696, lng: 124.596408, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071696, lng: 124.596408,
     photo: 'images/cat_logo.jpg',
     desc: 'Home of the College of Agriculture and Technology, offering programs in agricultural sciences, crop production, animal science, and agri-business management. The building features modern laboratories, demonstration farms, and classrooms.',
     location: 'North Wing, Campus',
@@ -20,7 +13,7 @@ export const BUILDINGS = [
   {
     id: 'ccis', name: 'College of Computing & Information Sciences Building', abbr: 'CCIS',
     type: 'academic', color: '#1a3a6b', emoji: '💻',
-    lat: 12.070807, lng: 124.595565, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070807, lng: 124.595565,
     photo: 'images/Me.jpg',
     desc: 'State-of-the-art building equipped with modern computer laboratories, networking rooms, and smart classrooms. Hosts the newest college at NWSSU, offering technology-focused programs to prepare students for the digital economy.',
     location: 'North-Central Wing, Campus',
@@ -31,7 +24,7 @@ export const BUILDINGS = [
   {
     id: 'ccjs', name: 'College of Criminal Justice & Science Building', abbr: 'CCJS',
     type: 'academic', color: '#8b1a1a', emoji: '⚖️',
-    lat: 12.071319, lng: 124.595193, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071319, lng: 124.595193,
     photo: 'images/ccjs_logo.png',
     desc: 'Training ground for future law enforcement professionals and criminologists. Features a moot court, forensic science laboratory, and simulation rooms for practical police science training.',
     location: 'East Wing, Campus',
@@ -42,7 +35,7 @@ export const BUILDINGS = [
   {
     id: 'coed', name: 'College of Education Building', abbr: 'COED',
     type: 'academic', color: '#c8a84b', emoji: '🎓',
-    lat: 12.071157, lng: 124.595094, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071157, lng: 124.595094,
     photo: 'images/coed_logo.jpg',
     desc: 'Dedicated to training future educators with a focus on pedagogical excellence. Features demonstration classrooms, a micro-teaching facility, and a curriculum resource center to support teacher education programs.',
     location: 'North-East Wing, Campus',
@@ -53,7 +46,7 @@ export const BUILDINGS = [
   {
     id: 'con', name: 'College of Nursing Building', abbr: 'CON',
     type: 'academic', color: '#1a6b5a', emoji: '🏥',
-    lat: 12.07078, lng: 124.595888, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.07078, lng: 124.595888,
     photo: 'images/con_logo.jpg',
     desc: 'A modern nursing building featuring state-of-the-art simulation laboratories, skill stations, and clinical training facilities. Prepares students for both local and international nursing careers.',
     location: 'West Wing, Campus',
@@ -64,7 +57,7 @@ export const BUILDINGS = [
   {
     id: 'com', name: 'College of Management Building', abbr: 'COM',
     type: 'academic', color: '#b5611a', emoji: '📊',
-    lat: 12.070753, lng: 124.596979, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070753, lng: 124.596979,
     photo: 'images/com_logo.png',
     desc: 'Hub for business and management education at NWSSU. Equipped with business simulation rooms, accounting labs, and a mini-hotel training facility for hospitality management students.',
     location: 'Central-West Wing, Campus',
@@ -75,7 +68,7 @@ export const BUILDINGS = [
   {
     id: 'cea', name: 'College of Engineering & Architecture Building', abbr: 'CEA',
     type: 'academic', color: '#4a1a6b', emoji: '🏗️',
-    lat: 12.070456, lng: 124.596557, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070456, lng: 124.596557,
     photo: 'images/cea_logo.jpg',
     desc: 'Engineering and Architecture hub featuring specialized labs, drafting rooms, a materials testing laboratory, and a CAD center. Prepares students for professional engineering and architectural licensure examinations.',
     location: 'North-East Campus',
@@ -86,7 +79,7 @@ export const BUILDINGS = [
   {
     id: 'library', name: 'University Library', abbr: 'LIB',
     type: 'facility', color: '#445566', emoji: '📚',
-    lat: 12.070861, lng: 124.596508, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070861, lng: 124.596508,
     photo: '',
     desc: 'The NWSSU Library serves as the primary resource center for students, faculty, and staff. It houses thousands of books, periodicals, local and foreign journals, theses, dissertations, and digital resources via the library management system.',
     location: 'Central Campus',
@@ -96,7 +89,7 @@ export const BUILDINGS = [
   {
     id: 'registrar', name: "Registrar's Office Building", abbr: 'REG',
     type: 'admin', color: '#334455', emoji: '📋',
-    lat: 12.071588, lng: 124.59678, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071588, lng: 124.59678,
     photo: '',
     desc: 'The Office of the University Registrar handles all student records, enrollment, transcript of records, certifications, and other academic documents. Students must present a valid NWSSU ID for document requests.',
     location: 'Central Campus, Ground Floor',
@@ -106,7 +99,7 @@ export const BUILDINGS = [
   {
     id: 'cashier', name: "Cashier's Office Building", abbr: 'CASH',
     type: 'admin', color: '#334455', emoji: '💳',
-    lat: 12.071184, lng: 124.596607, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071184, lng: 124.596607,
     photo: '',
     desc: "The Cashier's Office handles all financial transactions including tuition payment, miscellaneous fees, scholarship disbursements, and other university-related payments.",
     location: 'Central Campus, Ground Floor',
@@ -116,7 +109,7 @@ export const BUILDINGS = [
   {
     id: 'president', name: 'Administration Building', abbr: 'ADMIN',
     type: 'admin', color: '#2c3e50', emoji: '🏛️',
-    lat: 12.071453, lng: 124.596532, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071453, lng: 124.596532,
     photo: '',
     desc: "The main administrative hub of NWSSU, housing the Office of the University President, Vice Presidents, Human Resources, and key administrative offices. The nerve center of the university's operations and strategic direction.",
     location: 'Central Campus',
@@ -126,7 +119,7 @@ export const BUILDINGS = [
   {
     id: 'alumni', name: 'Alumni Building', abbr: 'ALU',
     type: 'facility', color: '#556677', emoji: '🎓',
-    lat: 12.071831, lng: 124.595615, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071831, lng: 124.595615,
     photo: '',
     desc: 'The Alumni Building serves as the headquarters of the NWSSU Alumni Association and hosts reunions, alumni networking events, career fairs, and development programs for graduates.',
     location: 'South Wing, Campus',
@@ -136,7 +129,7 @@ export const BUILDINGS = [
   {
     id: 'sociocultural', name: 'Socio-Cultural Building', abbr: 'SCB',
     type: 'facility', color: '#556677', emoji: '🎭',
-    lat: 12.070672, lng: 124.596309, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070672, lng: 124.596309,
     photo: '',
     desc: "Dedicated to the arts, culture, and social development programs of NWSSU. Features an auditorium, rehearsal spaces, and exhibit areas for the university's cultural troupes and events.",
     location: 'South-Central Campus',
@@ -146,7 +139,7 @@ export const BUILDINGS = [
   {
     id: 'studentcouncil', name: 'Student Council Building', abbr: 'SC',
     type: 'facility', color: '#556677', emoji: '⭐',
-    lat: 12.070645, lng: 124.596508, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070645, lng: 124.596508,
     photo: '',
     desc: 'Home of the NWSSU Supreme Student Council and various student organization offices. A hub of student governance, leadership development, and extracurricular activities.',
     location: 'South-Central Campus',
@@ -156,7 +149,7 @@ export const BUILDINGS = [
   {
     id: 'hotel', name: 'NWSSU Hotel & Restaurant', abbr: 'HTL',
     type: 'facility', color: '#556677', emoji: '🏨',
-    lat: 12.070834, lng: 124.596855, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070834, lng: 124.596855,
     photo: '',
     desc: 'A fully operational training hotel and restaurant managed by COM students under faculty supervision. Provides real-world hospitality experience while offering affordable accommodation and dining to university guests.',
     location: 'South Wing, Campus',
@@ -166,7 +159,7 @@ export const BUILDINGS = [
   {
     id: 'canteen', name: 'University Canteen', abbr: 'CAN',
     type: 'facility', color: '#556677', emoji: '🍽️',
-    lat: 12.070726, lng: 124.596111, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.070726, lng: 124.596111,
     photo: '',
     desc: 'The main dining facility of NWSSU serving affordable Filipino meals to students, faculty, and staff. Multiple food stalls offer a variety of local dishes, snacks, and beverages throughout the day.',
     location: 'South-East Campus',
@@ -176,7 +169,7 @@ export const BUILDINGS = [
   {
     id: 'sports', name: 'Sports Complex', abbr: 'SC',
     type: 'facility', color: '#2d5a27', emoji: '⚽',
-    lat: 12.071319, lng: 124.595813, // ⚠️ estimated — verify by walking, see README note
+    lat: 12.071319, lng: 124.595813,
     photo: '',
     desc: "NWSSU's Sports Complex features a basketball gymnasium, volleyball courts, a track oval, and open fields for various sports. Home of the university's athletics programs and intramural competitions.",
     location: 'South-West Campus',

@@ -17,8 +17,6 @@ const API = {
   departments: departmentsApi,
 };
 
-// Maps a collection name to its service's function-name suffix,
-// e.g. 'buildings' -> createBuilding/updateBuilding/deleteBuilding.
 const SINGULAR = {
   buildings: 'Building',
   departments: 'Department',
@@ -30,7 +28,6 @@ function sameText(a, b) {
   return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
-// Picks a department id that doesn't collide with an existing one.
 function uniqueDepartmentId(base, takenIds) {
   if (!takenIds.has(base)) return base;
   let candidate = `${base}-dept`;
@@ -42,8 +39,6 @@ function uniqueDepartmentId(base, takenIds) {
   return candidate;
 }
 
-// Loads everything the dashboard needs in one round-trip. Pure (no state),
-// so it can be used both on mount and by the "Re-sync" button.
 async function fetchAllData() {
   const [buildings, departments, activity] = await Promise.all([
     buildingsApi.listBuildings(),
@@ -59,7 +54,6 @@ export function AdminProvider({ children }) {
   const [departments, setDepartments] = useState([]);
   const [activity, setActivity] = useState([]);
 
-  // Manual re-sync (Settings page). Called from an event handler, not an effect.
   const refetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -72,9 +66,6 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  // Initial load. State is only set inside the promise callbacks (after the
-  // data arrives), which is what the react-hooks/set-state-in-effect rule
-  // expects. `isLoading` already starts as true, so no synchronous set here.
   useEffect(() => {
     let cancelled = false;
     fetchAllData()
@@ -115,18 +106,6 @@ export function AdminProvider({ children }) {
     listActivity().then(setActivity).catch(() => {});
   }, [setters]);
 
-  /**
-   * Saves a building and keeps Department Management in sync:
-   *  - type "academic"  -> links the building to a department, re-using an
-   *    existing one (already linked, same id, or same abbreviation and not
-   *    linked to another building) and only creating a new department when
-   *    none exists. Saving again never creates a duplicate.
-   *  - any other type   -> clears the building's department link only. The
-   *    department record itself is never deleted, so faculty, officers and
-   *    other department data stay intact.
-   *
-   * @returns {{ building, department, departmentCreated, departmentUnlinked }}
-   */
   const saveBuilding = useCallback(async (existingId, data) => {
     let saved = existingId
       ? await buildingsApi.updateBuilding(existingId, data)
@@ -137,7 +116,6 @@ export function AdminProvider({ children }) {
     let departmentUnlinked = false;
 
     if (saved.type === ACADEMIC) {
-      // Fresh copies so the duplicate check never runs on stale state.
       const [freshDepartments, freshBuildings] = await Promise.all([
         departmentsApi.listDepartments(),
         buildingsApi.listBuildings(),
@@ -196,8 +174,6 @@ export function AdminProvider({ children }) {
     return { building: finalBuilding, department, departmentCreated, departmentUnlinked };
   }, []);
 
-  // Real data now lives in Supabase, so "reset" re-syncs from the database
-  // instead of wiping it (see backend-architecture.md, section 7).
   const resetAllData = useCallback(async () => { await refetchAll(); }, [refetchAll]);
 
   const stats = useMemo(() => {

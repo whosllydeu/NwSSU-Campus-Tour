@@ -1,13 +1,5 @@
-// ============================================================
-// Building tour: cat
-// One tour per file — edit ONLY this file to fix this tour.
-// Format, angles and the 🧭 tuning guide: see ../../tourNodes.js
-// Registered in ../index.js · cross-tour links live in ../connections.js
-// ============================================================
 import { GPS_TODO } from '../shared';
 
-// ── CAT — the reference tour. Links are hand-authored exactly as
-// in the original CAT graph (old ids building-1…18 → cat-01…18).
 const CAT = {
   id: 'cat',
   title: 'College of Agriculture & Technology Building',
@@ -17,7 +9,7 @@ const CAT = {
   nodes: [
     { id: 'cat-01', name: 'Covered Walkway (Near Bleachers)', caption: 'CAT · Ground Floor', yaw: 3, gps: [12.071104, 124.595427],
       links: [
-        { nodeId: 'cat-02', position: { yaw: '0deg', pitch: '0deg' } }, // pitch was "180deg" (invalid) — set to 0
+        { nodeId: 'cat-02', position: { yaw: '0deg', pitch: '0deg' } },
       ] },
     { id: 'cat-02', name: 'Covered Walkway (Near Bleachers)', caption: 'CAT · Ground Floor', yaw: -7, gps: [12.071246, 124.595470],
       links: [
@@ -33,7 +25,7 @@ const CAT = {
     { id: 'cat-04', name: 'Ground Floor Area', caption: 'CAT · Ground Floor', yaw: 90, gps: [12.071353, 124.595529],
       links: [
         { nodeId: 'cat-05', position: { yaw: '90deg', pitch: '0deg' } },
-        { nodeId: 'cat-03', position: { yaw: '-90deg', pitch: '0deg' } }, // added: back link was missing
+        { nodeId: 'cat-03', position: { yaw: '-90deg', pitch: '0deg' } },
       ] },
     { id: 'cat-05', name: 'Ground Floor Area', caption: 'CAT · Ground Floor', yaw: 90, gps: [12.071443, 124.595596],
       links: [
@@ -65,7 +57,7 @@ const CAT = {
         { nodeId: 'cat-09', position: { yaw: '-40deg', pitch: '0deg' } },
         { nodeId: 'cat-11', position: { yaw: '40deg', pitch: '0deg' } },
       ] },
-    { id: 'cat-11', name: '2nd Floor Landing', caption: 'CAT · 2nd Floor', yaw: -90, gps: GPS_TODO, // yaw follows its link to cat-12
+    { id: 'cat-11', name: '2nd Floor Landing', caption: 'CAT · 2nd Floor', yaw: -90, gps: GPS_TODO,
       links: [
         { nodeId: 'cat-10', position: { yaw: '0deg', pitch: '0deg' } },
         { nodeId: 'cat-12', position: { yaw: '-90deg', pitch: '0deg' } },

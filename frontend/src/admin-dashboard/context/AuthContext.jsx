@@ -20,11 +20,8 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Message for the login page, e.g. "another administrator is logged in".
   const [notice, setNotice] = useState('');
 
-  // Signs this browser out without touching the active-admin lock
-  // (used when the lock belongs to someone else).
   const dropSession = useCallback(async (message) => {
     await signOut().catch(() => {});
     setSession(null);
@@ -32,15 +29,11 @@ export function AuthProvider({ children }) {
     if (message) setNotice(message);
   }, []);
 
-  // Used only for session restore on app load — failing here just means
-  // "treat as signed out," so it's fine to swallow.
   const loadProfileQuiet = useCallback(async (sess) => {
     if (!sess?.user) { setProfile(null); return; }
     try {
       const p = await getProfile(sess.user.id);
       if (p?.role === 'admin') {
-        // Restored admin session (reload / new tab): keep it only if this
-        // browser still holds the active-admin slot.
         const lock = await claimAdminSession();
         if (!lock.ok) {
           await dropSession(busyMessage(lock));
@@ -68,8 +61,6 @@ export function AuthProvider({ children }) {
     return () => { mounted = false; sub.unsubscribe(); };
   }, [loadProfileQuiet]);
 
-  // Used for the actual login button — here a problem MUST surface to
-  // the caller (Login.jsx) as a real error message, not a silent bounce.
   const login = useCallback(async (email, password) => {
     setNotice('');
     const { session: sess } = await signIn(email, password);
@@ -96,7 +87,6 @@ export function AuthProvider({ children }) {
       throw new Error(`This account is signed in but is role="${p.role}", not admin.`);
     }
 
-    // Only one administrator at a time.
     let lock;
     try {
       lock = await claimAdminSession();
@@ -121,9 +111,6 @@ export function AuthProvider({ children }) {
 
   const isAdmin = profile?.role === 'admin';
 
-  // While an admin is logged in, check in regularly to keep the slot.
-  // If the slot was taken (e.g. this device was offline/asleep longer
-  // than the timeout and another admin logged in), sign out here.
   useEffect(() => {
     if (!session || !isAdmin) return undefined;
     let stopped = false;
@@ -134,7 +121,6 @@ export function AuthProvider({ children }) {
           await dropSession(`You were logged out because ${busyMessage(lock).charAt(0).toLowerCase()}${busyMessage(lock).slice(1)}`);
         }
       } catch {
-        /* no internet for a moment — try again on the next beat */
       }
     };
     const timer = setInterval(beat, HEARTBEAT_MS);

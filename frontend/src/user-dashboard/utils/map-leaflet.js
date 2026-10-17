@@ -3,44 +3,27 @@ import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { campusRouter } from "../../utils/campusRouting";
 
-// On-campus routing runs locally on the campus walkway graph
-// (src/data/campusGraph.json) using A* — no external routing service,
-// so routes stay on the real walkways and also work offline.
-
-// How far (metres) a point may be from a walkway and still be snapped onto it.
 export const MAX_SNAP_METERS = 60;
 
 export const TILELAYER_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 export const TILELAYER_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-// Satellite view (Esri World Imagery) — free, no API key; attribution required.
 export const SATELLITE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 export const SATELLITE_ATTRIBUTION =
   'Imagery &copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics';
 
-// Non-building pathway endpoints (e.g. the campus Gate) — not real
-// buildings in data.js, but still need to be detectable by GPS and
-// selectable as a route origin/destination, since several outdoor
-// pathway tours start or end there instead of at an actual building.
-//
-// TODO: replace the placeholder position below with the real gate
-// coordinates. Easiest way to get them: stand at the gate, go to the
-// Map page, tap "My Location" — since Gate isn't registered yet, the
-// alert will show your raw coordinates instead of a building name.
-// Copy those numbers in here.
 export const VIRTUAL_LOCATIONS = [
   {
     id: 'gate',
     abbr: 'GATE',
     name: 'Main Gate',
-    position: [12.070884, 124.596793], // TODO: replace with real gate coordinates
+    position: [12.070884, 124.596793],
     detectionRadius: 30,
-    entranceNodeId: 'GATE-CEA:1', // first point of the GATE-CEA walkway
+    entranceNodeId: 'GATE-CEA:1',
   },
 ];
 
-// Transformed object building list from database
 export const transformedObjectBuilding = (buildings) => {
   const campBuildings = buildings.map((b) => ({
     id: b.id,
@@ -114,13 +97,6 @@ const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
   return EARTH_RADIUS * distanceAngle;
 }
 
-/**
- * Walking route along the campus walkways.
- * `start` / `destination` can be [lat, lng] (snapped onto the nearest
- * walkway) or { entranceNodeId } (routes from/to that graph node).
- * Resolves to { coordinates, distance (m), duration (s), steps, edges, ... }.
- * Throws an Error with a readable message when no route is possible.
- */
 export const getWalkingRoute = async (start, destination, options = {}) => {
   const result = campusRouter.route(start, destination, {
     maxDistance: options.maxDistance ?? MAX_SNAP_METERS,

@@ -97,20 +97,16 @@ export default function BuildingsAdmin() {
     setFormOpen(true);
   }, []);
 
-  // Files are grouped in storage by the building's id (or the slug of the
-  // name for a building that hasn't been created yet).
   const handleUpload = useCallback(
     (file, values) => uploadBuildingImage(file, editing?._id || slugify(values?.name || '') || 'new-building'),
     [editing]
   );
 
-  // Called by FormModal; errors are thrown back so the form can show them.
   const handleSubmit = useCallback(async (data) => {
     const previousPaths = editing ? collectBuildingImagePaths(editing) : [];
 
     const result = await saveBuilding(editing ? editing._id : null, data);
 
-    // Remove storage files that were replaced or deleted in this edit.
     if (previousPaths.length) {
       const keep = new Set(collectBuildingImagePaths(result.building));
       removeBuildingImages(previousPaths.filter((p) => !keep.has(p)));

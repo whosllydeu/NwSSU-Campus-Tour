@@ -1,17 +1,3 @@
-// ============================================================
-// nwssuTour.js — public API of the 360° tour system.
-//
-// All panorama DATA now lives in static/tourNodes.js (one source of
-// truth). This file only exposes helpers the rest of the app uses:
-//   hasTour(id)          → DetailScreen, Modal, BuildingInfoModal, Map
-//   PATH_LINKS           → DetailScreen "Walk …" buttons
-//   TOURS / NODE_BY_ID   → PanoramaTour / SphereTour
-//   getTourStart(id)     → which node a tour opens on
-//   planWalk(destId)     → Map "Walk there!" guided route
-//   setWalkCorridor(pts) → makes the 360° walk follow the Map route
-//   nodesNear(latLng)    → Map "360° near me" (closest panoramas first)
-// Existing imports keep working unchanged.
-// ============================================================
 import {
   TOUR_GRAPH, CONNECTIONS, WALK_ROUTES, WALK_DEFAULT_START, PATH_LINKS,
 } from './tourNodes';
@@ -22,23 +8,14 @@ export const TOURS = TOUR_GRAPH.tours;
 export const TOUR_NODES = TOUR_GRAPH.nodes;
 export const NODE_BY_ID = TOUR_GRAPH.byId;
 
-// Kept for existing imports. "Walk there!" no longer uses it — it now
-// always starts at the nearest reachable PATHWAY photo, however far.
 export const GPS_START_RADIUS = 150;
 
-// "Walk there!": if the nearest reachable pathway photo is farther than
-// this (metres), the walk still starts there but the Map shows a notice.
 export const WALK_START_MAX_METERS = 40;
 
-// "Walk there!" to a building with no WALK_ROUTES entry (e.g. one added from
-// the Admin Dashboard): the walk ends at the pathway photo nearest the
-// building, if one is within this many metres.
 export const WALK_DEST_MAX_METERS = 40;
 
-// "360° near me": farther than this from every panorama = probably off campus.
 export const NEAR_ME_RADIUS = 300;
 
-/** Straight-line distance in metres between two [lat, lng] points. */
 export function metersBetween([lat1, lng1], [lat2, lng2]) {
   const R = 6371000;
   const rad = (d) => (d * Math.PI) / 180;
@@ -47,11 +24,6 @@ export function metersBetween([lat1, lng1], [lat2, lng2]) {
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Every GPS-tagged panorama within `maxMeters` of `latLng`, closest first.
- * Panoramas still marked GPS_TODO (no coordinates) are skipped.
- * @returns [{ node, distance }]
- */
 export function nodesNear(latLng, maxMeters = Infinity) {
   if (!Array.isArray(latLng) || latLng.length < 2) return [];
   return TOUR_NODES
@@ -61,7 +33,6 @@ export function nodesNear(latLng, maxMeters = Infinity) {
     .sort((a, b) => a.distance - b.distance);
 }
 
-/** Building/pathway id (or alias like 'lib') → tour id, or null. */
 export const resolveTourId = (id) => {
   if (!id) return null;
   if (TOURS[id]) return id;
@@ -72,10 +43,8 @@ export const hasTour = (id) => Boolean(resolveTourId(id));
 
 export const tourOfNode = (nodeId) => TOURS[NODE_BY_ID[nodeId]?.data.tour] || null;
 
-/** True when a node belongs to an outdoor pathway tour (not a building interior). */
 export const isPathwayNode = (node) => tourOfNode(node?.id)?.kind === 'pathway';
 
-/** Readable place name for a node, e.g. "Gate – CEA Pathway · Walkway 3". */
 export function nodeLabel(nodeId) {
   const node = NODE_BY_ID[nodeId];
   if (!node) return '';
@@ -84,11 +53,6 @@ export function nodeLabel(nodeId) {
   return node.name ? `${title} · ${node.name}` : title;
 }
 
-/**
- * Pathway photos that still have no GPS coordinates (GPS_TODO).
- * These can never be picked as a "Walk there!" start until they get [lat, lng].
- * @returns [{ id, tour, name }]
- */
 export function pathwayNodesMissingGps() {
   return TOUR_NODES
     .filter((n) => isPathwayNode(n) && !Array.isArray(n.data?.gps))
@@ -103,7 +67,6 @@ if (import.meta.env?.DEV) {
   }
 }
 
-/** Closest GPS-tagged PATHWAY photo to `latLng` within `maxMeters`, or null. */
 export function nearestPathwayNode(latLng, maxMeters = Infinity) {
   if (!Array.isArray(latLng) || latLng.length < 2) return null;
   let best = null;
@@ -115,11 +78,6 @@ export function nearestPathwayNode(latLng, maxMeters = Infinity) {
   return best;
 }
 
-/**
- * Node a tour should open on.
- * `startNode` may be a node id ('coed-07') or an old-style file name
- * ('coed-07.jpg') — both work.
- */
 export function getTourStart(tourId, startNode = null) {
   if (startNode) {
     const id = String(startNode).replace(/\.[^.]+$/, '');
@@ -127,44 +85,25 @@ export function getTourStart(tourId, startNode = null) {
   }
   const t = TOURS[resolveTourId(tourId)];
   if (t?.startNode && NODE_BY_ID[t.startNode]) return t.startNode;
-  return NODE_BY_ID[tourId] ? tourId : null; // a node id was passed directly
+  return NODE_BY_ID[tourId] ? tourId : null;
 }
 
-// ------------------------------------------------------------------
-// Route-following 360° walk
-// ------------------------------------------------------------------
-// The Map draws its route with A* on the walkway graph (campusGraph.json).
-// "Walk there!" must show the SAME route in 360°, so the Map hands that
-// route's line to setWalkCorridor() before opening the walk. findPath()
-// then picks the chain of photos that stays on that line:
-//   cost of a step = metres walked
-//                  + a big penalty for every metre a photo is off the route
-//                  + a penalty for cutting through another building.
-// Without a corridor it is simply the shortest walk in metres.
-
-// Photos within this many metres of the route line count as "on the route"
-// (phone GPS on the photos is a few metres off).
 export const CORRIDOR_TOLERANCE_M = 15;
-const OFF_ROUTE_PENALTY = 25; // per metre beyond the tolerance
-const BUILDING_PENALTY = 200; // passing through a building that is not the destination
-const NO_GPS_STEP_M = 8; // assumed length of a step to/from a photo with no GPS
+const OFF_ROUTE_PENALTY = 25;
+const BUILDING_PENALTY = 200;
+const NO_GPS_STEP_M = 8;
 
 let walkCorridor = null;
 let pathCache = new Map();
 
-/**
- * Sets the Map route the guided 360° walk must follow ([[lat, lng], …]),
- * or clears it with null.
- */
 export function setWalkCorridor(coordinates) {
   walkCorridor = Array.isArray(coordinates) && coordinates.length > 1 ? coordinates : null;
   pathCache = new Map();
 }
 
-/** Distance in metres from a point to the nearest point of a polyline. */
 function distanceToLine(point, line) {
   const k = Math.cos((point[0] * Math.PI) / 180);
-  const M = 111320; // metres per degree of latitude
+  const M = 111320;
   const px = point[1] * k * M;
   const py = point[0] * M;
   let best = Infinity;
@@ -195,10 +134,6 @@ function stepCost(from, to, destTour) {
   return cost + offRoutePenalty(to);
 }
 
-/**
- * Best list of node ids from one panorama to another (follows the Map
- * route when a corridor is set), or null when they are not connected.
- */
 export function findPath(fromId, toId) {
   if (!NODE_BY_ID[fromId] || !NODE_BY_ID[toId]) return null;
   if (fromId === toId) return [fromId];
@@ -211,7 +146,6 @@ export function findPath(fromId, toId) {
   const done = new Set();
   const open = [fromId];
   while (open.length) {
-    // small graph (a few hundred photos) → a simple scan is fast enough
     let bi = 0;
     for (let i = 1; i < open.length; i++) if (dist.get(open[i]) < dist.get(open[bi])) bi = i;
     const id = open.splice(bi, 1)[0];
@@ -241,7 +175,6 @@ export function findPath(fromId, toId) {
   return path;
 }
 
-/** Total cost of a path from findPath() (same costs findPath uses). */
 function pathCost(path) {
   if (!path || path.length < 2) return 0;
   const destTour = NODE_BY_ID[path[path.length - 1]].data.tour;
@@ -250,15 +183,10 @@ function pathCost(path) {
   return total;
 }
 
-// Start-photo choice: photos up to this many metres farther than the
-// nearest one are also considered, and the one with the cheapest walk
-// along the route wins (two pathways can have photos at the same spot).
 const START_CANDIDATE_SLACK_M = 15;
 
-// Reverse adjacency (who links TO each node), built once on first use.
 let reverseLinks = null;
 
-/** Call after nodes/links change at runtime (e.g. buildings connected from the Admin Dashboard). */
 export function resetTourCaches() {
   reverseLinks = null;
   pathCache = new Map();
@@ -274,7 +202,6 @@ function getReverseLinks() {
   return reverseLinks;
 }
 
-/** Set of node ids that have a link path INTO `targetId` (including itself). */
 function nodesThatCanReach(targetId) {
   const rev = getReverseLinks();
   const seen = new Set([targetId]);
@@ -291,28 +218,6 @@ function nodesThatCanReach(targetId) {
   return seen;
 }
 
-/**
- * Plans a guided "Walk there!" route to a building.
- *
- * Start node priority:
- *   1. If an origin position is known (GPS, VITE_TEST_LOCATION, or the
- *      picked origin building's coordinates): the PATHWAY photo with GPS
- *      that is closest to it AND has a link path to the destination.
- *      Building-interior photos are never used as the GPS start.
- *   2. the arrival node of the origin building (no reachable GPS photo)
- *   3. the route's own startNode
- *   4. WALK_DEFAULT_START (Main Gate)
- *
- * Destination: the WALK_ROUTES entry for `destinationId`. If there is none
- * (e.g. a building added from the Admin Dashboard), the walk ends at the
- * pathway photo nearest `destinationLatLng`, within `maxDestMeters`.
- *
- * Returns null when no destination photo can be found, otherwise:
- *   { startNode, arriveNode, path, steps, label, via,
- *     startLabel, startSource: 'gps' | 'origin' | 'route' | 'gate',
- *     startDistance (m, only for 'gps'), withinThreshold, maxStartMeters,
- *     arriveDistance (m, only when the destination was found by GPS) }
- */
 export function planWalk(
   destinationId,
   {
@@ -325,8 +230,6 @@ export function planWalk(
     routeCoordinates = null,
   } = {}
 ) {
-  // When the Map route is known, the walk starts and ends where that
-  // route starts and ends, so the 360° walk and the map line match.
   const hasRoute = Array.isArray(routeCoordinates) && routeCoordinates.length > 1;
   const routeStart = hasRoute ? routeCoordinates[0] : null;
   const routeEnd = hasRoute ? routeCoordinates[routeCoordinates.length - 1] : null;
@@ -362,8 +265,6 @@ export function planWalk(
     withinThreshold: startDistance === null ? null : startDistance <= maxStartMeters,
   });
 
-  // 1) Reachable pathway photo nearest to where the Map route starts
-  //    (or to the origin position when there is no route).
   const anchor = routeStart || (Array.isArray(userLocation) && userLocation.length >= 2 ? userLocation : null);
   if (anchor) {
     const reachable = nodesThatCanReach(route.arriveNode);
@@ -378,8 +279,6 @@ export function planWalk(
       if (c.distance > nearest + START_CANDIDATE_SLACK_M) continue;
       const p = findPath(c.node.id, route.arriveNode);
       if (!p) continue;
-      // reaching the photo counts double, so the walk never "jumps ahead"
-      // past the photo nearest the user just to save a few steps
       const score = 2 * c.distance + offRoutePenalty(c.node) + pathCost(p);
       if (!best || score < best.score) best = { ...c, score };
     }
@@ -391,7 +290,6 @@ export function planWalk(
     }
   }
 
-  // 2–4) Fallbacks when no reachable pathway photo has coordinates.
   const fallbacks = [];
   const origin = WALK_ROUTES[originBuildingId];
   if (origin && originBuildingId !== destinationId) fallbacks.push([origin.arriveNode, 'origin']);

@@ -29,7 +29,6 @@ export default function SearchPanel() {
   const { buildings, departments } = useCampusData();
   const panelRef = useRef(null);
 
-  // Combined search index (mirrors SEARCH_INDEX from the original data.js).
   const index = useMemo(() => [
     ...buildings.map((b) => ({
       key: `b-${b.id}`, name: b.name, type: 'Building', image: resolveImage(b.photo),
@@ -54,7 +53,6 @@ export default function SearchPanel() {
       .slice(0, 8);
   }, [index, q]);
 
-  // Click-outside closes the panel (clears the query).
   useEffect(() => {
     if (!show) return;
     const onDocClick = (e) => {

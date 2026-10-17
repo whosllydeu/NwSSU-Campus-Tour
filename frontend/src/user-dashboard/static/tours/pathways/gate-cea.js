@@ -1,9 +1,3 @@
-// ============================================================
-// Outdoor pathway tour: path-gate-cea
-// One tour per file — edit ONLY this file to fix this tour.
-// Format, angles and the 🧭 tuning guide: see ../../tourNodes.js
-// Registered in ../index.js · cross-tour links live in ../connections.js
-// ============================================================
 const PATH_GATE_CEA = {
   id: 'path-gate-cea',
   title: 'Gate → College of Engineering & Architecture',
@@ -11,10 +5,9 @@ const PATH_GATE_CEA = {
   folder: 'pathways/gate-cea',
   defaultName: 'Pathway',
   nodes: [
-    // Main Gate: extra arrow (no pin) → Gate → College of Education photo 03
     {
       id: 'pathway-gate-cea-01', yaw: -9, gps: [12.07089, 124.59679],
-      links: [{ nodeId: 'pathway-gate-coed-03', dir: 'back' }], // TODO tune if needed
+      links: [{ nodeId: 'pathway-gate-coed-03', dir: 'back' }],
     },
     { id: 'pathway-gate-cea-02', yaw: -9, gps: [12.07109, 124.59684] },
     { id: 'pathway-gate-cea-03', yaw: -9, gps: [12.07118, 124.59691] },

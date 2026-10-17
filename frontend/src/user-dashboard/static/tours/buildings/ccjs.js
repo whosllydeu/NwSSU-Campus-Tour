@@ -1,9 +1,3 @@
-// ============================================================
-// Building tour: ccjs
-// One tour per file — edit ONLY this file to fix this tour.
-// Format, angles and the 🧭 tuning guide: see ../../tourNodes.js
-// Registered in ../index.js · cross-tour links live in ../connections.js
-// ============================================================
 import { GPS_TODO } from '../shared';
 
 const CCJS = {
@@ -19,7 +13,6 @@ const CCJS = {
       office: { name: 'CAS Faculty Room', text: 'Faculty room located along the ground-floor walkway of the building.' } },
     { id: 'ccjs-05', name: 'Stairwell Landing', caption: 'CCJS · Ground Floor', yaw: 85, gps: GPS_TODO },
     { id: 'ccjs-06', name: 'Ground Floor (Utility Room Area)', caption: 'CCJS · Ground Floor', yaw: 86, gps: GPS_TODO },
-    // { id: 'ccjs-07', name: 'Ground Floor (Utility Room Area)', caption: 'CCJS · Ground Floor → 2nd Floor', yaw: 0, gps: GPS_TODO },
     { id: 'ccjs-08', name: 'Stairwell (Going Up to 2nd Floor)', caption: 'CCJS · Ground Floor → 2nd Floor', yaw: 14, gps: GPS_TODO },
     { id: 'ccjs-09', name: '2nd Floor Hallway', caption: 'CCJS · 2nd Floor', yaw: -92, gps: GPS_TODO },
     { id: 'ccjs-10', name: 'Criminology Laboratory', caption: 'CCJS · 2nd Floor', yaw: -93, gps: GPS_TODO, star: true,
@@ -34,7 +27,7 @@ const CCJS = {
     { id: 'ccjs-16', name: '2nd Floor Hallway (Other Side)', caption: 'CCJS · 2nd Floor', yaw: -2, gps: GPS_TODO },
     { id: 'ccjs-17', name: 'Wash Area (2nd Floor, Other Side)', caption: 'CCJS · 2nd Floor', yaw: 94, gps: GPS_TODO },
     { id: 'ccjs-18', name: 'Stairwell to 3rd Floor', caption: 'CCJS · 2nd Floor → 3rd Floor', yaw: 16, gps: GPS_TODO },
-    { id: 'ccjs-19', name: 'Stairwell Landing (3rd Floor Arrival)', caption: 'CCJS · 3rd Floor', yaw: 0, gps: GPS_TODO }, // TODO yaw
+    { id: 'ccjs-19', name: 'Stairwell Landing (3rd Floor Arrival)', caption: 'CCJS · 3rd Floor', yaw: 0, gps: GPS_TODO },
     { id: 'ccjs-20', name: 'ACAD 301', caption: 'CCJS · 3rd Floor', yaw: -88, gps: GPS_TODO, star: true,
       office: { name: 'ACAD 301', text: 'Academic room on the 3rd floor of the CCJS building.' } },
     { id: 'ccjs-21', name: 'ACAD 302', caption: 'CCJS · 3rd Floor', yaw: -91, gps: GPS_TODO, star: true,

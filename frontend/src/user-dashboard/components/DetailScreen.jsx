@@ -48,8 +48,6 @@ function PhotoNote({ rawPhoto }) {
 
 const asList = (list) => (Array.isArray(list) ? list : []);
 
-// Large, faded visual in the hero — the building photo when one exists,
-// otherwise a neutral icon (replaces the old emoji).
 function HeroVisual({ photo, kind = 'building', color }) {
   const src = resolveImage(photo);
   if (src) {
@@ -67,7 +65,6 @@ function HeroVisual({ photo, kind = 'building', color }) {
   );
 }
 
-// Small photo in the contact card, with an icon fallback.
 function ContactIcon({ photo, name }) {
   const src = resolveImage(photo);
   if (src) {
@@ -84,7 +81,6 @@ function ContactIcon({ photo, name }) {
   );
 }
 
-// ── Building detail ──
 function BuildingDetail({ id }) {
   const { closeDetail, openTour, openUnavailable } = useUI();
   const { buildings, departments } = useCampusData();
@@ -169,7 +165,6 @@ function BuildingDetail({ id }) {
   );
 }
 
-// ── Department detail ──
 function DeptDetail({ id }) {
   const { closeDetail, openTour, openUnavailable } = useUI();
   const { buildings, departments } = useCampusData();

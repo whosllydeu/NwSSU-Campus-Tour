@@ -5,7 +5,6 @@ import { resolveImage } from '../utils/assets';
 
 const SIZE_CLASS = { hero: 'ds-photo-hero', card: 'ds-photo-card', dept: 'ds-photo-dept' };
 
-// Shown when a building has no uploaded photo yet.
 function Placeholder({ color, name }) {
   return (
     <div className="ph-inner">
@@ -17,8 +16,6 @@ function Placeholder({ color, name }) {
   );
 }
 
-// `tourId` — when set, the photo becomes a virtual-tour launcher
-// (clicking starts the 360° tour instead of enlarging the image).
 export default function Photo({ photo, color, name, context = 'hero', tourId }) {
   const { openLightbox, openTour } = useUI();
   const [errored, setErrored] = useState(false);
@@ -52,7 +49,6 @@ export default function Photo({ photo, color, name, context = 'hero', tourId }) 
     );
   }
 
-  // No image yet — still allow launching the tour if this is a tour location
   if (isTour) {
     return (
       <div className={`${cls} has-tour is-placeholder`} onClick={activate} title="Start virtual tour"

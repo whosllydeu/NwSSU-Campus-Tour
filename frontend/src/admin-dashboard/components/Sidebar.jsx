@@ -36,9 +36,6 @@ export default function Sidebar({ open, onNavigate }) {
         ))}
       </nav>
 
-      {/* Now a separate app, so this is a real link to wherever the
-          public site is hosted — set VITE_PUBLIC_SITE_URL in .env
-          (see .env.example). Falls back to the local dev server. */}
       <a
         href={import.meta.env.VITE_PUBLIC_SITE_URL || 'http://localhost:5173/'}
         className="ad-sidebar-exit"

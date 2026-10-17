@@ -1,9 +1,3 @@
-/* ══════════════════════════════════════════════════════
-   Design tokens — kept IN SYNC with the public site's
-   src/styles/style.css :root block. admin.css is written
-   against these same variable names, so if you re-theme
-   the public site, mirror the change here too.
-   ══════════════════════════════════════════════════════ */
 :root {
   --green:   #1e4d1a;
   --green2:  #163814;
@@ -51,7 +45,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ══════ Toast (shared shape with the public site) ══════ */
 .toast {
   position: fixed; bottom: 28px; left: 50%;
   transform: translateX(-50%) translateY(20px);
@@ -67,7 +60,6 @@ body {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ══════ Scrollbar ══════ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(200,168,75,0.2); border-radius: 99px; }

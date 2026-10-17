@@ -1,28 +1,3 @@
-// ============================================================
-// BuildingPanoramaViewer — walkable 360° tour of the panoramas an
-// admin uploaded for ONE building.
-//
-// The uploaded panoramas are chained in gallery order (Admin →
-// Buildings → Additional Images; use ↑ / ↓ to reorder):
-//   View 1 ⇄ View 2 ⇄ View 3 …
-// Each view gets a FORWARD arrow (to the next view) and a BACK arrow
-// (to the previous one), drawn on the ground like the campus tour.
-//
-// Arrow direction: the forward arrow points at the image's "Forward
-// arrow direction" set in the admin form (degrees, 0 = centre of the
-// photo — usually the way the camera faced while walking). The back
-// arrow points the opposite way. The "Facing …°" read-out in the top
-// bar tells you which number to type for a view.
-//
-// Still fully separate from PanoramaTour / SphereTour: its own viewer,
-// no campus tour graph, no pathway links, no shared state.
-//
-// Props:
-//   building   the building record (for the title)
-//   items      [{ id, src, caption, lat, lng, heading }] from getBuildingPanoramas()
-//   startId    optional — id of the view to open on (default: the first)
-//   onClose()
-// ============================================================
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, MapPin, Compass } from 'lucide-react';
@@ -33,15 +8,14 @@ import { GalleryPlugin } from '@photo-sphere-viewer/gallery-plugin';
 import '@photo-sphere-viewer/core/index.css';
 import '@photo-sphere-viewer/virtual-tour-plugin/index.css';
 import '@photo-sphere-viewer/gallery-plugin/index.css';
-import '../stylesheets/SphereTour.css'; // same ground-arrow look as the campus tour
+import '../stylesheets/SphereTour.css';
 import '../stylesheets/building-panorama.css';
 
 const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
 const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
-const MIN_ARROW_GAP = 25; // degrees — closer arrows would overlap
+const MIN_ARROW_GAP = 25;
 
-// Same chevron as SphereTour so both tours look alike.
 const CHEVRON_SVG = `
 <svg viewBox="0 0 100 100" aria-hidden="true">
   <circle class="tour-arrow-ring" cx="50" cy="50" r="44" />
@@ -62,11 +36,6 @@ const headingOf = (item) => {
 
 const labelOf = (item, index) => item.caption || `View ${index + 1}`;
 
-/**
- * Builds the tour graph: each view links to the previous and the next one
- * (gallery order), plus any extra arrows the admin added for junctions
- * (item.links = [{ to, yaw }]) — so one view can have 3–4 directions.
- */
 function buildNodes(items, buildingName) {
   const ids = new Set(items.map((it) => it.id));
   return items.map((item, index) => {
@@ -91,12 +60,11 @@ function buildNodes(items, buildingName) {
       const yaw = Number(extra?.yaw);
       if (!ids.has(extra?.to) || extra.to === item.id || !Number.isFinite(yaw)) continue;
       const existing = links.find((l) => l.nodeId === extra.to);
-      if (existing) { // admin set an exact direction for next/prev: use it
+      if (existing) {
         existing.position = { yaw: norm(yaw) * D2R, pitch: 0 };
         existing.data = { ...existing.data, yaw: norm(yaw) };
         continue;
       }
-      // An admin arrow wins over an automatic forward/back arrow in the same spot.
       for (let i = links.length - 1; i >= 0; i -= 1) {
         if (links[i].data.dir !== 'branch' && Math.abs(norm(links[i].data.yaw - yaw)) < MIN_ARROW_GAP) links.splice(i, 1);
       }
@@ -128,10 +96,6 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
   const current = items.find((item) => item.id === currentId) || items[0] || null;
   const currentIndex = Math.max(0, items.findIndex((item) => item.id === currentId));
 
-  // Viewer creation is deferred by one tick: React StrictMode (dev) mounts,
-  // unmounts and re-mounts effects immediately, and a viewer destroyed while
-  // its panorama is still downloading can leave the next one stuck on
-  // "Loading". With the delay, the throw-away mount never creates a viewer.
   useEffect(() => {
     const container = mountRef.current;
     if (!container || items.length === 0) return undefined;
@@ -145,11 +109,8 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
       const multiple = nodes.length > 1;
       const startNode = byId[firstId] || nodes[0];
 
-      // Face the way you were walking when you arrive on a view.
       const arrivalYaw = (toNode, fromNode) => {
         if (!fromNode) return toNode.data.forward;
-        // Came through a junction arrow: if the new view has an arrow back,
-        // face away from it (keep walking the same way).
         const isChainStep = Math.abs(toNode.data.index - fromNode.data.index) === 1;
         if (!isChainStep) {
           const backLink = toNode.links.find((l) => l.nodeId === fromNode.id);
@@ -169,8 +130,6 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
         return btn;
       };
 
-      // GalleryPlugin must be registered BEFORE VirtualTourPlugin so the tour
-      // can fill the thumbnail strip with its views.
       const plugins = [];
       if (multiple) {
         plugins.push([GalleryPlugin, {
@@ -236,7 +195,6 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
     };
   }, [items, building, firstId]);
 
-  // Esc closes; lock page scroll while open.
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     const prevOverflow = document.body.style.overflow;

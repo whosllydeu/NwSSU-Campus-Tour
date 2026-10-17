@@ -3,8 +3,6 @@ import { slugify } from '../../lib/slugify';
 
 const TABLE = 'buildings';
 
-// Keeps only the fields we store for each gallery image so the jsonb
-// column never collects UI-only state (previews, File objects, etc.).
 function cleanImages(images) {
   if (!Array.isArray(images)) return [];
   return images
@@ -24,7 +22,6 @@ function cleanImages(images) {
     }));
 }
 
-// Extra navigation arrows of a 360° image: [{ to: <image id>, yaw: <degrees> }]
 function cleanLinks(links) {
   if (!Array.isArray(links)) return [];
   return links
@@ -36,7 +33,6 @@ const optionalNumber = (v) => (
   v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)) ? Number(v) : null
 );
 
-// "360° Pathway Connection" → pathway_link jsonb (or null when not connected).
 function cleanPathwayLink(link) {
   if (!link || !link.pathwayNode) return null;
   return {
@@ -89,9 +85,6 @@ export async function createBuilding(data) {
 export async function updateBuilding(id, data) {
   const { data: rows, error } = await supabase.from(TABLE).update(toDb(data)).eq('id', id).select();
   if (error) throw error;
-  // RLS blocks a write by silently matching 0 rows, not by returning an
-  // error — an empty result here means the update didn't actually happen
-  // (usually: not signed in as an admin, or the session expired).
   if (!rows || rows.length === 0) {
     throw new Error('Update was blocked — you may not be signed in as an admin, or your session expired.');
   }

@@ -1,11 +1,3 @@
-/* ============================================================
-   SphereTour / PanoramaTour — the single 360° viewer.
-   Overlay chrome (gsv-root, gsv-controls, gsv-menu, gsv-card…)
-   still comes from index.css; this file only adds what the Photo
-   Sphere Viewer engine needs.
-   ============================================================ */
-
-/* Sit above map modals (BuildingInfoModal uses z-index 9999). */
 .gsv-root { z-index: 10000; }
 
 .tour__view {
@@ -24,7 +16,6 @@
   background: #0a0d10;
 }
 
-/* ── Ground arrows (Street View chevrons, anchored in 3D) ── */
 .tour-arrow {
   color: #fff;
 }
@@ -52,13 +43,11 @@
   stroke: #fff;
 }
 
-/* Arrow leading into another building / pathway */
 .tour-arrow.is-cross .tour-arrow-ring {
   fill: rgba(26, 115, 232, 0.45);
   stroke: #8ab4f8;
 }
 
-/* Next step of a guided "Walk there!" route */
 .tour-arrow.is-route .tour-arrow-ring {
   fill: rgba(52, 168, 83, 0.85);
   stroke: #fff;
@@ -69,7 +58,6 @@
   50% { stroke-width: 8; }
 }
 
-/* Floating "Enter …" pin (PSV marker, anchored to the doorway) */
 .tour-enter-pin {
   display: inline-flex;
   align-items: center;
@@ -87,10 +75,8 @@
 .tour-enter-pin:hover { background: #1558b0; transform: scale(1.06); }
 .tour-enter-pin svg { flex: none; animation: gsv-pin-bounce 1.4s ease-in-out infinite; }
 
-/* ── Heading readout (🧭) sits under the title ── */
 .gsv-attrib.tour-readout { top: 60px; gap: 10px; }
 
-/* ── Guided walk banner ── */
 .tour-guide {
   position: absolute;
   left: 50%;

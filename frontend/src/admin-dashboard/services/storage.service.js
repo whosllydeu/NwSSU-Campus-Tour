@@ -2,15 +2,10 @@ import { supabase } from '../../lib/supabaseClient';
 import { slugify } from '../../lib/slugify';
 import { IMAGE_LIMITS } from '../utils/image-compress.js';
 
-// Supabase Storage bucket for building photos. Created by
-// supabase/migrations/building_images_and_departments.sql — override with
-// VITE_SUPABASE_BUILDING_BUCKET only if you named the bucket differently.
 export const BUILDING_BUCKET = import.meta.env.VITE_SUPABASE_BUILDING_BUCKET || 'building-images';
 
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-// Size limits live in ../utils/image-compress.js (IMAGE_LIMITS) so they can
-// be adjusted in one place.
 export const MAX_SOURCE_BYTES = IMAGE_LIMITS.maxSourceMB * 1024 * 1024;
 export const MAX_UPLOAD_BYTES = IMAGE_LIMITS.maxUploadMB * 1024 * 1024;
 
@@ -21,10 +16,6 @@ const EXT_BY_TYPE = {
   'image/gif': 'gif',
 };
 
-/**
- * Checks a file the admin just SELECTED (before optimisation).
- * Returns an error message, or '' when the file is OK.
- */
 export function validateImageFile(file) {
   if (!file) return 'No file selected.';
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
@@ -36,9 +27,6 @@ export function validateImageFile(file) {
   return '';
 }
 
-/**
- * Checks a file right before UPLOAD (after optimisation).
- */
 export function validateUploadFile(file) {
   if (!file) return 'No file selected.';
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
@@ -50,12 +38,6 @@ export function validateUploadFile(file) {
   return '';
 }
 
-/**
- * Uploads one image to Supabase Storage.
- * @param {File} file
- * @param {string} folderKey  building id or name — used as the folder
- * @returns {Promise<{ url: string, path: string }>}
- */
 export async function uploadBuildingImage(file, folderKey) {
   const problem = validateUploadFile(file);
   if (problem) throw new Error(problem);
@@ -77,11 +59,6 @@ export async function uploadBuildingImage(file, folderKey) {
   return { url: data.publicUrl, path };
 }
 
-/**
- * Extracts the storage path from a public URL of OUR bucket.
- * Returns '' for local filenames or URLs from anywhere else, so those are
- * never touched by cleanup.
- */
 export function storagePathFromUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const marker = `/storage/v1/object/public/${BUILDING_BUCKET}/`;
@@ -90,10 +67,6 @@ export function storagePathFromUrl(url) {
   return decodeURIComponent(url.slice(at + marker.length).split('?')[0]);
 }
 
-/**
- * Best-effort removal of storage objects that are no longer referenced.
- * Never throws — a leftover file is harmless, a failed save is not.
- */
 export async function removeBuildingImages(paths) {
   const clean = [...new Set((paths || []).filter(Boolean))];
   if (clean.length === 0) return;
@@ -105,10 +78,6 @@ export async function removeBuildingImages(paths) {
   }
 }
 
-/**
- * Lists every storage path referenced by a building record
- * (main photo + gallery images).
- */
 export function collectBuildingImagePaths(building) {
   if (!building) return [];
   const paths = [storagePathFromUrl(building.photo)];

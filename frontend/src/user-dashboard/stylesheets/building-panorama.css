@@ -1,8 +1,3 @@
-/* ══════════════════════════════════════════════════════
-   Standalone 360° viewer for a building's uploaded panoramas
-   (sits above the map's building modal, z-index 9999)
-   ══════════════════════════════════════════════════════ */
-
 .bpv-overlay {
   position: fixed;
   inset: 0;

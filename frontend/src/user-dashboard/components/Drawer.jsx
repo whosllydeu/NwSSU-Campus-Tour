@@ -14,10 +14,6 @@ export default function Drawer() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // Closing the drawer makes UIContext call history.back() to remove the
-  // drawer's history marker. If we navigate at the same time, that back()
-  // undoes the navigation. So: close first, wait for the back() to finish,
-  // then navigate.
   const handleNav = (e, to) => {
     e.preventDefault();
     closeDrawer();
@@ -32,7 +28,7 @@ export default function Drawer() {
     };
     const onPop = () => go();
     window.addEventListener('popstate', onPop);
-    setTimeout(go, 400); // fallback if no history marker existed
+    setTimeout(go, 400);
   };
 
   return (

@@ -26,7 +26,6 @@ function Thumb({ b }) {
     );
   }
 
-  // Fallback when no photo has been uploaded yet.
   return (
     <div className="bldg-thumb" style={{ background: `linear-gradient(135deg,${b.color}40,${b.color}70)` }}>
       <Building2 size={52} strokeWidth={1.4} color="rgba(255,255,255,0.85)" aria-hidden="true" />
