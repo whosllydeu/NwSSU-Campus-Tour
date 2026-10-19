@@ -96,6 +96,9 @@ const NO_GPS_STEP_M = 8;
 let walkCorridor = null;
 let pathCache = new Map();
 
+/** The map route used for the current "Walk there!" (or null). */
+export const getWalkCorridor = () => walkCorridor;
+
 export function setWalkCorridor(coordinates) {
   walkCorridor = Array.isArray(coordinates) && coordinates.length > 1 ? coordinates : null;
   pathCache = new Map();

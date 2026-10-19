@@ -89,6 +89,7 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
       defaultPitch: 0,
       touchmoveTwoFingers: false,
       mousewheelCtrlKey: false,
+      moveSpeed: 2, // drag rotation speed (1 = default, higher = faster)
       plugins: [
         [MarkersPlugin, {}],
         [VirtualTourPlugin, {

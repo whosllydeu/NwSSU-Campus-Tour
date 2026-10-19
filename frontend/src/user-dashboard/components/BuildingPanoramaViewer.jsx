@@ -81,7 +81,7 @@ function buildNodes(items, buildingName) {
       name: labelOf(item, index),
       caption: `${buildingName} · ${labelOf(item, index)}`,
       links,
-      data: { index, forward },
+      data: { index, forward, view: Number.isFinite(Number(item?.view)) && item?.view !== null ? norm(Number(item.view)) : forward },
     };
   });
 }
@@ -110,7 +110,7 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
       const startNode = byId[firstId] || nodes[0];
 
       const arrivalYaw = (toNode, fromNode) => {
-        if (!fromNode) return toNode.data.forward;
+        if (!fromNode) return toNode.data.view;
         const isChainStep = Math.abs(toNode.data.index - fromNode.data.index) === 1;
         if (!isChainStep) {
           const backLink = toNode.links.find((l) => l.nodeId === fromNode.id);
@@ -161,10 +161,11 @@ export default function BuildingPanoramaViewer({ building, items, startId = null
       viewer = new Viewer({
         container,
         loadingTxt: 'Loading 360° view…',
-        defaultYaw: startNode.data.forward * D2R,
+        defaultYaw: startNode.data.view * D2R,
         defaultPitch: 0,
         touchmoveTwoFingers: false,
         mousewheelCtrlKey: false,
+        moveSpeed: 2, // drag rotation speed (1 = default, higher = faster)
         navbar: multiple
           ? ['zoom', 'move', 'gallery', 'caption', 'fullscreen']
           : ['zoom', 'move', 'caption', 'fullscreen'],

@@ -3,6 +3,7 @@ import { useUI } from '../context/UIContext';
 import { TOURS, NODE_BY_ID, getTourStart, findPath, tourOfNode } from '../static/nwssuTour';
 import SphereTour from './SphereTour';
 import NavigationArrow from './NavigationArrow';
+import TourMiniMap from './TourMiniMap';
 
 export default function PanoramaTour() {
   const { tour, closeTour } = useUI();
@@ -93,7 +94,11 @@ function TourScreen({ tour, closeTour }) {
         <span className="gsv-attrib-txt"><b>NwSSU</b> · {currentTour?.title}</span>
       </div>
 
-      <div className="gsv-zoom">
+      {tour.destinationNode && (
+        <TourMiniMap nodeId={node?.id || startNode} destinationId={tour.destinationNode} />
+      )}
+
+      <div className={`gsv-zoom${tour.destinationNode ? ' has-minimap' : ''}`}>
         <button className="gsv-round" onClick={() => apiRef.current?.zoomIn()} aria-label="Zoom in" title="Zoom in">＋</button>
         <button className="gsv-round" onClick={() => apiRef.current?.zoomOut()} aria-label="Zoom out" title="Zoom out">−</button>
       </div>

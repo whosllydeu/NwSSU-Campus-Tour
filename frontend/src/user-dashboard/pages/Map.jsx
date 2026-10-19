@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "../stylesheets/map.css";
 import "../stylesheets/map-actions.css";
 import {
@@ -10,6 +10,7 @@ import {
   Polyline,
   CircleMarker,
   Tooltip,
+  Circle,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -27,7 +28,8 @@ import {
   VIRTUAL_LOCATIONS,
 } from "../utils/map-leaflet";
 import { campusRouter, formatDistance } from "../../utils/campusRouting";
-import { Globe, LocateFixed, Network, Road, RotateCcw } from "lucide-react";
+import { Globe, LocateFixed, Navigation, Network, Road, RotateCcw } from "lucide-react";
+import { LiveFollower, routeProgress } from "../utils/liveTracking";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
 import { planWalk, setWalkCorridor, WALK_ROUTES } from "../static/nwssuTour";
@@ -102,6 +104,10 @@ export default function Map() {
     message: ""
   });
   const [route, setRoute] = useState(EMPTY_ROUTE);
+  const [tracking, setTracking] = useState(false);
+  const [accuracy, setAccuracy] = useState(null);
+  const lastReroute = useRef(0);
+  const arrivedRef = useRef(false);
   const [showGraph, setShowGraph] = useState(false);
   const graphStats = useMemo(() => campusRouter.analyze(), []);
 
@@ -124,6 +130,7 @@ export default function Map() {
   }, [selectedBuilding]);
 
   const handleReset = () => {
+    setTracking(false);
     setRoute(EMPTY_ROUTE);
     setWalkCorridor(null);
     setSelectedBuilding(null);
@@ -278,6 +285,79 @@ export default function Map() {
       return { entranceNodeId };
     }
     return fallbackPosition ?? building?.position ?? null;
+  };
+
+  // ---------- Live tracking ----------
+  useEffect(() => {
+    if (!tracking) return undefined;
+    if (!navigator.geolocation) {
+      Promise.resolve().then(() => {
+        setTracking(false);
+        setAlertMsg({ message: "Geolocation is not supported by this browser." });
+      });
+      return undefined;
+    }
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        setAccuracy(pos.coords.accuracy);
+        setLocationSource("gps");
+      },
+      (err) => {
+        setAlertMsg({ message: GEO_ERRORS[err.code] || "Unable to get your location." });
+        if (err.code === 1) setTracking(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, [tracking]);
+
+  const progress = useMemo(
+    () => (tracking && route.coordinates ? routeProgress(route.coordinates, userLocation) : null),
+    [tracking, route.coordinates, userLocation],
+  );
+
+  // Arrival message, and a new route if the user walks away from the line.
+  useEffect(() => {
+    if (!tracking || !progress || !selectedBuilding || !userLocation) return;
+    if (progress.remaining <= 10) {
+      if (!arrivedRef.current) {
+        arrivedRef.current = true;
+        Promise.resolve().then(() =>
+          setAlertMsg({ success: true, message: `✅ You have arrived at ${selectedBuilding.name}.` }),
+        );
+      }
+      return;
+    }
+    arrivedRef.current = false;
+    const now = Date.now();
+    if (progress.offRoute > 25 && now - lastReroute.current > 10000) {
+      lastReroute.current = now;
+      getWalkingRoute(userLocation, toRouteEndpoint(selectedBuilding))
+        .then((result) => {
+          setRoute(result);
+          setAlertMsg({ success: true, message: "🔄 You left the route — a new route was found from where you are." });
+        })
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracking, progress, selectedBuilding, userLocation]);
+
+  const toggleTracking = () => {
+    if (tracking) {
+      setTracking(false);
+      setAccuracy(null);
+      setAlertMsg({ success: true, message: "Live tracking stopped." });
+      return;
+    }
+    arrivedRef.current = false;
+    setTracking(true);
+    setAlertMsg({
+      success: true,
+      message: route.coordinates
+        ? "📡 Live tracking on — the remaining distance updates as you walk."
+        : "📡 Live tracking on — your position updates as you walk. Pick a destination and tap Get Route.",
+    });
   };
 
   const handleGetRoute = async () => {
@@ -540,9 +620,20 @@ export default function Map() {
 
               {userLocation && (
                 <Marker position={userLocation} icon={userLocationIcon}>
-                  <Popup>Your Current Location</Popup>
+                  <Popup>{tracking ? "You are here (live)" : "Your Current Location"}</Popup>
                 </Marker>
               )}
+
+              {tracking && userLocation && accuracy && (
+                <Circle
+                  center={userLocation}
+                  radius={accuracy}
+                  interactive={false}
+                  pathOptions={{ color: "#1a73e8", weight: 1, fillColor: "#1a73e8", fillOpacity: 0.12 }}
+                />
+              )}
+
+              {tracking && userLocation && <LiveFollower position={userLocation} />}
 
               {route.coordinates && (
                 <>
@@ -562,7 +653,7 @@ export default function Map() {
                     }}
                   />
 
-                  <RouteFitter route={route.coordinates}/>
+                  {!tracking && <RouteFitter route={route.coordinates}/>}
                 </>
               )}
             </MapContainer>
@@ -597,6 +688,14 @@ export default function Map() {
 
             <button
               type="button"
+              className={tracking ? "destination-route-btn" : "get-location-btn"}
+              style={{ width: "100%", justifyContent: "center", marginBottom: 8 }}
+              onClick={toggleTracking}
+              aria-pressed={tracking}
+            ><Navigation size={18} style={{ marginRight: 6 }}/>{tracking ? "Stop Live Tracking" : "Start Live Tracking"}</button>
+
+            <button
+              type="button"
               className={loader === "destination" ? "navigate-btn-loader" : "navigate-btn"}
               disabled={loader === "destination"}
               onClick={handleNavigateHere}
@@ -628,8 +727,18 @@ export default function Map() {
 
             {route.coordinates && (
               <div className="route-info">
-                <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
-                <p><strong>Time:</strong> {Math.max(1, Math.ceil(route.duration / 60))} minutes</p>
+                {progress ? (
+                  <>
+                    <p><strong>Remaining:</strong> {Math.round(progress.remaining)} meters</p>
+                    <p><strong>Time left:</strong> {Math.max(1, Math.ceil(progress.remaining / 1.3 / 60))} minutes</p>
+                    {accuracy && <p><small>GPS accuracy: ±{Math.round(accuracy)} m</small></p>}
+                  </>
+                ) : (
+                  <>
+                    <p><strong>Distance:</strong> {Math.round(route.distance)} meters</p>
+                    <p><strong>Time:</strong> {Math.max(1, Math.ceil(route.duration / 60))} minutes</p>
+                  </>
+                )}
 
                 {route.steps?.length > 0 && (
                   <ol style={{ margin: '8px 0 0', paddingLeft: 18 }}>
