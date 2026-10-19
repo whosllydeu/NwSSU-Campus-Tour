@@ -1,4 +1,4 @@
-import { BrowserRouter, MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
+import { MemoryRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UIProvider } from "./user-dashboard/context/UIContext";
 
 import Home from "./user-dashboard/pages/Home";
@@ -31,17 +31,19 @@ import {
 import AdminLayout from "./admin-dashboard/components/AdminLayout";
 
 const isAdminUrl = window.location.pathname.startsWith("/admin");
-const Router = isAdminUrl ? BrowserRouter : MemoryRouter;
 
-const startPath = isAdminUrl ? undefined : window.location.pathname || "/";
-if (!isAdminUrl && window.location.pathname !== "/") {
-  window.history.replaceState(null, "", "/");
+// Both sides use an in-memory router, so the address bar stays clean:
+// "/" for visitors and "/admin" for the dashboard, whatever page is open.
+const startPath = window.location.pathname || "/";
+const cleanPath = isAdminUrl ? "/admin" : "/";
+if (window.location.pathname !== cleanPath) {
+  window.history.replaceState(null, "", cleanPath);
 }
-const routerProps = isAdminUrl ? {} : { initialEntries: [startPath] };
+const routerProps = { initialEntries: [startPath] };
 
 const App = () => {
   return (
-    <Router {...routerProps}>
+    <MemoryRouter {...routerProps}>
       <UIProvider>
         <Routes>
           <Route path="/" element={<Home/>}/>
@@ -80,7 +82,7 @@ const App = () => {
         <Lightbox/>
         <Toast/>
       </UIProvider>
-    </Router>
+    </MemoryRouter>
   );
 }
 
