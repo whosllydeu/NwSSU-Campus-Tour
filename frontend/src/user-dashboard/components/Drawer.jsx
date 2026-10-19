@@ -48,6 +48,10 @@ export default function Drawer() {
         <div className="drawer-search-row">
           <input
             type="text"
+            id="drawerSearch"
+            name="drawerSearch"
+            autoComplete="off"
+            aria-label="Search"
             placeholder="Search…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
