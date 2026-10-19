@@ -93,9 +93,12 @@ function TourScreen({ tour, closeTour }) {
         <span className="gsv-attrib-txt"><b>NwSSU</b> · {currentTour?.title}</span>
       </div>
 
-      <div className="gsv-controls">
+      <div className="gsv-zoom">
         <button className="gsv-round" onClick={() => apiRef.current?.zoomIn()} aria-label="Zoom in" title="Zoom in">＋</button>
         <button className="gsv-round" onClick={() => apiRef.current?.zoomOut()} aria-label="Zoom out" title="Zoom out">−</button>
+      </div>
+
+      <div className="gsv-controls">
         <button className="gsv-round" onClick={() => setCompass((c) => !c)} aria-label="Toggle heading readout">🧭</button>
         <button className="gsv-round" onClick={() => setMenu((m) => !m)} aria-label="Menu">⋮</button>
         <button className="gsv-round" onClick={closeTour} aria-label="Close">✕</button>
