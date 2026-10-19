@@ -23,6 +23,8 @@ export const toDeg = (value) => {
 
 const warn = (...args) => { if (IS_DEV) console.warn('[tour]', ...args); };
 
+export const enterPinHtml = (label) => `<span class="tour-enter-pin"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 7 12 7.3 12.28a1 1 0 0 0 1.4 0C13 22 20 15.25 20 10c0-4.42-3.58-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>${escapeHtml(label)}</span>`;
+
 const escapeHtml = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -152,7 +154,7 @@ export function buildTourGraph(tourDefs, connections = []) {
       node.markers.push({
         id: `go:${node.id}>${l.nodeId}`,
         position: { yaw: `${l.data.yaw}deg`, pitch: '-4deg' },
-        html: `<span class="tour-enter-pin"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 7 12 7.3 12.28a1 1 0 0 0 1.4 0C13 22 20 15.25 20 10c0-4.42-3.58-8-8-8z" fill="currentColor"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>${escapeHtml(l.data.label)}</span>`,
+        html: enterPinHtml(l.data.label),
         anchor: 'bottom center',
         data: { goto: l.nodeId },
       });

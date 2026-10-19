@@ -1,0 +1,77 @@
+.ta-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.ta-side { position: sticky; top: 12px; max-height: calc(100vh - 120px); display: flex; flex-direction: column; }
+.ta-field { display: flex; flex-direction: column; gap: 6px; }
+.ta-field select, .ta-main select, .ta-main input[type="number"] { min-width: 0; }
+.ta-field select option, .ta-main select option, .ta-main select optgroup { color: #111827; background-color: #ffffff; }
+.ta-small { font-size: 12px; margin: 8px 0; }
+.ta-nodes { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.ta-node { width: 100%; text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.ta-node:hover { border-color: var(--border); }
+.ta-node.active { border-color: var(--gold); background: rgba(200, 168, 75, 0.12); }
+.ta-node-name { flex: 1 1 140px; font-size: 13px; }
+.ta-node-id { font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+.ta-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #c98a12; color: #fff; }
+.ta-section { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.ta-section h3 { font-size: 14px; margin: 0; }
+.ta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.ta-row-label { flex: 1 1 220px; font-size: 13px; }
+.ta-row-label em { font-style: normal; color: #e0a43a; }
+.ta-row input[type="number"] { width: 90px; }
+.ta-dot { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+.ta-dot.is-forward { background: #2e9e4f; }
+.ta-dot.is-extra { background: #c98a12; }
+.ta-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ta-unsaved { font-size: 12px; color: #e0a43a; }
+@media (max-width: 900px) {
+  .ta-layout { grid-template-columns: 1fr; }
+  .ta-side { position: static; max-height: 320px; }
+}
+
+.bte-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, 0.72); display: flex; align-items: stretch; justify-content: center; padding: 16px; }
+.bte-box { width: 100%; max-width: 1280px; background: var(--bg, #13241a); border: 1px solid var(--border); border-radius: 14px; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.bte-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.bte-head h2 { margin: 0 0 4px; font-size: 20px; }
+.bte-layout { grid-template-columns: 280px minmax(0, 1fr); }
+.bte-node-row { display: flex; align-items: center; gap: 4px; }
+.bte-node-row .ta-node { flex: 1; min-width: 0; }
+.bte-move { display: flex; flex-direction: column; gap: 2px; }
+.bte-move .btn-sm { padding: 0 6px; line-height: 1.3; }
+.bte-thumb { width: 56px; height: 28px; object-fit: cover; border-radius: 4px; flex: none; }
+.bte-dot-back { background: #5a5a5a; }
+.bte-launch { display: flex; flex-direction: column; gap: 6px; padding: 12px; margin-bottom: 10px; border: 1px dashed var(--border); border-radius: 10px; }
+.bte-launch .btn-primary { align-self: flex-start; }
+@media (max-width: 900px) {
+  .bte-layout { grid-template-columns: 1fr; }
+  .bte-overlay { padding: 0; }
+  .bte-box { border-radius: 0; }
+}
+
+.bte-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.bte-sheet-status { display: block; margin-bottom: 8px; }
+.ta-node.is-bad { border-color: rgba(220, 80, 80, 0.6); }
+.bte-badge-360 { background: #2f6fb3; }
+.bte-badge-bad { background: #b33a3a; }
+.bte-name-row { align-items: flex-end; border-bottom: none; }
+.bte-name { flex: 1 1 260px; }
+.bte-flat { width: 100%; max-height: 360px; object-fit: contain; border-radius: 10px; border: 1px solid var(--border); background: #000; }
+.ta-main .ta-field input { min-width: 0; }
+.bte-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.bte-chip { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 112px; padding: 4px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: inherit; font: inherit; font-size: 11px; cursor: pointer; text-align: left; }
+.bte-chip img, .bte-chip-empty { width: 100%; height: 52px; object-fit: cover; border-radius: 5px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); }
+.bte-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bte-chip:hover { border-color: var(--gold); }
+.bte-chip.is-bad { border-color: rgba(220, 80, 80, 0.7); }
+.nid-box { max-width: 640px; margin: auto; max-height: 90vh; }
+.nid-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.nid-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.nid-new { font-family: ui-monospace, monospace; font-weight: 700; color: var(--gold, #c8a84b); min-width: 80px; }
+.nid-old { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nid-box input[type="text"] { font-size: 15px; padding: 8px 10px; }
+.ta-main .ta-field input[type="number"] { width: 170px; }
+.bte-head-actions { margin-top: 0; }
+.ta-select-group { color: #111827; }
+
+.ta-replace { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 10px; }
+.bte-select-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; margin-bottom: 4px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.bte-check { width: 16px; height: 16px; flex: none; accent-color: #c8a84b; cursor: pointer; }
+.bte-node-row.is-checked .ta-node { border-color: rgba(220, 80, 80, 0.7); background: rgba(220, 80, 80, 0.08); }

@@ -8,6 +8,8 @@ import {
 import { listBuildings } from "../services/buildings.service";
 import { listDepartments } from "../services/departments.service";
 import { applyAdminBuildingTours } from "../utils/adminTours";
+import { listTourOverrides } from "../services/tourOverrides.service";
+import { applyTourOverrides } from "../utils/tourOverrides";
 
 const DataContext = createContext(null);
 
@@ -24,11 +26,16 @@ export const useCampusData = () => {
   return context;
 };
 
-const connectTours = (buildings) => {
+const connectTours = (buildings, overrides) => {
   try {
     applyAdminBuildingTours(buildings);
   } catch (tourErr) {
     console.error("[admin-tour] could not connect admin buildings:", tourErr);
+  }
+  try {
+    applyTourOverrides(overrides);
+  } catch (overrideErr) {
+    console.error("[tour] could not apply arrow edits:", overrideErr);
   }
 };
 
@@ -41,10 +48,15 @@ export const DataProvider = ({ children }) => {
   useEffect(() => {
     let active = true;
 
-    Promise.all([listBuildings(), listDepartments()])
-      .then(([buildingRows, departmentRows]) => {
+    const overridesRequest = listTourOverrides().catch((err) => {
+      console.warn("[tour] arrow edits not loaded:", err?.message || err);
+      return [];
+    });
+
+    Promise.all([listBuildings(), listDepartments(), overridesRequest])
+      .then(([buildingRows, departmentRows, overrideRows]) => {
         if (!active) return;
-        connectTours(buildingRows);
+        connectTours(buildingRows, overrideRows);
         setBuildings(buildingRows);
         setDepartments(departmentRows);
         setError(null);

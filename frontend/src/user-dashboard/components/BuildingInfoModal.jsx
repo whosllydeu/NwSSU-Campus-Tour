@@ -4,6 +4,7 @@ import "../stylesheets/map.css";
 import "../stylesheets/gallery.css";
 import "../stylesheets/building-panorama.css";
 import { hasTour } from "../static/nwssuTour";
+import { adminTourId } from "../utils/adminTours";
 import { useUI } from "../context/UIContext";
 import { useTour } from "../context/TourContext";
 import { useCampusData } from "../context/DataContext";
@@ -30,6 +31,10 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
 
   const inTour = async () => {
     if (checkingPanoramas) return;
+    if (hasTour(adminTourId(building.id))) {
+      openTour(adminTourId(building.id));
+      return;
+    }
     setCheckingPanoramas(true);
     let items;
     try {

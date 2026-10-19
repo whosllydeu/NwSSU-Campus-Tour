@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
-import { TOUR_NODES, TOURS, isPathwayNode, metersBetween } from '../../user-dashboard/static/nwssuTour';
+import { useMemo, useState } from 'react';
+import { TOUR_NODES, TOURS, NODE_BY_ID, isPathwayNode, metersBetween } from '../../user-dashboard/static/nwssuTour';
+import { resolveImage } from '../../user-dashboard/utils/assets';
+import PanoAimViewer from './PanoAimViewer.jsx';
 import { isBuiltInTourBuilding } from '../../user-dashboard/utils/adminTours';
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const EMPTY_PATHWAY_LINK = { pathwayNode: '', entryImage: '', label: '', pinYaw: '', returnYaw: '' };
+export const EMPTY_PATHWAY_LINK = { pathwayNode: '', entryImage: '', label: '', pinYaw: '', returnYaw: '', exitArrow: false, useUploadedTour: false };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function initialPathwayLinkValue(raw) {
@@ -14,6 +16,8 @@ export function initialPathwayLinkValue(raw) {
     label: raw.label || '',
     pinYaw: raw.pinYaw ?? '',
     returnYaw: raw.returnYaw ?? '',
+    exitArrow: raw.exitArrow === true,
+    useUploadedTour: raw.useUploadedTour === true,
   };
 }
 
@@ -38,6 +42,8 @@ export default function PathwayLinkField({
 }) {
   const v = value || EMPTY_PATHWAY_LINK;
   const set = (patch) => onChange({ ...v, ...patch });
+  const [aiming, setAiming] = useState(null);
+  const [facing, setFacing] = useState(0);
 
   const hasCoords = isCoord(buildingLat) && isCoord(buildingLng);
 
@@ -63,21 +69,70 @@ export default function PathwayLinkField({
     .map((item, index) => ({ key: item.id || item.uid, item, index }))
     .filter(({ item }) => item.panorama === true);
 
+  const pathNode = v.pathwayNode ? NODE_BY_ID[v.pathwayNode] : null;
+  const entryItem = panoramas.find(({ key }) => key === v.entryImage)?.item || null;
+  const entrySrc = entryItem ? entryItem.preview || resolveImage(entryItem.url) : '';
+  const pinLabel = String(v.label || '').trim() || `Enter ${buildingName || 'building'}`;
+  const num = (x) => (isCoord(x) ? Number(x) : null);
+
+  const pathPins = useMemo(() => {
+    if (!pathNode) return [];
+    const list = (pathNode.links || [])
+      .filter((l) => !String(l.nodeId).startsWith('admin-'))
+      .map((l, i) => ({
+        id: `p-${i}`,
+        yaw: Number(l.data?.yaw) || 0,
+        label: NODE_BY_ID[l.nodeId]?.name || 'Arrow',
+        kind: 'back',
+      }));
+    if (num(v.pinYaw) !== null) list.push({ id: 'p-pin', yaw: num(v.pinYaw), label: pinLabel, kind: 'forward' });
+    return list;
+  }, [pathNode, v.pinYaw, pinLabel]);
+
+  const entryPins = useMemo(() => {
+    if (!entryItem) return [];
+    const list = [];
+    if (num(entryItem.heading) !== null) list.push({ id: 'e-fwd', yaw: num(entryItem.heading), label: 'Forward arrow', kind: 'back' });
+    (entryItem.links || []).forEach((l, i) => {
+      if (num(l.yaw) !== null) list.push({ id: `e-x${i}`, yaw: num(l.yaw), label: 'Extra arrow', kind: 'back' });
+    });
+    if (num(v.returnYaw) !== null) list.push({ id: 'e-exit', yaw: num(v.returnYaw), label: 'Exit to pathway', kind: 'extra' });
+    return list;
+  }, [entryItem, v.returnYaw]);
+
   const optionLabel = (o) => `${o.title} · photo ${o.number}${o.distance !== null ? ` (${Math.round(o.distance)} m away)` : ' (no GPS yet)'}`;
 
-  if (recordId && isBuiltInTourBuilding(recordId)) {
-    return (
-      <div className="ad-field-help">
-        This building already has a built-in 360° tour connected to the pathways, so nothing needs to be set here.
-      </div>
-    );
-  }
+  const builtIn = Boolean(recordId && isBuiltInTourBuilding(recordId));
+  const replaceToggle = builtIn && (
+    <div className="ta-replace">
+      <label className="ad-gallery-check">
+        <input
+          type="checkbox"
+          checked={v.useUploadedTour === true}
+          disabled={disabled}
+          onChange={(e) => set({ useUploadedTour: e.target.checked })}
+        />
+        <span><b>Use the 360° photos uploaded above instead of the built-in tour</b></span>
+      </label>
+      <small className="ad-field-help">
+        {v.useUploadedTour === true
+          ? `The built-in tour for this building is hidden: “Open 360 Tour” shows the uploaded photos, and the pathway pins that led into the old photos are removed. Connect a pathway photo below so “Walk there!” can enter. Untick to bring the built-in tour back.`
+          : 'This building has a built-in 360° tour (photos stored in the project). Tick this to replace it with photos you upload here.'}
+      </small>
+      {v.useUploadedTour === true && panoramas.length === 0 && (
+        <small className="ad-error">Upload at least one image marked as a 360° panorama first.</small>
+      )}
+    </div>
+  );
+
+  if (builtIn && v.useUploadedTour !== true) return replaceToggle;
 
   const cell = { display: 'flex', flexDirection: 'column', gap: 4 };
   const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {replaceToggle}
       <div style={grid}>
         <label style={cell}>
           <span>Connect at pathway photo</span>
@@ -148,24 +203,106 @@ export default function PathwayLinkField({
               onChange={(e) => set({ pinYaw: e.target.value })}
             />
           </label>
-          <label style={cell}>
-            <span>“Back to pathway” arrow direction (°)</span>
+        </div>
+      )}
+
+      {pathNode && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            type="button"
+            className="btn-ghost btn-sm"
+            style={{ alignSelf: 'flex-start' }}
+            disabled={disabled}
+            onClick={() => setAiming(aiming === 'pin' ? null : 'pin')}
+          >
+            {aiming === 'pin' ? 'Close 360 preview' : 'Aim the pin on the pathway photo'}
+          </button>
+          {aiming === 'pin' && (
+            <div className="ad-aim">
+              <PanoAimViewer
+                src={pathNode.panorama}
+                startYaw={num(v.pinYaw) ?? pathNode.data?.yaw ?? 0}
+                pins={pathPins}
+                onFacing={setFacing}
+              />
+              <p className="ad-field-help">
+                Turn the pathway photo until the centre line points at the building entrance. Grey labels are the
+                pathway's own arrows — keep the pin away from them.
+              </p>
+              <div className="ad-aim-actions">
+                <button type="button" className="btn-ghost btn-sm" onClick={() => set({ pinYaw: String(facing) })}>
+                  Put the pin here ({facing}°)
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {v.pathwayNode && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label className="ad-gallery-check">
             <input
-              type="number"
-              step="any"
-              value={v.returnYaw}
-              placeholder="Automatic"
+              type="checkbox"
+              checked={v.exitArrow === true}
               disabled={disabled}
-              onChange={(e) => set({ returnYaw: e.target.value })}
+              onChange={(e) => set({ exitArrow: e.target.checked })}
             />
+            <span>Show an exit arrow back to the pathway on the entrance photo</span>
           </label>
+          <small className="ad-field-help">
+            Off: inside the building only the arrows you set on the 360° images are shown.
+          </small>
+          {v.exitArrow === true && (
+            <>
+              <div style={grid}>
+                <label style={cell}>
+                  <span>Exit arrow direction (°)</span>
+                  <input
+                    type="number"
+                    step="any"
+                    value={v.returnYaw}
+                    placeholder="Automatic"
+                    disabled={disabled}
+                    onChange={(e) => set({ returnYaw: e.target.value })}
+                  />
+                </label>
+              </div>
+              {entrySrc && (
+                <button
+                  type="button"
+                  className="btn-ghost btn-sm"
+                  style={{ alignSelf: 'flex-start' }}
+                  disabled={disabled}
+                  onClick={() => setAiming(aiming === 'exit' ? null : 'exit')}
+                >
+                  {aiming === 'exit' ? 'Close 360 preview' : 'Aim the exit arrow on the entrance photo'}
+                </button>
+              )}
+              {aiming === 'exit' && entrySrc && (
+                <div className="ad-aim">
+                  <PanoAimViewer
+                    src={entrySrc}
+                    startYaw={num(v.returnYaw) ?? ((num(entryItem.heading) ?? 0) + 180)}
+                    pins={entryPins}
+                    onFacing={setFacing}
+                  />
+                  <div className="ad-aim-actions">
+                    <button type="button" className="btn-ghost btn-sm" onClick={() => set({ returnYaw: String(facing) })}>
+                      Put the exit arrow here ({facing}°)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
       <small className="ad-field-help">
-        Directions are optional: leave them blank and the pin is placed automatically. To fine-tune, open the
-        pathway photo in the 360° tour, tap 🧭, face the building entrance and copy the “yaw” number here.
-        The building’s 360° images are walked in the order shown in “Additional Images”.
+        The pin direction is optional, but if it is left blank the pin is placed automatically and may not face the
+        entrance — use “Aim the pin on the pathway photo” to set it. “Walk there!” faces the pin when it reaches this
+        pathway photo. The building’s 360° images are walked in the order shown in “Additional Images”.
       </small>
     </div>
   );

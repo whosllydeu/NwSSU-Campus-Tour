@@ -18,7 +18,11 @@ function cleanImages(images) {
       ...(img.heading !== '' && img.heading !== undefined && img.heading !== null && Number.isFinite(Number(img.heading))
         ? { heading: Number(img.heading) }
         : {}),
+      ...(img.view !== '' && img.view !== undefined && img.view !== null && Number.isFinite(Number(img.view))
+        ? { view: Number(img.view) }
+        : {}),
       ...(cleanLinks(img.links).length ? { links: cleanLinks(img.links) } : {}),
+      ...(img.end === true ? { end: true } : {}),
     }));
 }
 
@@ -34,13 +38,16 @@ const optionalNumber = (v) => (
 );
 
 function cleanPathwayLink(link) {
-  if (!link || !link.pathwayNode) return null;
+  if (!link) return null;
+  if (!link.pathwayNode) return link.useUploadedTour === true ? { pathwayNode: '', useUploadedTour: true } : null;
   return {
     pathwayNode: String(link.pathwayNode),
     entryImage: link.entryImage ? String(link.entryImage) : '',
     label: link.label ? String(link.label).trim() : '',
     pinYaw: optionalNumber(link.pinYaw),
     returnYaw: optionalNumber(link.returnYaw),
+    exitArrow: link.exitArrow === true,
+    useUploadedTour: link.useUploadedTour === true,
   };
 }
 

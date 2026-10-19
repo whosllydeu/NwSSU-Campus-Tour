@@ -1,4 +1,4 @@
-import { GPS_TODO } from '../shared';
+import { GPS_TODO } from './frontend/src/user-dashboard/static/tours/shared';
 
 const CON = {
   id: 'con',

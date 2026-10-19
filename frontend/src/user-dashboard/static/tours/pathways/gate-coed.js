@@ -6,8 +6,6 @@ const PATH_GATE_COED = {
   ext: '.JPG',
   defaultName: 'Pathway',
   nodes: [
-    { id: 'pathway-gate-coed-01', yaw: -177, gps: [12.07098, 124.59678] },
-    { id: 'pathway-gate-coed-02', yaw: -177, gps: [12.07095, 124.59675] },
     { id: 'pathway-gate-coed-03', yaw: -177, gps: [12.07072, 124.59676] },
     { id: 'pathway-gate-coed-04', yaw: -177, gps: [12.07068, 124.59669] },
     { id: 'pathway-gate-coed-05', yaw: -177, gps: [12.07062, 124.59663] },

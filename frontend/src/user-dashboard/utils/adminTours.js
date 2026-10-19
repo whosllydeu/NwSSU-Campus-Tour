@@ -27,7 +27,47 @@ export function isBuiltInTourBuilding(buildingId) {
 
 export const adminTourId = (buildingId) => `admin-${buildingId}`;
 
-let added = { tourIds: [], nodeIds: new Set(), walkKeys: [], foreign: [] };
+const freshAdded = () => ({
+  tourIds: [], nodeIds: new Set(), walkKeys: [], foreign: [],
+  restoreTours: [], restoreWalks: [], unlinked: [],
+});
+let added = freshAdded();
+
+export const hiddenNodeIds = new Set();
+
+function staticTourIdOf(buildingId) {
+  const { tours, aliases, byId } = TOUR_GRAPH;
+  if (tours[buildingId] && !String(buildingId).startsWith('admin-')) return buildingId;
+  if (aliases?.[buildingId]) return aliases[buildingId];
+  const arrive = WALK_ROUTES[buildingId]?.arriveNode;
+  return arrive ? byId[arrive]?.data?.tour || null : null;
+}
+
+function replaceStaticTour(buildingId, tourId) {
+  const { tours, nodes } = TOUR_GRAPH;
+  const staticId = staticTourIdOf(buildingId);
+  if (!staticId || !tours[staticId] || staticId === tourId) return;
+  const staticNodes = new Set(tours[staticId].nodeIds);
+  staticNodes.forEach((id) => hiddenNodeIds.add(id));
+  added.restoreTours.push({ id: staticId, tour: tours[staticId] });
+  tours[staticId] = tours[tourId];
+
+  for (const node of nodes) {
+    if (staticNodes.has(node.id)) continue;
+    const links = node.links.filter((l) => staticNodes.has(l.nodeId));
+    if (!links.length) continue;
+    const markers = (node.markers || []).filter((m) => staticNodes.has(m.data?.goto));
+    node.links = node.links.filter((l) => !staticNodes.has(l.nodeId));
+    node.markers = (node.markers || []).filter((m) => !staticNodes.has(m.data?.goto));
+    added.unlinked.push({ nodeId: node.id, links, markers });
+  }
+
+  [buildingId, staticId].forEach((key) => {
+    if (!WALK_ROUTES[key] || added.restoreWalks.some((w) => w.key === key)) return;
+    added.restoreWalks.push({ key, route: WALK_ROUTES[key] });
+    delete WALK_ROUTES[key];
+  });
+}
 
 function removePrevious() {
   const { byId, nodes, tours } = TOUR_GRAPH;
@@ -43,7 +83,17 @@ function removePrevious() {
   added.nodeIds.forEach((id) => { delete byId[id]; });
   added.tourIds.forEach((id) => { delete tours[id]; });
   added.walkKeys.forEach((key) => { delete WALK_ROUTES[key]; });
-  added = { tourIds: [], nodeIds: new Set(), walkKeys: [], foreign: [] };
+  added.restoreWalks.forEach(({ key, route }) => { WALK_ROUTES[key] = route; });
+  added.restoreTours.forEach(({ id, tour }) => { tours[id] = tour; });
+  for (const u of added.unlinked) {
+    const node = byId[u.nodeId];
+    if (!node) continue;
+    u.links.forEach((l) => { if (!node.links.some((x) => x.nodeId === l.nodeId)) node.links.push(l); });
+    const markers = node.markers || [];
+    node.markers = [...markers, ...u.markers.filter((m) => !markers.some((x) => x.id === m.id))];
+  }
+  hiddenNodeIds.clear();
+  added = freshAdded();
 }
 
 function addLink(node, targetId, yaw, extra = {}) {
@@ -85,21 +135,11 @@ export function applyAdminBuildingTours(buildings = []) {
 
   for (const b of buildings || []) {
     const cfg = b?.pathwayLink ?? b?.pathway_link;
-    if (!b?.id || !cfg?.pathwayNode) continue;
-    if (isBuiltInTourBuilding(b.id)) {
-      warn(`"${b.name}" already has a built-in 360° tour — its admin pathway connection is ignored.`);
-      continue;
-    }
-    const pathNode = byId[cfg.pathwayNode];
-    if (!pathNode) {
-      warn(`"${b.name}": pathway photo "${cfg.pathwayNode}" does not exist.`);
-      continue;
-    }
+    if (!b?.id) continue;
+    const builtIn = isBuiltInTourBuilding(b.id);
+    if (builtIn && cfg?.useUploadedTour !== true) continue;
     const gallery = buildingGallery(b).filter((img) => img.panorama === true);
-    if (!gallery.length) {
-      warn(`"${b.name}" has no images marked as 360° panorama — not connected.`);
-      continue;
-    }
+    if (!gallery.length) continue;
 
     const tourId = adminTourId(b.id);
     const nodeIdOf = (imgId) => `${tourId}--${imgId}`;
@@ -115,8 +155,9 @@ export function applyAdminBuildingTours(buildings = []) {
         markers: [],
         data: {
           tour: tourId,
-          yaw: normDeg(Number(img.heading) || 0),
-          yawIsDefault: !finite(img.heading),
+          yaw: normDeg(finite(img.view) ? Number(img.view) : Number(img.heading) || 0),
+          forward: normDeg(Number(img.heading) || 0),
+          yawIsDefault: !finite(img.heading) && !finite(img.view),
           backYaw: null,
           gps: finite(img.lat) && finite(img.lng) ? [Number(img.lat), Number(img.lng)] : null,
           star: false,
@@ -134,9 +175,9 @@ export function applyAdminBuildingTours(buildings = []) {
         if (imgIds.has(String(l.to)) && finite(l.yaw)) addLink(node, nodeIdOf(String(l.to)), Number(l.yaw));
       });
     });
-    own.forEach(({ node }, i) => {
-      if (own[i + 1]) addLink(node, own[i + 1].node.id, node.data.yaw, { dir: 'forward' });
-      if (own[i - 1]) addLink(node, own[i - 1].node.id, node.data.yaw + 180, { dir: 'back' });
+    own.forEach(({ img, node }, i) => {
+      if (own[i + 1] && !img.end) addLink(node, own[i + 1].node.id, node.data.forward, { dir: 'forward' });
+      if (own[i - 1] && !own[i - 1].img.end) addLink(node, own[i - 1].node.id, node.data.forward + 180, { dir: 'back' });
     });
 
     tours[tourId] = {
@@ -148,6 +189,13 @@ export function applyAdminBuildingTours(buildings = []) {
       nodeIds: own.map(({ node }) => node.id),
     };
     added.tourIds.push(tourId);
+    if (builtIn) replaceStaticTour(b.id, tourId);
+
+    const pathNode = cfg?.pathwayNode ? byId[cfg.pathwayNode] : null;
+    if (!pathNode) {
+      if (cfg?.pathwayNode) warn(`"${b.name}": pathway photo "${cfg.pathwayNode}" does not exist.`);
+      continue;
+    }
 
     const entry = own.find(({ img }) => img.id === String(cfg.entryImage))?.node || own[0].node;
     tours[tourId].startNode = entry.id;
@@ -158,13 +206,15 @@ export function applyAdminBuildingTours(buildings = []) {
       const markerId = addPin(pathNode, entry.id, pinYaw, pinLabel);
       added.foreign.push({ nodeId: pathNode.id, targetId: entry.id, markerId });
     }
-    const backLabel = pathTour ? `Walk: ${pathTour.title}` : 'Back to Pathway';
-    const returnYaw = finite(cfg.returnYaw) ? Number(cfg.returnYaw) : freeYaw(entry, [180, 90, -90, 0]);
-    if (addLink(entry, pathNode.id, returnYaw, { cross: true, label: backLabel })) {
-      addPin(entry, pathNode.id, returnYaw, backLabel);
+    if (cfg.exitArrow === true) {
+      const backLabel = pathTour ? `Walk: ${pathTour.title}` : 'Back to Pathway';
+      const returnYaw = finite(cfg.returnYaw) ? Number(cfg.returnYaw) : freeYaw(entry, [180, 90, -90, 0]);
+      if (addLink(entry, pathNode.id, returnYaw, { cross: true, label: backLabel })) {
+        addPin(entry, pathNode.id, returnYaw, backLabel);
+      }
     }
 
-    if (!STATIC_WALK_KEYS.has(b.id)) {
+    if (!STATIC_WALK_KEYS.has(b.id) || builtIn) {
       WALK_ROUTES[b.id] = { pathway: pathNode.data.tour, arriveNode: entry.id };
       added.walkKeys.push(b.id);
     }

@@ -11,10 +11,6 @@ const PATH_CCIS_ALUMNI = {
   nodes: [
     { id: 'pathway-ccis-alumni-01', yaw: 0, gps: [12.07086, 124.59671] },
     { id: 'pathway-ccis-alumni-02', yaw: 0, gps: [12.07091, 124.59670] },
-    {
-      id: 'pathway-ccis-alumni-02b', yaw: 0, gps: [12.0709285, 124.5965891],
-      file: 'pathway-coed-alumni-02b.jpg',
-    },
     { id: 'pathway-ccis-alumni-03', yaw: 0, gps: [12.07066, 124.59669] },
     { id: 'pathway-ccis-alumni-04', yaw: 0, gps: [12.07064, 124.59673] },
     { id: 'pathway-ccis-alumni-05', yaw: 0, gps: [12.07067, 124.59642] },

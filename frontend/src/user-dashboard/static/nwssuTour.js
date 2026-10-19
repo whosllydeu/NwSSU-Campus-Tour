@@ -218,6 +218,17 @@ function nodesThatCanReach(targetId) {
   return seen;
 }
 
+function originDoorNode(originBuildingId, destinationId) {
+  if (!originBuildingId || originBuildingId === destinationId) return null;
+  const origin = WALK_ROUTES[originBuildingId];
+  const inside = origin && NODE_BY_ID[origin.arriveNode];
+  if (!inside) return null;
+  if (isPathwayNode(inside)) return inside.id;
+  const out = inside.links.find((l) => NODE_BY_ID[l.nodeId]?.data.tour === origin.pathway)
+    || inside.links.find((l) => isPathwayNode(NODE_BY_ID[l.nodeId]));
+  return out ? out.nodeId : inside.id;
+}
+
 export function planWalk(
   destinationId,
   {
@@ -228,6 +239,7 @@ export function planWalk(
     destinationName = null,
     maxDestMeters = WALK_DEST_MAX_METERS,
     routeCoordinates = null,
+    startFromOrigin = false,
   } = {}
 ) {
   const hasRoute = Array.isArray(routeCoordinates) && routeCoordinates.length > 1;
@@ -264,6 +276,12 @@ export function planWalk(
     startDistance,
     withinThreshold: startDistance === null ? null : startDistance <= maxStartMeters,
   });
+
+  if (startFromOrigin) {
+    const door = originDoorNode(originBuildingId, destinationId);
+    const path = door ? findPath(door, route.arriveNode) : null;
+    if (path) return build(door, path, 'origin');
+  }
 
   const anchor = routeStart || (Array.isArray(userLocation) && userLocation.length >= 2 ? userLocation : null);
   if (anchor) {

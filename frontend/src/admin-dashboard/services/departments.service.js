@@ -14,7 +14,8 @@ export async function listDepartments() {
 }
 
 export async function createDepartment(data) {
-  const { _id, ...rest } = data;
+  const rest = { ...data };
+  delete rest._id;
   const id = rest.id || slugify(rest.name || rest.abbr || `dept-${Date.now()}`);
   const { data: row, error } = await supabase.from(TABLE).insert({ ...rest, id }).select().single();
   if (error) throw error;
@@ -22,7 +23,8 @@ export async function createDepartment(data) {
 }
 
 export async function updateDepartment(id, data) {
-  const { _id, ...rest } = data;
+  const rest = { ...data };
+  delete rest._id;
   const { data: rows, error } = await supabase.from(TABLE).update(rest).eq('id', id).select();
   if (error) throw error;
   if (!rows || rows.length === 0) {

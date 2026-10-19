@@ -38,7 +38,6 @@ export default function DepartmentsAdmin() {
     { key: 'faculty', label: 'Faculty', render: (r) => r.faculty?.length ?? 0 },
   ];
 
-  function openCreate() { setEditing(null); setFormSession((n) => n + 1); setFormOpen(true); }
   function openEdit(row) { setEditing(row); setFormSession((n) => n + 1); setFormOpen(true); }
 
   async function handleSubmit(data) {
@@ -69,7 +68,6 @@ export default function DepartmentsAdmin() {
     <div className="ad-panel">
       <div className="ad-panel-header">
         <h2>All Departments</h2>
-        <button className="btn-primary" onClick={openCreate}>+ Add Department</button>
       </div>
       <DataTable
         columns={COLUMNS}

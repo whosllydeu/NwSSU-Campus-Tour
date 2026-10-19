@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import LocationPicker from './LocationPicker.jsx';
+import BuildingTourEditor from './BuildingTourEditor.jsx';
+import NameImagesDialog from './NameImagesDialog.jsx';
+import {
+  applyCoordinateRows,
+  canWatchFiles,
+  readCoordinateRows,
+  saveCoordinateSheet,
+  watchCoordinateSheet,
+} from '../utils/coordsSheet.js';
 import { resolveImage } from '../../user-dashboard/utils/assets';
 import { ACCEPTED_IMAGE_TYPES, validateImageFile, validateUploadFile } from '../services/storage.service.js';
 import { IMAGE_LIMITS, prepareImageForUpload, getPreparedInfo, formatBytes, isPanoramaSize } from '../utils/image-compress.js';
@@ -116,6 +124,8 @@ export function GalleryField({
   disabled,
   buildingLat,
   buildingLng,
+  buildingName,
+  buildingAbbr,
   onAddFiles,
   onReplaceFile,
   onChangeItem,
@@ -125,12 +135,19 @@ export function GalleryField({
 }) {
   const addRef = useRef(null);
   const replaceRef = useRef(null);
+  const sheetRef = useRef(null);
+  const itemsRef = useRef(items);
   const [replaceUid, setReplaceUid] = useState(null);
-  const [pickingUid, setPickingUid] = useState(null);
   const [processing, setProcessing] = useState('');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorStart, setEditorStart] = useState(null);
+  const [pendingFiles, setPendingFiles] = useState(null);
+  const [sheetStatus, setSheetStatus] = useState('');
+  const stopWatchRef = useRef(null);
   const busy = disabled || Boolean(processing);
 
-  const hasBuildingCoords = validLat(buildingLat) && validLng(buildingLng);
+  useEffect(() => { itemsRef.current = items; });
+  useEffect(() => () => stopWatchRef.current?.(), []);
 
   const detected = useRef(new Set());
   useEffect(() => {
@@ -145,6 +162,15 @@ export function GalleryField({
     });
   }, [items, onChangeItem]);
 
+  const panoramaCount = items.filter((i) => i.panorama === true).length;
+  const missingCoords = items.filter((i) => !validLat(i.lat) || !validLng(i.lng)).length;
+  const errorCount = Object.values(errors || {}).filter((e) => e && Object.values(e).some(Boolean)).length;
+
+  const openEditor = (uid = null) => {
+    setEditorStart(uid);
+    setEditorOpen(true);
+  };
+
   const handleAdd = async (event) => {
     const files = Array.from(event.target.files || []);
     event.target.value = '';
@@ -152,11 +178,17 @@ export function GalleryField({
     setProcessing(files.length > 1 ? `Optimising ${files.length} images…` : 'Optimising image…');
     try {
       const { ready, problems } = await prepareFiles(files);
-      if (ready.length) onAddFiles(ready);
+      if (ready.length) setPendingFiles(ready);
       if (problems.length) onError(problems.join(' '));
     } finally {
       setProcessing('');
     }
+  };
+
+  const confirmNames = (named) => {
+    setPendingFiles(null);
+    onAddFiles(named);
+    setEditorOpen(true);
   };
 
   const handleReplace = async (event) => {
@@ -175,264 +207,133 @@ export function GalleryField({
     }
   };
 
+  const applyRows = (rows, source) => {
+    const { applied, unknown } = applyCoordinateRows(rows, itemsRef.current, onChangeItem);
+    const extra = unknown.length ? ` · ${unknown.length} name(s) not found: ${unknown.slice(0, 3).join(', ')}${unknown.length > 3 ? '…' : ''}` : '';
+    setSheetStatus(`${source}: ${applied} coordinate${applied === 1 ? '' : 's'} applied${extra}`);
+  };
+
+  const downloadSheet = async () => {
+    const base = String(buildingAbbr || buildingName || 'building').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'building';
+    try {
+      const handle = await saveCoordinateSheet(itemsRef.current, `${base}-coordinates.xlsx`);
+      stopWatchRef.current?.();
+      if (handle) {
+        stopWatchRef.current = watchCoordinateSheet(handle, (rows) => applyRows(rows, 'Excel file saved'));
+        setSheetStatus(`Watching ${handle.name} — fill in the Coordinates column, save the file, and the coordinates appear here.`);
+      } else {
+        setSheetStatus('Downloaded. Fill in the Coordinates column, save it, then click “Upload coordinates”.');
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') onError(err?.message || 'Could not create the Excel file.');
+    }
+  };
+
+  const uploadSheet = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      applyRows(await readCoordinateRows(file), 'Uploaded file');
+    } catch {
+      onError('Could not read that file. Use the Excel file downloaded from here.');
+    }
+  };
+
+  const sheetTools = {
+    canWatch: canWatchFiles(),
+    status: sheetStatus,
+    onDownload: downloadSheet,
+    onUpload: () => sheetRef.current?.click(),
+  };
+
   return (
     <div className="ad-gallery">
-      {items.length === 0 && (
-        <p className="ad-gallery-empty">
-          No additional images yet. Add photos of entrances, rooms or landmarks — each one gets its own coordinates.
-        </p>
-      )}
-
-      {items.filter((i) => i.panorama === true).length > 1 && (
-        <p className="ad-gallery-empty">
-          360° panoramas are linked with arrows in this order (View 1 → View 2 → …). Use ↑ / ↓ to change the walking order.
-        </p>
-      )}
-
-      {items.map((item, index) => {
-        const src = item.preview || resolveImage(item.url);
-        const itemErrors = errors[item.uid] || {};
-        const isPicking = pickingUid === item.uid;
-
-        return (
-          <div className={`ad-gallery-item${itemErrors.lat || itemErrors.lng ? ' has-error' : ''}`} key={item.uid}>
-            <div className="ad-gallery-row">
-              <div className="ad-gallery-thumb">
-                {src ? <img src={src} alt={item.caption || `Image ${index + 1}`} /> : <span>No preview</span>}
-                {item.file && <span className="ad-upload-badge">New</span>}
-                <span className="ad-gallery-order">{index + 1}</span>
-              </div>
-
-              <div className="ad-gallery-fields">
-                {item.file && <span className="ad-upload-size">{fileSummary(item.file)}</span>}
-                <label className="ad-gallery-label">
-                  Caption
-                  <input
-                    type="text"
-                    value={item.caption}
-                    placeholder="e.g. Main entrance"
-                    disabled={disabled}
-                    onChange={(e) => onChangeItem(item.uid, { caption: e.target.value })}
-                  />
-                </label>
-
-                <div className="ad-gallery-coords">
-                  <label className="ad-gallery-label">
-                    <span>Latitude<span className="ad-req">*</span></span>
-                    <input
-                      type="number"
-                      step="any"
-                      min="-90"
-                      max="90"
-                      value={item.lat}
-                      disabled={disabled}
-                      onChange={(e) => onChangeItem(item.uid, { lat: e.target.value })}
-                    />
-                    {itemErrors.lat && <span className="ad-error">{itemErrors.lat}</span>}
-                  </label>
-                  <label className="ad-gallery-label">
-                    <span>Longitude<span className="ad-req">*</span></span>
-                    <input
-                      type="number"
-                      step="any"
-                      min="-180"
-                      max="180"
-                      value={item.lng}
-                      disabled={disabled}
-                      onChange={(e) => onChangeItem(item.uid, { lng: e.target.value })}
-                    />
-                    {itemErrors.lng && <span className="ad-error">{itemErrors.lng}</span>}
-                  </label>
-                </div>
-
-                <label className="ad-gallery-check">
-                  <input
-                    type="checkbox"
-                    checked={item.panorama === true}
-                    disabled={disabled}
-                    onChange={(e) => onChangeItem(item.uid, { panorama: e.target.checked })}
-                  />
-                  <span>360° panorama — opens in the map's "Open 360 Tour" for this building only</span>
-                </label>
-
-                {item.panorama === true && (
-                  <label className="ad-gallery-label">
-                    Forward arrow direction (°)
-                    <input
-                      type="number"
-                      step="1"
-                      min="-360"
-                      max="360"
-                      placeholder="0 = centre of the photo"
-                      value={item.heading ?? ''}
-                      disabled={disabled}
-                      onChange={(e) => onChangeItem(item.uid, { heading: e.target.value })}
-                    />
-                    <span className="ad-field-help">
-                      Where the arrow to the next view points. Open the tour, turn to face the next spot and copy the "Facing …°" number. The back arrow points the opposite way.
-                    </span>
-                    {itemErrors.heading && <span className="ad-error">{itemErrors.heading}</span>}
-                  </label>
-                )}
-
-                {item.panorama === true && (
-                  <ExtraArrows
-                    item={item}
-                    items={items}
-                    error={itemErrors.links}
-                    disabled={disabled}
-                    onChange={(links) => onChangeItem(item.uid, { links })}
-                  />
-                )}
-
-                <div className="ad-gallery-actions">
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    disabled={disabled || index === 0}
-                    title="Move up"
-                    aria-label="Move image up"
-                    onClick={() => onMoveItem?.(item.uid, -1)}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    disabled={disabled || index === items.length - 1}
-                    title="Move down"
-                    aria-label="Move image down"
-                    onClick={() => onMoveItem?.(item.uid, 1)}
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    disabled={disabled}
-                    onClick={() => setPickingUid(isPicking ? null : item.uid)}
-                  >
-                    {isPicking ? 'Done picking' : 'Pick on map'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    disabled={disabled || !hasBuildingCoords}
-                    title={hasBuildingCoords ? '' : 'Select the building location first'}
-                    onClick={() => onChangeItem(item.uid, { lat: buildingLat, lng: buildingLng })}
-                  >
-                    Use building location
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    disabled={busy}
-                    onClick={() => {
-                      setReplaceUid(item.uid);
-                      replaceRef.current?.click();
-                    }}
-                  >
-                    Replace image
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm ad-gallery-remove"
-                    disabled={disabled}
-                    onClick={() => {
-                      if (isPicking) setPickingUid(null);
-                      onRemoveItem(item.uid);
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {isPicking && (
-              <div className="ad-gallery-picker">
-                <LocationPicker
-                  latitude={validLat(item.lat) ? item.lat : ''}
-                  longitude={validLng(item.lng) ? item.lng : ''}
-                  onChange={({ lat, lng }) => onChangeItem(item.uid, { lat, lng })}
-                  helpText="Click the map where this photo was taken. Drag the marker to fine-tune."
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      <div className="ad-upload-actions">
+      <div className="bte-launch">
         <button
           type="button"
-          className="btn-ghost btn-sm"
-          disabled={busy}
-          onClick={() => addRef.current?.click()}
+          className="btn-primary"
+          disabled={busy || items.length === 0}
+          onClick={() => openEditor()}
         >
+          🧭 Open 360° Tour Editor ({items.length} {items.length === 1 ? 'image' : 'images'}{panoramaCount ? ` · ${panoramaCount} × 360°` : ''})
+        </button>
+        <span className="ad-field-help">
+          Names, coordinates, 360° start views and arrows are all edited inside the editor.
+        </span>
+        {(missingCoords > 0 || errorCount > 0) && items.length > 0 && (
+          <span className="ad-error">
+            {missingCoords > 0 ? `${missingCoords} image${missingCoords === 1 ? '' : 's'} still need${missingCoords === 1 ? 's' : ''} coordinates. ` : ''}
+            {errorCount > 0 ? 'Open the editor to fix the highlighted images.' : ''}
+          </span>
+        )}
+        {sheetStatus && <span className="ad-field-help bte-sheet-status">{sheetStatus}</span>}
+      </div>
+
+      {items.length === 0 ? (
+        <p className="ad-gallery-empty">
+          No additional images yet. Add photos of entrances, rooms or 360° views — you will name them and set their coordinates next.
+        </p>
+      ) : (
+        <div className="bte-strip">
+          {items.map((item, i) => {
+            const src = item.preview || resolveImage(item.url);
+            const bad = !validLat(item.lat) || !validLng(item.lng) || Boolean(errors[item.uid] && Object.values(errors[item.uid]).some(Boolean));
+            return (
+              <button
+                type="button"
+                key={item.uid}
+                className={`bte-chip${bad ? ' is-bad' : ''}`}
+                onClick={() => openEditor(item.uid)}
+                title={bad ? 'Needs coordinates' : 'Open in editor'}
+              >
+                {src ? <img src={src} alt="" /> : <span className="bte-chip-empty">?</span>}
+                <span>{item.caption || `Image ${i + 1}`}{item.panorama === true ? ' · 360°' : ''}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="ad-upload-actions">
+        <button type="button" className="btn-ghost btn-sm" disabled={busy} onClick={() => addRef.current?.click()}>
           {processing || '+ Add images'}
         </button>
         <span className="ad-upload-hint">You can select several files at once · {LIMIT_HINT}</span>
       </div>
 
+      {pendingFiles && (
+        <NameImagesDialog
+          files={pendingFiles}
+          existing={items}
+          defaultBase={buildingAbbr}
+          onCancel={() => setPendingFiles(null)}
+          onConfirm={confirmNames}
+        />
+      )}
+
+      {editorOpen && (
+        <BuildingTourEditor
+          items={items}
+          errors={errors}
+          startUid={editorStart}
+          buildingName={buildingName}
+          buildingLat={buildingLat}
+          buildingLng={buildingLng}
+          disabled={busy}
+          sheet={sheetTools}
+          onChangeItem={onChangeItem}
+          onMoveItem={onMoveItem}
+          onRemoveItem={onRemoveItem}
+          onAddImages={() => addRef.current?.click()}
+          onReplaceImage={(uid) => { setReplaceUid(uid); replaceRef.current?.click(); }}
+          onClose={() => setEditorOpen(false)}
+        />
+      )}
+
       <input ref={addRef} type="file" accept={ACCEPT_ATTR} multiple hidden onChange={handleAdd} />
       <input ref={replaceRef} type="file" accept={ACCEPT_ATTR} hidden onChange={handleReplace} />
-    </div>
-  );
-}
-
-const MAX_EXTRA_ARROWS = 2;
-
-function ExtraArrows({ item, items, error, disabled, onChange }) {
-  const links = Array.isArray(item.links) ? item.links : [];
-  const selfId = item.id || item.uid;
-  const targets = items
-    .map((it, i) => ({ id: it.id || it.uid, label: it.caption || `Image ${i + 1}`, panorama: it.panorama }))
-    .filter((t) => t.id !== selfId && t.panorama === true);
-
-  const update = (index, patch) => onChange(links.map((l, i) => (i === index ? { ...l, ...patch } : l)));
-  const remove = (index) => onChange(links.filter((_, i) => i !== index));
-  const add = () => onChange([...links, { to: '', yaw: '' }]);
-
-  return (
-    <div className="ad-gallery-label">
-      <span>Extra arrows (for 3–4 way junctions)</span>
-      {links.map((link, index) => (
-        <div className="ad-gallery-coords" key={index}>
-          <select
-            value={link.to}
-            disabled={disabled}
-            onChange={(e) => update(index, { to: e.target.value })}
-            aria-label="Arrow goes to"
-          >
-            <option value="">Goes to…</option>
-            {targets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <input
-              type="number"
-              step="1"
-              min="-360"
-              max="360"
-              placeholder="Direction (°)"
-              value={link.yaw}
-              disabled={disabled}
-              onChange={(e) => update(index, { yaw: e.target.value })}
-              aria-label="Arrow direction in degrees"
-            />
-            <button type="button" className="btn-ghost btn-sm" disabled={disabled} onClick={() => remove(index)} aria-label="Remove arrow">✕</button>
-          </div>
-        </div>
-      ))}
-      {links.length < MAX_EXTRA_ARROWS && (
-        <button type="button" className="btn-ghost btn-sm" disabled={disabled || targets.length === 0} onClick={add}>
-          + Add arrow
-        </button>
-      )}
-      <span className="ad-field-help">
-        Use for a hallway or path that splits. Pick the image the arrow leads to and the direction (copy the "Facing …°" number). Add the matching arrow on that image too so users can come back.
-      </span>
-      {error && <span className="ad-error">{error}</span>}
+      <input ref={sheetRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={uploadSheet} />
     </div>
   );
 }

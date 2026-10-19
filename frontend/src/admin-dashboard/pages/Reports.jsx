@@ -6,7 +6,10 @@ import {
 import { useAdmin } from '../context/AdminContext.jsx';
 import { useUI } from '../context/ToastContext.jsx';
 
-const PIE_COLORS = ['#2a6624', '#c8a84b', '#1a3a6b', '#8b1a1a', '#1a6b5a', '#b5611a', '#4a1a6b', '#e8c96a'];
+const PIE_COLORS = ['#2f6b45', '#64748b', '#3b6fb6', '#d0a12c', '#2a8a7a', '#b45309', '#7c5cbf', '#9ca3af'];
+const AXIS = '#6b7280';
+const GRID = '#e5e7eb';
+const TOOLTIP = { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, color: '#111827' };
 
 function toCsv(rows, headers) {
   const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -106,11 +109,11 @@ export default function Reports() {
           <div className="ad-chart-box">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={buildingTypeData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="type" stroke="#c8c0aa" fontSize={12} />
-                <YAxis stroke="#c8c0aa" fontSize={12} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: '#162a12', border: '1px solid rgba(200,168,75,0.3)', borderRadius: 8, color: '#f0ebe0' }} />
-                <Bar dataKey="count" fill="#c8a84b" radius={[6, 6, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                <XAxis dataKey="type" stroke={AXIS} fontSize={12} />
+                <YAxis stroke={AXIS} fontSize={12} allowDecimals={false} />
+                <Tooltip contentStyle={TOOLTIP} />
+                <Bar dataKey="count" fill="#2f6b45" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -124,7 +127,7 @@ export default function Reports() {
                 <Pie data={photoCoverage} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(d) => `${d.name}: ${d.value}`}>
                   {photoCoverage.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#162a12', border: '1px solid rgba(200,168,75,0.3)', borderRadius: 8, color: '#f0ebe0' }} />
+                <Tooltip contentStyle={TOOLTIP} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -136,11 +139,11 @@ export default function Reports() {
         <div className="ad-chart-box">
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={programsByCollege}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-              <XAxis dataKey="name" stroke="#c8c0aa" fontSize={12} />
-              <YAxis stroke="#c8c0aa" fontSize={12} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: '#162a12', border: '1px solid rgba(200,168,75,0.3)', borderRadius: 8, color: '#f0ebe0' }} />
-              <Bar dataKey="programs" fill="#2a6624" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+              <XAxis dataKey="name" stroke={AXIS} fontSize={12} />
+              <YAxis stroke={AXIS} fontSize={12} allowDecimals={false} />
+              <Tooltip contentStyle={TOOLTIP} />
+              <Bar dataKey="programs" fill="#64748b" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -154,12 +157,12 @@ export default function Reports() {
           <div className="ad-chart-box">
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={activityTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="date" stroke="#c8c0aa" fontSize={12} />
-                <YAxis stroke="#c8c0aa" fontSize={12} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: '#162a12', border: '1px solid rgba(200,168,75,0.3)', borderRadius: 8, color: '#f0ebe0' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+                <XAxis dataKey="date" stroke={AXIS} fontSize={12} />
+                <YAxis stroke={AXIS} fontSize={12} allowDecimals={false} />
+                <Tooltip contentStyle={TOOLTIP} />
                 <Legend />
-                <Line type="monotone" dataKey="count" name="Edits" stroke="#c8a84b" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="count" name="Edits" stroke="#2f6b45" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

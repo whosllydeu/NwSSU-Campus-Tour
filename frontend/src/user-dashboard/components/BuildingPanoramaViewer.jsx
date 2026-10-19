@@ -41,14 +41,14 @@ function buildNodes(items, buildingName) {
   return items.map((item, index) => {
     const forward = headingOf(item);
     const links = [];
-    if (index < items.length - 1) {
+    if (index < items.length - 1 && !item.end) {
       links.push({
         nodeId: items[index + 1].id,
         position: { yaw: forward * D2R, pitch: 0 },
         data: { yaw: forward, dir: 'forward' },
       });
     }
-    if (index > 0) {
+    if (index > 0 && !items[index - 1].end) {
       const back = norm(forward + 180);
       links.push({
         nodeId: items[index - 1].id,

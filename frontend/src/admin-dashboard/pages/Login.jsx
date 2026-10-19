@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/login.css';
 import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
@@ -8,7 +8,6 @@ const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", border
 export default function Login() {
   const { login, notice, clearNotice } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,8 +20,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login(email, password);
-      const from = location.state?.from?.pathname || '/admin';
-      navigate(from, { replace: true });
+      navigate('/admin', { replace: true });
     } catch (err) {
       setError(err.message || 'Sign-in failed.');
     } finally {

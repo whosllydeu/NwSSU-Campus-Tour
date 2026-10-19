@@ -44,7 +44,10 @@ export async function uploadBuildingImage(file, folderKey) {
 
   const folder = slugify(folderKey || 'building') || 'building';
   const ext = EXT_BY_TYPE[file.type] || 'jpg';
-  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const named = file.ctName ? slugify(file.ctName) : '';
+  const unique = named
+    ? `${named}-${Math.random().toString(36).slice(2, 6)}`
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const path = `buildings/${folder}/${unique}.${ext}`;
 
   const { error } = await supabase.storage

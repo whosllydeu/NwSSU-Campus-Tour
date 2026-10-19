@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import {
+  LayersControl,
   MapContainer,
   Marker,
   TileLayer,
@@ -7,7 +8,12 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/admin-map.css';
-import { TILELAYER_URL } from '../../user-dashboard/utils/map-leaflet';
+import {
+  TILELAYER_URL,
+  TILELAYER_ATTRIBUTION,
+  SATELLITE_URL,
+  SATELLITE_ATTRIBUTION,
+} from '../../user-dashboard/utils/map-leaflet';
 import { isValidCoordinate, MapCenter, MapClickHandler } from '../utils/admin-map-leaflet';
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -63,9 +69,14 @@ export default function LocationPicker({
           scrollWheelZoom={true}
           style={{ width: '100%', height: '100%' }}
         >
-          <TileLayer
-            url={TILELAYER_URL}
-          />
+          <LayersControl position="topright">
+            <LayersControl.BaseLayer checked name="Satellite">
+              <TileLayer url={SATELLITE_URL} attribution={SATELLITE_ATTRIBUTION} maxNativeZoom={18} maxZoom={21} />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Map">
+              <TileLayer url={TILELAYER_URL} attribution={TILELAYER_ATTRIBUTION} maxNativeZoom={19} maxZoom={21} />
+            </LayersControl.BaseLayer>
+          </LayersControl>
 
           <MapCenter lat={lat} lng={lng} />
 

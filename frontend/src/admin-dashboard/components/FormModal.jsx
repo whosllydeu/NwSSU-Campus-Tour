@@ -33,7 +33,9 @@ function initialGalleryValue(raw) {
       caption: img.caption || '',
       panorama: typeof img.panorama === 'boolean' ? img.panorama : undefined,
       heading: Number.isFinite(Number(img.heading)) && img.heading !== null ? img.heading : '',
+      view: img.view !== null && img.view !== undefined && Number.isFinite(Number(img.view)) ? img.view : '',
       links: Array.isArray(img.links) ? img.links.map((l) => ({ to: l.to || '', yaw: l.yaw ?? '' })) : [],
+      end: img.end === true,
     }));
 }
 
@@ -143,10 +145,12 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
       preview: makePreview(file),
       lat: '',
       lng: '',
-      caption: '',
+      caption: file.ctName || '',
       panorama: Boolean(getPreparedInfo(file)?.panorama),
       heading: '',
+      view: '',
       links: [],
+      end: false,
     }));
     updateGallery(key, (items) => [...items, ...additions]);
   }, [makePreview, updateGallery]);
@@ -216,6 +220,9 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
           else if (!inRange(item.lng, -180, 180)) e.lng = 'Must be between -180 and 180';
           if (item.heading !== '' && item.heading !== undefined && !inRange(item.heading, -360, 360)) {
             e.heading = 'Must be between -360 and 360';
+          }
+          if (item.view !== '' && item.view !== undefined && !inRange(item.view, -360, 360)) {
+            e.view = 'Must be between -360 and 360';
           }
           (item.links || []).forEach((l) => {
             if (!l.to) e.links = 'Choose where each extra arrow goes';
@@ -328,9 +335,13 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
               ...(item.heading !== '' && item.heading !== undefined && Number.isFinite(Number(item.heading))
                 ? { heading: Number(item.heading) }
                 : {}),
+              ...(item.view !== '' && item.view !== undefined && Number.isFinite(Number(item.view))
+                ? { view: Number(item.view) }
+                : {}),
               links: (item.links || [])
                 .filter((l) => l.to && galleryIds.has(l.to) && Number.isFinite(Number(l.yaw)))
                 .map((l) => ({ to: l.to, yaw: Number(l.yaw) })),
+              ...(item.end === true ? { end: true } : {}),
             });
           }
           out[field.key] = result;
@@ -347,8 +358,12 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                 label: String(link.label || '').trim(),
                 pinYaw: num(link.pinYaw),
                 returnYaw: num(link.returnYaw),
+                exitArrow: link.exitArrow === true,
+                useUploadedTour: link.useUploadedTour === true,
               }
-            : null;
+            : link.useUploadedTour === true
+              ? { pathwayNode: '', entryImage: '', label: '', pinYaw: null, returnYaw: null, exitArrow: false, useUploadedTour: true }
+              : null;
           continue;
         }
 
@@ -421,6 +436,8 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                     disabled={submitting}
                     buildingLat={values.lat}
                     buildingLng={values.lng}
+                    buildingName={values.name}
+                    buildingAbbr={values.abbr}
                     onAddFiles={(files) => handleGalleryAdd(field.key, files)}
                     onReplaceFile={(uid, file) => handleGalleryReplace(field.key, uid, file)}
                     onChangeItem={(uid, patch) => handleGalleryChange(field.key, uid, patch)}

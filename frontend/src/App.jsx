@@ -11,6 +11,7 @@ import Login from "./admin-dashboard/pages/Login";
 import Overview from "./admin-dashboard/pages/Overview";
 import BuildingsAdmin from "./admin-dashboard/pages/BuildingsAdmin";
 import DepartmentsAdmin from "./admin-dashboard/pages/DepartmentsAdmin";
+import ToursAdmin from "./admin-dashboard/pages/ToursAdmin";
 import Users from "./admin-dashboard/pages/Users";
 import Reports from "./admin-dashboard/pages/Reports";
 import Settings from "./admin-dashboard/pages/Settings";
@@ -61,6 +62,7 @@ const App = () => {
             <Route index element={<Overview/>} />
             <Route path="buildings" element={<BuildingsAdmin />} />
             <Route path="departments" element={<DepartmentsAdmin />} />
+            <Route path="tours" element={<ToursAdmin />} />
             <Route path="users" element={<Users />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />

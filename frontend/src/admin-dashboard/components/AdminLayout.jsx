@@ -5,11 +5,13 @@ import Topbar from './Topbar.jsx';
 import { AdminProvider } from '../context/AdminContext.jsx';
 import '../styles/admin.css';
 import '../styles/admin-flat.css';
+import '../styles/admin-light.css';
 
 const TITLES = {
   '/admin': { title: 'Dashboard', subtitle: 'Overview of the campus tour system' },
   '/admin/buildings': { title: 'Buildings', subtitle: 'Manage campus building records' },
   '/admin/departments': { title: 'Departments', subtitle: 'Manage college & department records' },
+  '/admin/tours': { title: '360° Tours', subtitle: 'Edit the arrows of the built-in 360° tours' },
   '/admin/users': { title: 'Users', subtitle: 'Manage accounts & admin access' },
   '/admin/reports': { title: 'Reports & Analytics', subtitle: 'Insights across the campus dataset' },
   '/admin/settings': { title: 'Settings', subtitle: 'System information & data controls' },

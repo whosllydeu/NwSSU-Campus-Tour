@@ -12,3 +12,12 @@ body.admin-flat ::-webkit-scrollbar-thumb,
 body.admin-flat ::-webkit-scrollbar-track {
   border-radius: 0 !important;
 }
+body.admin-flat select option,
+body.admin-flat select optgroup {
+  color: #111827;
+  background-color: #ffffff;
+}
+
+.ad-role-btn { white-space: nowrap; }
+.ad-role-btn.is-demote { color: #e07a6e; border-color: rgba(224, 122, 110, 0.55); background: transparent; }
+.ad-role-btn.is-demote:hover:not(:disabled) { background: rgba(224, 122, 110, 0.12); border-color: #e07a6e; }

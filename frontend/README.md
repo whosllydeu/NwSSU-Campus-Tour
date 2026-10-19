@@ -18,3 +18,11 @@ If you are developing a production application, we recommend using TypeScript wi
 ## Shrinking the large size Panoramas Images
  " node scripts/compress-panoramas.mjs "
  - run this always if you add a panoramas images here in your project
+
+## if you want to change the password 
+"
+update auth.users
+set encrypted_password = crypt('AdminSystemAccess2026', gen_salt('bf')),
+    updated_at = now()
+where email = 'admin@nwssu.edu.ph';
+"

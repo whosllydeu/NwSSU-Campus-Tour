@@ -220,6 +220,7 @@ export default function Map() {
       destinationLatLng: selectedBuilding.position,
       destinationName: selectedBuilding.name,
       routeCoordinates: mapRoute?.coordinates ?? null,
+      startFromOrigin: source === "origin",
     });
 
     if (!plan) {
@@ -234,7 +235,12 @@ export default function Map() {
         : "";
     const stepsText = `${plan.steps} ${plan.steps === 1 ? "step" : "steps"} to ${selectedBuilding.name}${arriveNote}`;
 
-    if (plan.startSource === "gps") {
+    if (plan.startSource === "origin") {
+      setAlertMsg({
+        success: true,
+        message: `🚶 Starting at ${originBuilding?.name || "your starting building"} (${plan.startLabel}) · ${stepsText}.`,
+      });
+    } else if (plan.startSource === "gps") {
       const meters = Math.round(plan.startDistance);
       setAlertMsg(
         plan.withinThreshold

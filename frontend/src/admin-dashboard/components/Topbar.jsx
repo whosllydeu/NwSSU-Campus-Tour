@@ -1,3 +1,4 @@
+import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -29,7 +30,7 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
           <span className="ad-admin-role">{profile?.role === 'admin' ? 'Administrator' : 'NWSSU CampusTour'}</span>
         </div>
         <button className="btn-ghost btn-sm ad-logout-btn" onClick={handleLogout}>
-          ⏻ Logout
+          <LogOut size={14} aria-hidden="true" /> Logout
         </button>
       </div>
     </header>

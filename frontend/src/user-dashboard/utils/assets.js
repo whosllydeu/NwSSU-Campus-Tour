@@ -36,6 +36,7 @@ export function buildingGallery(building) {
       panorama: typeof item?.panorama === 'boolean' ? item.panorama : undefined,
       heading: Number.isFinite(Number(item?.heading)) ? Number(item.heading) : 0,
       links: Array.isArray(item?.links) ? item.links : [],
+      end: item?.end === true,
     }))
     .filter((item) => Boolean(item.src));
 }

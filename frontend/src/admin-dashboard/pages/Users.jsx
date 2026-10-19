@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useUI } from '../context/ToastContext.jsx';
 import { listProfiles, updateUserRole } from '../services/users.service.js';
@@ -11,18 +11,14 @@ export default function Users() {
   const [isLoading, setIsLoading] = useState(true);
   const [pending, setPending] = useState(null);
 
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      setProfiles(await listProfiles());
-    } catch (err) {
-      showToast(err.message || 'Failed to load users.');
-    } finally {
-      setIsLoading(false);
-    }
+  useEffect(() => {
+    let active = true;
+    listProfiles()
+      .then((rows) => { if (active) setProfiles(rows); })
+      .catch((err) => { if (active) showToast(err.message || 'Failed to load users.'); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, [showToast]);
-
-  useEffect(() => { refetch(); }, [refetch]);
 
   const adminCount = profiles.filter((p) => p.role === 'admin').length;
 
@@ -80,7 +76,7 @@ export default function Users() {
                 <td>{p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td>
                 <td className="ad-row-actions">
                   <button
-                    className={p.role === 'admin' ? 'ad-icon-btn danger' : 'btn-primary btn-sm'}
+                    className={p.role === 'admin' ? 'btn-ghost btn-sm ad-role-btn is-demote' : 'btn-primary btn-sm ad-role-btn'}
                     onClick={() => requestRoleChange(p)}
                   >
                     {p.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}

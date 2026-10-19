@@ -147,6 +147,8 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
     if (apiRef) {
       apiRef.current = {
         getNodeId: () => tour.getCurrentNode()?.id || null,
+        zoomIn: () => viewer.zoomIn(10),
+        zoomOut: () => viewer.zoomOut(10),
         goTo: (nodeId) => goVia(nodeId),
         step: (direction = 'forward') => {
           const current = tour.getCurrentNode();
