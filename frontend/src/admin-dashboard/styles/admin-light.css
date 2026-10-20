@@ -221,3 +221,23 @@ body.admin-flat .ad-confirm-box h3,
 body.admin-flat .bte-head h2,
 body.admin-flat .ad-stat-value { font-weight: 800; }
 body.admin-flat .ad-activity-text strong { font-weight: 700; }
+
+/* ===== Sidebar in the campus-tour colors (green + gold) ===== */
+body.admin-flat aside.ad-sidebar {
+  background: linear-gradient(180deg, #1e4d1a 0%, #163814 100%);
+  border-right: 1px solid #0f2a0d;
+}
+body.admin-flat aside.ad-sidebar .ad-sidebar-brand { border-bottom-color: rgba(200, 168, 75, 0.25); }
+body.admin-flat aside.ad-sidebar .brand-name { color: #e8c96a; }
+body.admin-flat aside.ad-sidebar .brand-sub { color: #c8c0aa; }
+
+body.admin-flat aside.ad-sidebar .ad-nav-link { color: #f0ebe0; }
+body.admin-flat aside.ad-sidebar .ad-nav-link:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+body.admin-flat aside.ad-sidebar .ad-nav-link.active {
+  background: rgba(200, 168, 75, 0.16);
+  color: #e8c96a;
+  border-left-color: #c8a84b;
+}
+
+body.admin-flat aside.ad-sidebar .ad-sidebar-exit { color: #e8c96a; border-top-color: rgba(200, 168, 75, 0.25); }
+body.admin-flat aside.ad-sidebar .ad-sidebar-exit:hover { color: #ffffff; }
