@@ -350,3 +350,99 @@ body.admin-modern .ad-search-box input {
   color: var(--ink);
 }
 body.admin-modern .ad-search-box:focus-within { border-color: var(--g700); background: #fff; }
+
+/* ================= Settings page ================= */
+body.admin-modern .st { display: flex; flex-direction: column; gap: 20px; }
+body.admin-modern .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+body.admin-modern .st .ad-panel h2 { display: flex; align-items: center; gap: 8px; }
+body.admin-modern .st-h-icon { color: var(--g700); }
+
+body.admin-modern .st-form { display: flex; flex-direction: column; gap: 12px; }
+body.admin-modern .st-form label { display: flex; flex-direction: column; gap: 5px; position: relative; }
+body.admin-modern .st-form label > span { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+body.admin-modern .st-form input[type="password"],
+body.admin-modern .st-form textarea,
+body.admin-modern .st-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--g50);
+  color: var(--ink);
+  font: inherit; font-size: 14px;
+}
+body.admin-modern .st-form textarea { resize: vertical; min-height: 64px; }
+body.admin-modern .st-form input:focus,
+body.admin-modern .st-form textarea:focus,
+body.admin-modern .st-form select:focus { outline: none; border-color: var(--g700); background: #fff; }
+body.admin-modern .st-count { position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: var(--ink3); }
+body.admin-modern .st-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+body.admin-modern .st-inline { min-width: 200px; }
+body.admin-modern .st-switch { flex-direction: row !important; align-items: center; gap: 8px !important; cursor: pointer; }
+body.admin-modern .st-switch input { width: 18px; height: 18px; accent-color: var(--g700); }
+body.admin-modern .st-switch span { font-size: 13.5px !important; color: var(--ink) !important; }
+body.admin-modern .st-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+body.admin-modern .st-actions .ad-muted { font-size: 12.5px; }
+body.admin-modern .st-error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fdf0f0; color: #b42318; font-size: 13px; font-weight: 600; }
+body.admin-modern .st-error code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
+
+body.admin-modern .st-preview {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 12px;
+  background: #1e4d1a; color: #f0ebe0; border: 1px solid #c8a84b;
+  font-size: 13.5px;
+}
+body.admin-modern .st-preview svg { color: #e8c96a; flex: none; }
+body.admin-modern .st-preview.is-warning { background: #5c3d07; border-color: #e8c96a; }
+body.admin-modern .st-preview.is-urgent { background: #7a1616; border-color: #f2b8b5; }
+body.admin-modern .st-preview.is-urgent svg { color: #fff; }
+
+/* Data check */
+body.admin-modern .st-checks { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+body.admin-modern .st-checks li { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+body.admin-modern .st-check-row {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border: none; background: #fff; text-align: left; cursor: pointer;
+  font: inherit; color: var(--ink);
+}
+body.admin-modern .st-check-row:disabled { cursor: default; }
+body.admin-modern .st-checks li.is-warn .st-check-row:hover { background: var(--gold-soft); }
+body.admin-modern .st-check-dot {
+  width: 24px; height: 24px; flex: none; display: grid; place-items: center;
+  border-radius: 50%; font-size: 13px; font-weight: 800;
+}
+body.admin-modern .is-ok .st-check-dot { background: var(--g100); color: var(--g700); }
+body.admin-modern .is-warn .st-check-dot { background: var(--gold-soft); color: #8a6d1d; }
+body.admin-modern .st-check-label { flex: 1; font-size: 14px; font-weight: 600; }
+body.admin-modern .st-check-count { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+body.admin-modern .is-ok .st-check-count { background: var(--g100); color: var(--g700); }
+body.admin-modern .is-warn .st-check-count { background: var(--gold-soft); color: #8a6d1d; }
+body.admin-modern .st-check-list {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: 10px 14px 12px 50px; background: var(--g50);
+  font-size: 13px; color: var(--ink2); line-height: 1.5;
+}
+body.admin-modern .st-link { color: var(--g700); font-weight: 700; white-space: nowrap; }
+
+/* System info + QR */
+body.admin-modern .st-sys { display: grid; grid-template-columns: 1fr 200px; gap: 24px; align-items: start; }
+body.admin-modern .st-link-row { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+body.admin-modern .st-url { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+body.admin-modern .st-url a { color: var(--g700); font-weight: 700; word-break: break-all; }
+body.admin-modern .st-url .btn-sm, body.admin-modern .st-refresh, body.admin-modern .st-qr .btn-sm { display: inline-flex; align-items: center; gap: 6px; }
+body.admin-modern .st-refresh { margin-top: 16px; }
+body.admin-modern .st-qr {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px; border-radius: 14px;
+  background: var(--g50); border: 1px solid var(--line);
+  text-align: center; font-size: 12px; font-weight: 600; color: var(--ink2);
+}
+body.admin-modern .st-qr img { width: 160px; height: 160px; border-radius: 10px; background: #fff; padding: 6px; border: 2px solid var(--gold); }
+body.admin-modern .st-qr-empty { width: 160px; height: 160px; display: grid; place-items: center; color: var(--ink3); }
+
+@media (max-width: 1000px) {
+  body.admin-modern .st-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  body.admin-modern .st-sys { grid-template-columns: 1fr; }
+  body.admin-modern .st-check-list { flex-direction: column; padding-left: 14px; }
+}

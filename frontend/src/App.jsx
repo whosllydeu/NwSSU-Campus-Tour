@@ -29,6 +29,7 @@ import {
   Toast,
 } from "./user-dashboard/components";
 import AdminLayout from "./admin-dashboard/components/AdminLayout";
+import AnnouncementBar from "./user-dashboard/components/AnnouncementBar";
 
 const isAdminUrl = window.location.pathname.startsWith("/admin");
 
@@ -73,6 +74,7 @@ const App = () => {
           <Route path="*" element={<Navigate to={isAdminUrl ? "/admin" : "/"} replace />} />
         </Routes>
         
+        {!isAdminUrl && <AnnouncementBar/>}
         <Splash/>
         <Drawer/>
         <SearchPanel/>

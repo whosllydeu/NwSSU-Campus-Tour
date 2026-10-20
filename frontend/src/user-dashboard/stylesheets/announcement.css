@@ -1,0 +1,38 @@
+/* Announcement set by the admin (Settings → Site Announcement) */
+.announce-bar {
+  position: fixed;
+  top: calc(var(--nav-h, 64px) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 10px 10px 10px 16px;
+  border-radius: 14px;
+  background: #1e4d1a;
+  border: 1px solid #c8a84b;
+  color: #f0ebe0;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  animation: announce-in 0.35s ease;
+}
+.announce-bar svg { flex: none; color: #e8c96a; }
+.announce-bar.is-warning { background: #5c3d07; border-color: #e8c96a; }
+.announce-bar.is-urgent { background: #7a1616; border-color: #f2b8b5; }
+.announce-bar.is-urgent svg { color: #fff; }
+.announce-bar button {
+  flex: none;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  border: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+}
+.announce-bar button svg { color: #fff; }
+.announce-bar button:hover { background: rgba(255, 255, 255, 0.24); }
+@keyframes announce-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
