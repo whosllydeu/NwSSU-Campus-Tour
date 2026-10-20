@@ -45,19 +45,19 @@ body.admin-modern aside.ad-sidebar {
   padding: 22px 16px;
   gap: 4px;
 }
-body.admin-modern .ad-sidebar-brand {
+body.admin-modern.admin-flat aside.ad-sidebar .ad-sidebar-brand {
   display: flex; align-items: center; gap: 10px;
   padding: 2px 8px 22px;
   margin-bottom: 8px;
   border-bottom: none;
 }
-body.admin-modern .ad-brand-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }
-body.admin-modern .ad-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-body.admin-modern .ad-brand-name { font-family: var(--ff-h); font-size: 20px; color: var(--g800); }
-body.admin-modern .ad-brand-sub { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-brand-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-brand-name { font-family: var(--ff-h); font-size: 20px; color: var(--g800); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-brand-sub { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
 
-body.admin-modern .ad-sidebar-nav { gap: 6px; }
-body.admin-modern .ad-nav-link {
+body.admin-modern.admin-flat aside.ad-sidebar .ad-sidebar-nav { gap: 6px; }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link {
   display: flex; align-items: center; gap: 12px;
   padding: 11px 16px;
   border: none;
@@ -67,25 +67,25 @@ body.admin-modern .ad-nav-link {
   font-weight: 600;
   background: transparent;
 }
-body.admin-modern .ad-nav-link svg { color: var(--ink3); flex: none; }
-body.admin-modern .ad-nav-link:hover { background: var(--g50); color: var(--g800); }
-body.admin-modern .ad-nav-link:hover svg { color: var(--g700); }
-body.admin-modern .ad-nav-link.active {
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link svg { color: var(--ink3); flex: none; }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link:hover { background: var(--g50); color: var(--g800); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link:hover svg { color: var(--g700); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link.active {
   background: var(--g700);
   color: #fff;
   font-weight: 700;
   box-shadow: 0 6px 16px rgba(42, 102, 36, 0.28);
 }
-body.admin-modern .ad-nav-link.active svg { color: var(--gold); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-nav-link.active svg { color: var(--gold); }
 
-body.admin-modern .ad-sidebar-bottom { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
-body.admin-modern .ad-sidebar-exit {
+body.admin-modern.admin-flat aside.ad-sidebar .ad-sidebar-bottom { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-sidebar-exit {
   display: flex; align-items: center; gap: 10px;
   margin: 0; padding: 10px 16px;
   border: none; border-radius: 999px;
   color: var(--g700); font-size: 13px; font-weight: 600;
 }
-body.admin-modern .ad-sidebar-exit:hover { background: var(--gold-soft); color: var(--g800); }
+body.admin-modern.admin-flat aside.ad-sidebar .ad-sidebar-exit:hover { background: var(--gold-soft); color: var(--g800); }
 
 /* ---------- Topbar ---------- */
 body.admin-modern .ad-topbar {
