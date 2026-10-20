@@ -9,7 +9,6 @@ const FIELDS = [
   { key: 'name', label: 'College/Department Name', type: 'text', required: true, wide: true },
   { key: 'abbr', label: 'Abbreviation', type: 'text', required: true },
   { key: 'color', label: 'Accent Color', type: 'color' },
-  { key: 'photo', label: 'Photo (filename or URL)', type: 'text', wide: true, help: 'Leave empty to use the linked building\'s photo.' },
   { key: 'offices', label: 'Offices', type: 'list', wide: true },
   { key: 'programs', label: 'Programs Offered', type: 'list', wide: true },
   { key: 'faculty', label: 'Faculty (one per line, "Name - Role")', type: 'list', wide: true },

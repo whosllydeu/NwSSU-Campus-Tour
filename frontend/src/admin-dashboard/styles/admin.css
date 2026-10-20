@@ -250,16 +250,4 @@
   .ad-panel { break-inside: avoid; border: 1px solid #ccc; background: #fff; color: #111; }
   .ad-panel h2, .ad-topbar-title h1 { color: #111; }
 }
-.ad-shell,
-.ad-shell *,
-.ad-shell *::before,
-.ad-shell *::after,
-[class^="ad-"],
-[class*=" ad-"],
-[class^="ad-"] *,
-[class*=" ad-"] *,
-body.admin-flat *,
-body.admin-flat *::before,
-body.admin-flat *::after {
-  border-radius: 0 !important;
-}
+/* (square-corner override removed — the admin now uses rounded corners, see admin-modern.css) */
