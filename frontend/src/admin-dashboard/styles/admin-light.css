@@ -241,3 +241,20 @@ body.admin-flat aside.ad-sidebar .ad-nav-link.active {
 
 body.admin-flat aside.ad-sidebar .ad-sidebar-exit { color: #e8c96a; border-top-color: rgba(200, 168, 75, 0.25); }
 body.admin-flat aside.ad-sidebar .ad-sidebar-exit:hover { color: #ffffff; }
+
+/* Sidebar stays full height and fixed while the page scrolls (desktop) */
+@media (min-width: 761px) {
+  body.admin-flat aside.ad-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 20;
+  }
+  body.admin-flat .ad-main { margin-left: 260px; }
+}
+@media (max-width: 760px) {
+  body.admin-flat aside.ad-sidebar { height: 100dvh; }
+}
