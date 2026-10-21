@@ -25,6 +25,7 @@ export default function SearchPanel() {
   const {
     searchQuery, setSearchQuery,
     openBuilding, openDept,
+    drawerOpen, closeDrawer,
   } = useUI();
   const { buildings, departments } = useCampusData();
   const panelRef = useRef(null);
@@ -56,7 +57,11 @@ export default function SearchPanel() {
   useEffect(() => {
     if (!show) return;
     const onDocClick = (e) => {
-      if (e.target.closest('.nav-search-box') || e.target.closest('#searchPanel')) return;
+      if (
+        e.target.closest('.nav-search-box') ||
+        e.target.closest('.drawer-search-row') ||
+        e.target.closest('#searchPanel')
+      ) return;
       setSearchQuery('');
     };
     document.addEventListener('click', onDocClick);
@@ -66,10 +71,17 @@ export default function SearchPanel() {
   const handleRun = (item) => {
     item.run();
     setSearchQuery('');
+    closeDrawer();
   };
 
+  // When typing in the mobile menu, show the results on top of the menu,
+  // just below its search box (otherwise they are hidden behind the menu).
+  const drawerStyle = drawerOpen
+    ? { zIndex: 302, top: 130, right: 12, width: 264, maxHeight: 'calc(100vh - 150px)' }
+    : undefined;
+
   return (
-    <div className={`search-panel${show ? ' show' : ''}`} id="searchPanel" ref={panelRef}>
+    <div className={`search-panel${show ? ' show' : ''}`} id="searchPanel" ref={panelRef} style={drawerStyle}>
       {show && (
         results.length === 0 ? (
           <div className="sp-head">No results for "{searchQuery}"</div>
