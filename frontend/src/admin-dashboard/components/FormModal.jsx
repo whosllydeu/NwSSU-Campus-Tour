@@ -34,6 +34,7 @@ function initialGalleryValue(raw) {
       panorama: typeof img.panorama === 'boolean' ? img.panorama : undefined,
       heading: Number.isFinite(Number(img.heading)) && img.heading !== null ? img.heading : '',
       view: img.view !== null && img.view !== undefined && Number.isFinite(Number(img.view)) ? img.view : '',
+      back: img.back !== null && img.back !== undefined && Number.isFinite(Number(img.back)) ? img.back : '',
       links: Array.isArray(img.links) ? img.links.map((l) => ({ to: l.to || '', yaw: l.yaw ?? '' })) : [],
       end: img.end === true,
     }));
@@ -149,6 +150,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
       panorama: Boolean(getPreparedInfo(file)?.panorama),
       heading: '',
       view: '',
+      back: '',
       links: [],
       end: false,
     }));
@@ -223,6 +225,9 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
           }
           if (item.view !== '' && item.view !== undefined && !inRange(item.view, -360, 360)) {
             e.view = 'Must be between -360 and 360';
+          }
+          if (item.back !== '' && item.back !== undefined && item.back !== null && !inRange(item.back, -360, 360)) {
+            e.back = 'Must be between -360 and 360';
           }
           (item.links || []).forEach((l) => {
             if (!l.to) e.links = 'Choose where each extra arrow goes';
@@ -337,6 +342,9 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                 : {}),
               ...(item.view !== '' && item.view !== undefined && Number.isFinite(Number(item.view))
                 ? { view: Number(item.view) }
+                : {}),
+              ...(item.back !== '' && item.back !== undefined && item.back !== null && Number.isFinite(Number(item.back))
+                ? { back: Number(item.back) }
                 : {}),
               links: (item.links || [])
                 .filter((l) => l.to && galleryIds.has(l.to) && Number.isFinite(Number(l.yaw)))

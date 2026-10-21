@@ -158,7 +158,7 @@ export function applyAdminBuildingTours(buildings = []) {
           yaw: normDeg(finite(img.view) ? Number(img.view) : Number(img.heading) || 0),
           forward: normDeg(Number(img.heading) || 0),
           yawIsDefault: !finite(img.heading) && !finite(img.view),
-          backYaw: null,
+          backYaw: finite(img.back) ? normDeg(Number(img.back)) : null,
           gps: finite(img.lat) && finite(img.lng) ? [Number(img.lat), Number(img.lng)] : null,
           star: false,
           office: null,
@@ -177,7 +177,7 @@ export function applyAdminBuildingTours(buildings = []) {
     });
     own.forEach(({ img, node }, i) => {
       if (own[i + 1] && !img.end) addLink(node, own[i + 1].node.id, node.data.forward, { dir: 'forward' });
-      if (own[i - 1] && !own[i - 1].img.end) addLink(node, own[i - 1].node.id, node.data.forward + 180, { dir: 'back' });
+      if (own[i - 1] && !own[i - 1].img.end) addLink(node, own[i - 1].node.id, node.data.backYaw ?? node.data.forward + 180, { dir: 'back' });
     });
 
     tours[tourId] = {

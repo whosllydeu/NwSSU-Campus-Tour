@@ -35,6 +35,8 @@ export function buildingGallery(building) {
       caption: item?.caption || '',
       panorama: typeof item?.panorama === 'boolean' ? item.panorama : undefined,
       heading: Number.isFinite(Number(item?.heading)) ? Number(item.heading) : 0,
+      view: item?.view !== null && item?.view !== undefined && item?.view !== '' && Number.isFinite(Number(item.view)) ? Number(item.view) : null,
+      back: item?.back !== null && item?.back !== undefined && item?.back !== '' && Number.isFinite(Number(item.back)) ? Number(item.back) : null,
       links: Array.isArray(item?.links) ? item.links : [],
       end: item?.end === true,
     }))

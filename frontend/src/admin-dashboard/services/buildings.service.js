@@ -21,6 +21,9 @@ function cleanImages(images) {
       ...(img.view !== '' && img.view !== undefined && img.view !== null && Number.isFinite(Number(img.view))
         ? { view: Number(img.view) }
         : {}),
+      ...(img.back !== '' && img.back !== undefined && img.back !== null && Number.isFinite(Number(img.back))
+        ? { back: Number(img.back) }
+        : {}),
       ...(cleanLinks(img.links).length ? { links: cleanLinks(img.links) } : {}),
       ...(img.end === true ? { end: true } : {}),
     }));

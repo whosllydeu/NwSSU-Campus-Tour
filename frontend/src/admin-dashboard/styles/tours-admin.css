@@ -75,3 +75,21 @@
 .bte-select-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; margin-bottom: 4px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .bte-check { width: 16px; height: 16px; flex: none; accent-color: #c8a84b; cursor: pointer; }
 .bte-node-row.is-checked .ta-node { border-color: rgba(220, 80, 80, 0.7); background: rgba(220, 80, 80, 0.08); }
+
+/* 360° editor: keep the panorama in view — the start-view and arrow settings scroll in their own box */
+.bte-controls {
+  max-height: min(42vh, 380px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 12px 8px 4px;
+  border: 1px solid var(--border, #e5e9e4);
+  border-radius: 12px;
+  background: var(--card, #fff);
+}
+.bte-controls .ta-section:first-child { margin-top: 0; }
+.bte-controls::-webkit-scrollbar { width: 8px; }
+.bte-controls::-webkit-scrollbar-thumb { background: #c8d3c6; border-radius: 8px; }
+.bte-controls::-webkit-scrollbar-track { background: transparent; }
+@media (max-width: 760px) {
+  .bte-controls { max-height: none; overflow: visible; border: none; padding: 0; }
+}

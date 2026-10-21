@@ -49,7 +49,7 @@ function buildNodes(items, buildingName) {
       });
     }
     if (index > 0 && !items[index - 1].end) {
-      const back = norm(forward + 180);
+      const back = Number.isFinite(item.back) ? norm(item.back) : norm(forward + 180);
       links.push({
         nodeId: items[index - 1].id,
         position: { yaw: back * D2R, pitch: 0 },
