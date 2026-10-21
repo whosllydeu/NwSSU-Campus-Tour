@@ -71,6 +71,8 @@ export default function BuildingTourEditor({
   const prev = pIndex > 0 && !panoramas[pIndex - 1].end ? panoramas[pIndex - 1] : null;
   const isLastPano = isPano && pIndex === panoramas.length - 1;
   const forward = item && isNum(item.heading) ? Number(item.heading) : 0;
+  const backIsAuto = !(item && isNum(item.back));
+  const backYaw = backIsAuto ? norm(forward + 180) : Number(item.back);
   const links = item && Array.isArray(item.links) ? item.links : [];
   const targets = isPano ? panoramas.filter((it) => it !== item) : [];
   const targetLabel = (key) => {
@@ -82,7 +84,7 @@ export default function BuildingTourEditor({
   if (isPano) {
     if (isNum(item.view)) pins.push({ id: 'view', yaw: Number(item.view), label: 'Start view', kind: 'view' });
     if (next) pins.push({ id: 'fwd', yaw: forward, label: `Forward → ${labelOf(next)}`, kind: 'forward' });
-    if (prev) pins.push({ id: 'back', yaw: forward + 180, label: `Back → ${labelOf(prev)}`, kind: 'back' });
+    if (prev) pins.push({ id: 'back', yaw: backYaw, label: `Back → ${labelOf(prev)}`, kind: 'back' });
     links.forEach((l, i) => {
       if (isNum(l.yaw)) pins.push({ id: `x${i}`, yaw: Number(l.yaw), label: `→ ${targetLabel(l.to)}`, kind: 'extra' });
     });
@@ -280,6 +282,7 @@ export default function BuildingTourEditor({
                     </p>
                   </div>
 
+                  <div className="bte-controls">
                   <div className="ta-section">
                     <h3>Start view</h3>
                     <div className="ta-row">
@@ -316,9 +319,17 @@ export default function BuildingTourEditor({
                     <div className="ta-row">
                       <span className="ta-dot bte-dot-back">B</span>
                       <span className="ta-row-label">
-                        Back → {prev ? labelOf(prev) : <em>none</em>}
-                        {prev && <span className="ta-node-id"> · automatic, opposite of forward ({Math.round(norm(forward + 180))}°)</span>}
+                        Back → {prev ? labelOf(prev) : <em>none (first 360° photo)</em>}
+                        {prev && backIsAuto && <span className="ta-node-id"> · auto, opposite of forward</span>}
                       </span>
+                      <input type="number" step="any" value={item.back ?? ''} placeholder={String(Math.round(norm(forward + 180)))}
+                        disabled={!prev} aria-label="Back arrow direction" onChange={(e) => set({ back: e.target.value })} />
+                      <button type="button" className="btn-ghost btn-sm" disabled={!prev} onClick={() => set({ back: String(facing) })}>
+                        Aim here ({facing}°)
+                      </button>
+                      {prev && !backIsAuto && (
+                        <button type="button" className="btn-ghost btn-sm" title="Go back to automatic (opposite of forward)" onClick={() => set({ back: '' })}>Auto</button>
+                      )}
                       {prev && <button type="button" className="btn-ghost btn-sm" onClick={() => select(prev.uid)}>Open</button>}
                     </div>
 
@@ -349,8 +360,9 @@ export default function BuildingTourEditor({
                     <p className="ad-field-help">
                       Extra arrows are for side paths such as stairs or another hallway. Add the matching arrow on the
                       other photo so users can come back. If the automatic back arrow points the wrong way, add an extra
-                      arrow to the previous photo — it replaces the automatic one.
+                      arrow to the previous photo — or aim the Back arrow above.
                     </p>
+                  </div>
                   </div>
                 </>
               )}
