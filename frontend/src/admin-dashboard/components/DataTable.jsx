@@ -88,7 +88,7 @@ export default function DataTable({ columns, rows, keyField = '_id', onEdit, onD
                 ))}
                 <td className="ad-row-actions">
                   <button className="ad-icon-btn" title="Edit" onClick={() => onEdit(row)}>✏️</button>
-                  <button className="ad-icon-btn danger" title="Delete" onClick={() => onDelete(row)}>🗑️</button>
+                  {onDelete && <button className="ad-icon-btn danger" title="Delete" onClick={() => onDelete(row)}>🗑️</button>}
                 </td>
               </tr>
             ))}

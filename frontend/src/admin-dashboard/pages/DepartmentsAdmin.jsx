@@ -3,12 +3,12 @@ import { useAdmin } from '../context/AdminContext.jsx';
 import { useUI } from '../context/ToastContext.jsx';
 import DataTable from '../components/DataTable.jsx';
 import FormModal from '../components/FormModal.jsx';
-import ConfirmDialog from '../components/ConfirmDialog.jsx';
 
 const FIELDS = [
   { key: 'name', label: 'College/Department Name', type: 'text', required: true, wide: true },
   { key: 'abbr', label: 'Abbreviation', type: 'text', required: true },
   { key: 'color', label: 'Accent Color', type: 'color' },
+  { key: 'photo', label: 'Photo (filename or URL)', type: 'text', wide: true, help: 'Leave empty to use the linked building\'s photo.' },
   { key: 'offices', label: 'Offices', type: 'list', wide: true },
   { key: 'programs', label: 'Programs Offered', type: 'list', wide: true },
   { key: 'faculty', label: 'Faculty (one per line, "Name - Role")', type: 'list', wide: true },
@@ -17,12 +17,11 @@ const FIELDS = [
 ];
 
 export default function DepartmentsAdmin() {
-  const { isLoading, departments, buildings, addRecord, updateRecord, deleteRecord } = useAdmin();
+  const { isLoading, departments, buildings, addRecord, updateRecord } = useAdmin();
   const { showToast } = useUI();
   const [formOpen, setFormOpen] = useState(false);
   const [formSession, setFormSession] = useState(0);
   const [editing, setEditing] = useState(null);
-  const [toDelete, setToDelete] = useState(null);
 
   const COLUMNS = [
     { key: 'abbr', label: 'Abbr' },
@@ -50,17 +49,6 @@ export default function DepartmentsAdmin() {
     setFormOpen(false);
   }
 
-  async function handleDeleteConfirm() {
-    const target = toDelete;
-    setToDelete(null);
-    try {
-      await deleteRecord('departments', 'Department', target._id, target.name);
-      showToast(`"${target.name}" deleted`);
-    } catch (err) {
-      showToast(`Could not delete "${target.name}": ${err.message}`);
-    }
-  }
-
   if (isLoading) return <div className="ad-loading">Loading departments…</div>;
 
   return (
@@ -72,10 +60,12 @@ export default function DepartmentsAdmin() {
         columns={COLUMNS}
         rows={departments}
         onEdit={openEdit}
-        onDelete={setToDelete}
         searchPlaceholder="Search departments…"
-        emptyLabel="No departments yet. Add one to get started."
+        emptyLabel="No departments yet. Add an academic building to create one."
       />
+      <p className="ad-muted" style={{ marginTop: 10, fontSize: 12.5 }}>
+        Departments are created and removed together with their academic building in Buildings.
+      </p>
       <FormModal
         key={formSession}
         open={formOpen}
@@ -84,13 +74,6 @@ export default function DepartmentsAdmin() {
         initialValues={editing || {}}
         onSubmit={handleSubmit}
         onClose={() => setFormOpen(false)}
-      />
-      <ConfirmDialog
-        open={Boolean(toDelete)}
-        title="Delete department?"
-        message={`"${toDelete?.name}" will be permanently removed from the campus tour data.`}
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setToDelete(null)}
       />
     </div>
   );

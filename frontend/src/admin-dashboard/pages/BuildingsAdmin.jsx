@@ -4,6 +4,7 @@ import { useUI } from '../context/ToastContext.jsx';
 import DataTable from '../components/DataTable.jsx';
 import FormModal from '../components/FormModal.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
+import { linkedDepartment } from '../utils/linkedDepartment.js';
 import { BUILDING_TYPES } from '../data/adminData.js';
 import { resolveImage } from '../../user-dashboard/utils/assets';
 import {
@@ -75,8 +76,17 @@ const COLUMNS = [
   { key: 'programs', label: 'Programs', sortable: false, render: (row) => row.programs?.length ?? 0 },
 ];
 
+function deleteMessage(building, departments, buildings) {
+  if (!building) return '';
+  const base = `"${building.name}" and its uploaded images will be permanently removed from the campus tour data.`;
+  const dept = linkedDepartment(building, departments, buildings);
+  return dept
+    ? `${base} Its department "${dept.name}" will also be deleted from the Departments page.`
+    : base;
+}
+
 export default function BuildingsAdmin() {
-  const { isLoading, buildings, saveBuilding, deleteRecord } = useAdmin();
+  const { isLoading, buildings, departments, saveBuilding, deleteBuilding } = useAdmin();
   const { showToast } = useUI();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -124,16 +134,18 @@ export default function BuildingsAdmin() {
     setDeleting(true);
     try {
       const paths = collectBuildingImagePaths(toDelete);
-      await deleteRecord('buildings', 'Building', toDelete._id, toDelete.name);
+      const { departmentDeleted } = await deleteBuilding(toDelete);
       removeBuildingImages(paths);
-      showToast(`"${toDelete.name}" deleted`);
+      showToast(departmentDeleted
+        ? `"${toDelete.name}" and its department "${departmentDeleted}" deleted`
+        : `"${toDelete.name}" deleted`);
       setToDelete(null);
     } catch (err) {
       showToast(`Could not delete "${toDelete.name}": ${err.message}`);
     } finally {
       setDeleting(false);
     }
-  }, [toDelete, deleting, deleteRecord, showToast]);
+  }, [toDelete, deleting, deleteBuilding, showToast]);
 
   if (isLoading) {
     return (
@@ -180,7 +192,7 @@ export default function BuildingsAdmin() {
       <ConfirmDialog
         open={Boolean(toDelete)}
         title="Delete building?"
-        message={`"${toDelete?.name}" and its uploaded images will be permanently removed from the campus tour data. Its department record (if any) is kept.`}
+        message={deleteMessage(toDelete, departments, buildings)}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setToDelete(null)}
       />

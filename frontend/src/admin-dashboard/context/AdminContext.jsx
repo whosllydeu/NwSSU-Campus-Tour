@@ -2,6 +2,7 @@
 import * as buildingsApi from '../services/buildings.service.js';
 import * as departmentsApi from '../services/departments.service.js';
 import { listActivity } from '../services/activity.service.js';
+import { linkedDepartment } from '../utils/linkedDepartment.js';
 
 const AdminContext = createContext(null);
 
@@ -174,6 +175,32 @@ export function AdminProvider({ children }) {
     return { building: finalBuilding, department, departmentCreated, departmentUnlinked };
   }, []);
 
+  // Deleting an academic building also deletes the department that was created for it,
+  // unless another building is still linked to that department.
+  const deleteBuilding = useCallback(async (building) => {
+    await buildingsApi.deleteBuilding(building._id);
+    setBuildings((prev) => prev.filter((b) => b._id !== building._id));
+
+    // An academic building takes its department with it (departments are only created from buildings).
+    let departmentDeleted = null;
+    if (building.type === ACADEMIC) {
+      const [freshBuildings, freshDepartments] = await Promise.all([
+        buildingsApi.listBuildings(),
+        departmentsApi.listDepartments(),
+      ]);
+      const dept = linkedDepartment(building, freshDepartments, freshBuildings);
+      const stillUsed = dept && freshBuildings.some((b) => b.dept === dept.id);
+      if (dept && !stillUsed) {
+        await departmentsApi.deleteDepartment(dept.id);
+        setDepartments((prev) => prev.filter((d) => d.id !== dept.id));
+        departmentDeleted = dept.name || dept.id;
+      }
+    }
+
+    listActivity().then(setActivity).catch(() => {});
+    return { departmentDeleted };
+  }, []);
+
   const resetAllData = useCallback(async () => { await refetchAll(); }, [refetchAll]);
 
   const stats = useMemo(() => {
@@ -197,6 +224,7 @@ export function AdminProvider({ children }) {
     activity, stats,
     addRecord, updateRecord, deleteRecord,
     saveBuilding,
+    deleteBuilding,
     resetAllData,
   };
 
