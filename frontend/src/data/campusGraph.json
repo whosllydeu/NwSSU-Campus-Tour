@@ -25,7 +25,9 @@
     {"id":"CCIS-ALUMNI:IMCO","coord":[12.0709285,124.5965891],"kind":"junction","walkways":["CCIS-ALUMNI"],"note":"IMCO office corridor (new 360° photo pathway-ccis-alumni-02b)"},
     {"id":"GATE-CEA:2","coord":[12.07109,124.59684],"kind":"junction","walkways":["GATE-CEA"]},
     {"id":"CCIS-ALUMNI:19","coord":[12.07034,124.59563],"kind":"junction","walkways":["CCIS-ALUMNI"]},
-    {"id":"X:COM-SAS:5-6:LIB-REG:1-2","coord":[12.0719428,124.5964271],"kind":"intersection","walkways":["COM-SAS","LIB-REG"]}
+    {"id":"X:COM-SAS:5-6:LIB-REG:1-2","coord":[12.0719428,124.5964271],"kind":"intersection","walkways":["COM-SAS","LIB-REG"]},
+    {"id":"pathway-ccis-alumni-17","coord":[12.07008,124.59616],"kind":"junction","walkways":["CCIS-ALUMNI"],"note":"360° photo pathway-ccis-alumni-17"},
+    {"id":"pathway-gate-coed-15","coord":[12.0699607,124.5961729],"kind":"junction","walkways":["GATE-COED"],"note":"360° photo pathway-gate-coed-15"}
   ],
   "edges": [
     {"id":"GATE-CEA#1","from":"GATE-CEA:1","to":"GATE-CEA:2","walkway":"GATE-CEA","length":22.89,"geometry":[[12.07089,124.59679],[12.07109,124.59684]]},
@@ -36,13 +38,16 @@
     {"id":"LIB-REG#2","from":"X:COM-SAS:5-6:LIB-REG:1-2","to":"LIB-REG:11","walkway":"LIB-REG","length":146.65,"geometry":[[12.0719428,124.5964271],[12.07165,124.59642],[12.07168,124.59648],[12.07161,124.5965],[12.07147,124.59642],[12.07139,124.59652],[12.07123,124.59646],[12.07119,124.59665],[12.07095,124.59666]]},
     {"id":"CCIS-ALUMNI#1","from":"CCIS-ALUMNI:1","to":"CCIS-ALUMNI:2","walkway":"CCIS-ALUMNI","length":5.67,"geometry":[[12.07086,124.59671],[12.07091,124.5967]]},
     {"id":"CCIS-ALUMNI#2","from":"CCIS-ALUMNI:2","to":"CCIS-ALUMNI:IMCO","walkway":"CCIS-ALUMNI","length":12.23,"geometry":[[12.07091,124.5967],[12.0709285,124.5965891]]},
-    {"id":"CCIS-ALUMNI#2b","from":"CCIS-ALUMNI:IMCO","to":"CCIS-ALUMNI:19","walkway":"CCIS-ALUMNI","length":201.2,"geometry":[[12.0709285,124.5965891],[12.07064,124.59634],[12.07067,124.5964],[12.07008,124.59616],[12.07011,124.59601],[12.07027,124.59592],[12.07021,124.59576],[12.07034,124.59573],[12.07034,124.59563]]},
+    {"id":"CCIS-ALUMNI#2baa","from":"CCIS-ALUMNI:IMCO","to":"pathway-ccis-alumni-17","walkway":"CCIS-ALUMNI","length":119.92,"geometry":[[12.0709285,124.5965891],[12.07064,124.59634],[12.07067,124.5964],[12.07008,124.59616]]},
+    {"id":"CCIS-ALUMNI#2bb","from":"pathway-ccis-alumni-17","to":"CCIS-ALUMNI:19","walkway":"CCIS-ALUMNI","length":81.28,"geometry":[[12.07008,124.59616],[12.07011,124.59601],[12.07027,124.59592],[12.07021,124.59576],[12.07034,124.59573],[12.07034,124.59563]]},
     {"id":"CCIS-ALUMNI#3","from":"CCIS-ALUMNI:19","to":"CCIS-ALUMNI:21","walkway":"CCIS-ALUMNI","length":17.23,"geometry":[[12.07034,124.59563],[12.07039,124.59548]]},
-    {"id":"GATE-COED#1","from":"GATE-COED:1","to":"GATE-COED:23","walkway":"GATE-COED","length":232.07,"geometry":[[12.07098,124.59678],[12.07072,124.59676],[12.0706,124.5966],[12.06992,124.59633],[12.070111,124.595592],[12.070254,124.595648]]},
+    {"id":"GATE-COED#1aa","from":"GATE-COED:1","to":"pathway-gate-coed-15","walkway":"GATE-COED","length":149.7,"geometry":[[12.07098,124.59678],[12.07072,124.59676],[12.0706,124.5966],[12.06992,124.59633],[12.0699607,124.5961729]]},
+    {"id":"GATE-COED#1b","from":"pathway-gate-coed-15","to":"GATE-COED:23","walkway":"GATE-COED","length":82.36,"geometry":[[12.0699607,124.5961729],[12.0699993,124.5960236],[12.070111,124.595592],[12.070254,124.595648]]},
     {"id":"CONNECTOR#1","from":"LIB-REG:11","to":"CCIS-ALUMNI:1","walkway":"CONNECTOR","connector":true,"note":"LIB-REG end joins CCIS-ALUMNI start","length":11.39,"geometry":[[12.07095,124.59666],[12.07086,124.59671]]},
     {"id":"CONNECTOR#2","from":"CCIS-ALUMNI:2","to":"GATE-CEA:1","walkway":"CONNECTOR","connector":true,"note":"CCIS-ALUMNI point 2 joins the main gate","length":10.04,"geometry":[[12.07091,124.5967],[12.07089,124.59679]]},
     {"id":"CONNECTOR#3","from":"GATE-COED:1","to":"GATE-CEA:2","walkway":"CONNECTOR","connector":true,"note":"photo gate-coed-01 links to gate-cea-02","length":13.86,"geometry":[[12.07098,124.59678],[12.07109,124.59684]]},
     {"id":"CONNECTOR#4","from":"GATE-COED:23","to":"CCIS-ALUMNI:19","walkway":"CONNECTOR","connector":true,"note":"GATE-COED end goes straight north to CCIS-ALUMNI","length":9.76,"geometry":[[12.070254,124.595648],[12.07034,124.59563]]},
-    {"id":"CONNECTOR#5","from":"LIB-REG:11","to":"CCIS-ALUMNI:IMCO","walkway":"CONNECTOR","connector":true,"note":"Registrar waiting area straight down the corridor to the IMCO office","length":8.07,"geometry":[[12.07095,124.59666],[12.0709285,124.5965891]]}
+    {"id":"CONNECTOR#5","from":"LIB-REG:11","to":"CCIS-ALUMNI:IMCO","walkway":"CONNECTOR","connector":true,"note":"Registrar waiting area straight down the corridor to the IMCO office","length":8.07,"geometry":[[12.07095,124.59666],[12.0709285,124.5965891]]},
+    {"id":"CONNECTOR#7","from":"pathway-ccis-alumni-17","to":"pathway-gate-coed-15","walkway":"CONNECTOR","connector":true,"note":"Shortcut: photos ccis-alumni-17 and gate-coed-15 are the same spot (1 m apart)","length":13.34,"geometry":[[12.07008,124.59616],[12.0699607,124.5961729]]}
   ]
 }
