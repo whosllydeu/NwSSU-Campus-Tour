@@ -9,29 +9,13 @@ import { useUI } from '../context/ToastContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import nwssuLogo from '../../assets/images/nwssu-logo.jpg';
 import '../styles/report-print.css';
+import { TYPE_LABEL, exportReportExcel, exportBuildingsCsv } from '../utils/reportExport.js';
 
 const PIE_COLORS = ['#2f6b45', '#64748b', '#3b6fb6', '#d0a12c', '#2a8a7a', '#b45309', '#7c5cbf', '#9ca3af'];
 const AXIS = '#6b7280';
 const GRID = '#e5e7eb';
 const TOOLTIP = { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 8, color: '#111827' };
 
-function toCsv(rows, headers) {
-  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const lines = [headers.map(escape).join(',')];
-  rows.forEach((r) => lines.push(headers.map((h) => escape(Array.isArray(r[h]) ? r[h].join('; ') : r[h])).join(',')));
-  return lines.join('\n');
-}
-
-function downloadCsv(filename, csv) {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-const TYPE_LABEL = { academic: 'Academic', admin: 'Administrative', facility: 'Facility' };
 const list = (v) => (Array.isArray(v) ? v.filter((x) => String(x ?? '').trim()) : []);
 const hasCoords = (b) => b.lat !== null && b.lng !== null && Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lng));
 const fmtDate = (iso, withTime = true) =>
@@ -71,6 +55,7 @@ export default function Reports() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [activityRange, setActivityRange] = useState(30);
   const [printing, setPrinting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Ctrl+P / browser menu printing also gets the paper-sized charts
   useEffect(() => {
@@ -117,14 +102,34 @@ export default function Reports() {
 
   if (isLoading) return <div className="ad-loading">Crunching numbers…</div>;
 
-  function exportBuildingsCsv() {
-    const headers = ['name', 'abbr', 'type', 'location', 'programs', 'offices'];
-    downloadCsv('buildings-report.csv', toCsv(buildings, headers));
-    showToast('Buildings report exported');
-  }
 
   const buildingName = (id) => buildings.find((b) => b.dept === id)?.name || '—';
   const preparedBy = profile?.full_name || profile?.name || profile?.email || session?.user?.email || 'Administrator';
+
+  async function exportExcel() {
+    setExporting(true);
+    try {
+      await exportReportExcel({
+        buildings: filteredBuildings,
+        allBuildings: buildings,
+        departments,
+        activity: recentActivity,
+        stats,
+        filters: { typeLabel: typeFilter === 'all' ? 'All types' : TYPE_LABEL[typeFilter], days: activityRange },
+        preparedBy,
+      });
+      showToast('Excel report downloaded');
+    } catch (err) {
+      showToast(`Could not export: ${err.message}`);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function exportCsv() {
+    exportBuildingsCsv(filteredBuildings, departments);
+    showToast('Buildings CSV downloaded');
+  }
 
   return (
     <>
@@ -152,7 +157,8 @@ export default function Reports() {
           </label>
           <div className="ad-filters-actions">
             <button className="btn-ghost btn-sm" onClick={printReport}>🖨️ Print Report</button>
-            <button className="btn-gold btn-sm" onClick={exportBuildingsCsv}>⬇ Export CSV</button>
+            <button className="btn-gold btn-sm" onClick={exportExcel} disabled={exporting}>{exporting ? 'Preparing…' : '⬇ Export Excel'}</button>
+            <button className="btn-ghost btn-sm" onClick={exportCsv}>⬇ CSV</button>
           </div>
         </div>
       </div>
