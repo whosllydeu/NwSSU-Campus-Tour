@@ -93,3 +93,35 @@
 @media (max-width: 760px) {
   .bte-controls { max-height: none; overflow: visible; border: none; padding: 0; }
 }
+
+/* Search above the "New arrow goes to…" list */
+.ta-target-search { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.ta-target-search input {
+  flex: 1; min-width: 0; height: 36px; padding: 0 14px;
+  border: 1px solid var(--border, #e5e9e4); border-radius: 999px;
+  background: var(--accent-soft, #f2f7f1); color: var(--text, #111827); font: inherit; font-size: 13.5px;
+}
+.ta-target-search input:focus { outline: none; border-color: var(--accent, #2a6624); background: #fff; }
+
+/* Place labels */
+.ta-label-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 110px auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border, #e5e9e4);
+}
+.ta-label-row input[type="text"], .ad-aim-add input[type="text"] {
+  min-width: 0; height: 34px; padding: 0 10px;
+  border: 1px solid var(--border, #e5e9e4); border-radius: 8px; font: inherit; font-size: 13.5px;
+  background: #fff; color: var(--text, #111827);
+}
+.ad-aim-add input[type="text"] { flex: 1; }
+.ta-label-row .ta-label-text { grid-column: 2 / -1; font-size: 12.5px; }
+.ta-dot-label { background: #2f6fb3; font-style: italic; font-family: Georgia, serif; }
+@media (max-width: 760px) {
+  .ta-label-row { grid-template-columns: 26px minmax(0, 1fr); }
+  .ta-label-row > * { grid-column: 2; }
+  .ta-label-row .ta-dot { grid-column: 1; grid-row: 1; }
+}

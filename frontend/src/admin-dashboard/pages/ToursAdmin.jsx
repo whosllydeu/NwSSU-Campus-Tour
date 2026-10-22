@@ -9,6 +9,7 @@ import {
   listTourOverrides,
   saveTourOverride,
   deleteTourOverride,
+  labelsSupported,
 } from '../../user-dashboard/services/tourOverrides.service';
 import '../styles/admin-images.css';
 import '../styles/tours-admin.css';
@@ -40,8 +41,14 @@ function sameArrows(a, b) {
   if (!a || !b) return false;
   if (round1(a.yaw) !== round1(b.yaw)) return false;
   if (a.links.length !== b.links.length) return false;
-  return a.links.every((l, i) => l.to === b.links[i].to && round1(l.yaw) === round1(b.links[i].yaw));
+  if (!a.links.every((l, i) => l.to === b.links[i].to && round1(l.yaw) === round1(b.links[i].yaw))) return false;
+  const la = a.labels || [];
+  const lb = b.labels || [];
+  if (la.length !== lb.length) return false;
+  return la.every((l, i) => l.name === lb[i].name && (l.text || '') === (lb[i].text || '') && round1(l.yaw) === round1(lb[i].yaw));
 }
+
+const matches = (q, ...parts) => parts.some((p) => String(p || '').toLowerCase().includes(q));
 
 export default function ToursAdmin() {
   const { showToast } = useUI();
@@ -55,14 +62,20 @@ export default function ToursAdmin() {
   const [drafts, setDrafts] = useState({});
   const [facing, setFacing] = useState(0);
   const [newTarget, setNewTarget] = useState('');
+  const [targetQuery, setTargetQuery] = useState('');
+  const [newLabel, setNewLabel] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
   const saved = useCallback((id) => {
     const ov = overrides[id];
     const orig = baseArrows(id);
-    if (!ov) return orig;
-    return { yaw: isNum(ov.yaw) ? ov.yaw : orig.yaw, links: ov.links.map((l) => ({ ...l })) };
+    if (!ov) return { ...orig, labels: [] };
+    return {
+      yaw: isNum(ov.yaw) ? ov.yaw : orig.yaw,
+      links: ov.links.map((l) => ({ ...l })),
+      labels: (ov.labels || []).map((l) => ({ ...l })),
+    };
   }, [overrides]);
 
   useEffect(() => {
@@ -82,7 +95,11 @@ export default function ToursAdmin() {
   }, [showToast]);
 
   const current = saved(nodeId);
-  const fromSaved = { yaw: round1(current.yaw), links: current.links.map((l) => ({ to: l.to, yaw: round1(l.yaw) })) };
+  const fromSaved = {
+    yaw: round1(current.yaw),
+    links: current.links.map((l) => ({ to: l.to, yaw: round1(l.yaw) })),
+    labels: (current.labels || []).map((l) => ({ name: l.name, text: l.text || '', yaw: round1(l.yaw) })),
+  };
   const draft = !nodeId || loading ? null : drafts[nodeId] || fromSaved;
   const dirty = Boolean(drafts[nodeId]) && !sameArrows(drafts[nodeId], fromSaved);
 
@@ -120,7 +137,7 @@ export default function ToursAdmin() {
     setNodeId(TOURS[id]?.nodeIds.find(hasNode) || '');
   };
 
-  const pins = !draft || !node ? [] : draft.links.map((l, i) => {
+  const arrowPins = !draft || !node ? [] : draft.links.map((l, i) => {
       const cross = NODE_BY_ID[l.to]?.data?.tour !== node.data.tour;
       return {
         id: `a-${i}`,
@@ -129,6 +146,10 @@ export default function ToursAdmin() {
         kind: cross ? 'extra' : 'forward',
       };
     });
+  const labelPins = !draft ? [] : (draft.labels || [])
+    .filter((l) => isNum(l.yaw))
+    .map((l, i) => ({ id: `lb-${i}`, yaw: Number(l.yaw), label: `ℹ ${l.name || 'Label'}`, kind: 'view' }));
+  const pins = [...arrowPins, ...labelPins];
 
   const targetGroups = (() => {
     const groups = tours.map((t) => ({
@@ -136,6 +157,13 @@ export default function ToursAdmin() {
       title: `${isAdminTour(t) ? 'Added in admin · ' : ''}${tourLabel(t)}`,
       nodes: t.nodeIds.filter((id) => id !== nodeId && !draft?.links.some((l) => l.to === id)),
     }));
+    const q = targetQuery.trim().toLowerCase();
+    if (q) {
+      groups.forEach((g) => {
+        if (matches(q, g.title)) return;
+        g.nodes = g.nodes.filter((id) => matches(q, id, NODE_BY_ID[id]?.name));
+      });
+    }
     const own = groups.findIndex((g) => g.id === tourId);
     if (own > 0) groups.unshift(groups.splice(own, 1)[0]);
     return groups.filter((g) => g.nodes.length);
@@ -147,6 +175,16 @@ export default function ToursAdmin() {
     if (!newTarget) return;
     setDraft((d) => ({ ...d, links: [...d.links, { to: newTarget, yaw: facing }] }));
     setNewTarget('');
+    setTargetQuery('');
+  };
+
+  const setLabel = (i, patch) => setDraft((d) => ({ ...d, labels: (d.labels || []).map((l, j) => (j === i ? { ...l, ...patch } : l)) }));
+  const removeLabel = (i) => setDraft((d) => ({ ...d, labels: (d.labels || []).filter((_, j) => j !== i) }));
+  const addLabel = () => {
+    const name = newLabel.trim();
+    if (!name) return;
+    setDraft((d) => ({ ...d, labels: [...(d.labels || []), { name, text: '', yaw: facing }] }));
+    setNewLabel('');
   };
 
   const save = async () => {
@@ -155,15 +193,20 @@ export default function ToursAdmin() {
       showToast('Every arrow needs a direction number.');
       return;
     }
+    if ((draft.labels || []).some((l) => !String(l.name || '').trim() || !isNum(l.yaw))) {
+      showToast('Every label needs a name and a direction number.');
+      return;
+    }
     setSaving(true);
     try {
       const row = await saveTourOverride(nodeId, {
         yaw: norm(Number(draft.yaw) || 0),
         links: draft.links.map((l) => ({ to: l.to, yaw: norm(Number(l.yaw)) })),
+        labels: (draft.labels || []).map((l) => ({ name: l.name.trim(), text: (l.text || '').trim(), yaw: norm(Number(l.yaw)) })),
       });
       setOverrides((o) => ({ ...o, [nodeId]: row }));
       dropDraft(nodeId);
-      showToast('Arrows saved. Reload the campus tour to see them.');
+      showToast('Saved. Reload the campus tour to see the changes.');
     } catch (err) {
       showToast(err.message || 'Could not save the arrows.');
     } finally {
@@ -314,9 +357,24 @@ export default function ToursAdmin() {
                   );
                 })}
 
+                <div className="ta-target-search">
+                  <input
+                    type="search"
+                    name="arrow-target-search"
+                    value={targetQuery}
+                    placeholder="Search a building, pathway, or photo…"
+                    aria-label="Search where the new arrow goes"
+                    onChange={(e) => { setTargetQuery(e.target.value); setNewTarget(''); }}
+                  />
+                  {targetQuery && (
+                    <span className="ta-small ad-muted">
+                      {targetGroups.reduce((n, g) => n + g.nodes.length, 0)} match{targetGroups.reduce((n, g) => n + g.nodes.length, 0) === 1 ? '' : 'es'}
+                    </span>
+                  )}
+                </div>
                 <div className="ad-aim-add">
                   <select value={newTarget} onChange={(e) => setNewTarget(e.target.value)} aria-label="New arrow goes to">
-                    <option value="">New arrow goes to…</option>
+                    <option value="">{targetQuery ? 'Choose from the matches…' : 'New arrow goes to…'}</option>
                     {targetGroups.map((g) => (
                       <optgroup key={g.id} label={g.title}>
                         {g.nodes.map((id) => <option key={id} value={id}>{nodeName(id)}</option>)}
@@ -333,9 +391,71 @@ export default function ToursAdmin() {
                 </p>
               </div>
 
+              <div className="ta-section">
+                <h3>Labels on this photo ({(draft.labels || []).length})</h3>
+                {!labelsSupported() && (
+                  <p className="ad-error">Labels are not set up yet — run <code>tour_overrides_labels.sql</code> once in Supabase, then reload.</p>
+                )}
+                {(draft.labels || []).length === 0 && (
+                  <p className="ad-muted">No labels. Add one for an office or facility this photo passes by — e.g. “Registrar’s Office”.</p>
+                )}
+                {(draft.labels || []).map((l, i) => (
+                  <div className="ta-label-row" key={i}>
+                    <span className="ta-dot ta-dot-label">i</span>
+                    <input
+                      type="text"
+                      className="ta-label-name"
+                      value={l.name}
+                      placeholder="Label (e.g. Registrar's Office)"
+                      aria-label="Label name"
+                      onChange={(e) => setLabel(i, { name: e.target.value })}
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      value={l.yaw}
+                      aria-label="Label direction in degrees"
+                      onChange={(e) => setLabel(i, { yaw: e.target.value })}
+                    />
+                    <button type="button" className="btn-ghost btn-sm" onClick={() => setLabel(i, { yaw: facing })}>
+                      Aim here ({facing}°)
+                    </button>
+                    <button type="button" className="btn-ghost btn-sm ad-gallery-remove" onClick={() => removeLabel(i)}>
+                      Remove
+                    </button>
+                    <input
+                      type="text"
+                      className="ta-label-text"
+                      value={l.text || ''}
+                      placeholder="Short description shown when tapped (optional)"
+                      aria-label="Label description"
+                      onChange={(e) => setLabel(i, { text: e.target.value })}
+                    />
+                  </div>
+                ))}
+                <div className="ad-aim-add">
+                  <input
+                    type="text"
+                    name="new-label"
+                    value={newLabel}
+                    placeholder="New label, e.g. Cashier's Office"
+                    aria-label="New label name"
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLabel(); } }}
+                  />
+                  <button type="button" className="btn-ghost btn-sm" disabled={!newLabel.trim() || !labelsSupported()} onClick={addLabel}>
+                    + Add label here ({facing}°)
+                  </button>
+                </div>
+                <p className="ad-field-help">
+                  Drag the photo so the centre line points at the office or facility, then add the label. Blue pins in the
+                  photo show where labels appear. Visitors can tap a label to read its description.
+                </p>
+              </div>
+
               <div className="ta-actions">
                 <button type="button" className="btn-primary" disabled={!dirty || saving || tableMissing} onClick={save}>
-                  {saving ? 'Saving…' : 'Save arrows'}
+                  {saving ? 'Saving…' : 'Save changes'}
                 </button>
                 <button
                   type="button"
@@ -360,7 +480,7 @@ export default function ToursAdmin() {
       <ConfirmDialog
         open={confirmReset}
         title="Reset this photo?"
-        message="This removes your saved arrow edits for this photo and brings back the original arrows from the code."
+        message="This removes your saved arrows and labels for this photo and brings back the original arrows from the code."
         confirmLabel="Reset"
         onConfirm={resetToOriginal}
         onCancel={() => setConfirmReset(false)}
