@@ -54,3 +54,33 @@
 .map-action-card .map-btn-row:last-of-type {
   margin-bottom: 0;
 }
+
+/* Collapse handle so the map can be seen (mainly on phones) */
+.map-action-card .mac-toggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100% !important;
+  height: 28px !important;
+  margin: 0 0 6px !important;
+  padding: 0 8px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #4b5563 !important;
+  font-size: 0.78rem !important;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.map-action-card .mac-toggle:hover { color: #1e4d1a !important; }
+.map-action-card .mac-grip {
+  width: 34px; height: 4px; border-radius: 4px; background: #cbd5e1; margin-right: 4px;
+}
+.map-action-card.is-collapsed { overflow: hidden; }
+.map-action-card.is-collapsed .mac-toggle { margin: 0 !important; }
+.map-action-card .mac-body[hidden] { display: none !important; }
+.map-action-card .mac-body > button {
+  width: 100% !important;
+  margin: 0 0 5px !important;
+}

@@ -24,13 +24,27 @@ export const VIRTUAL_LOCATIONS = [
   },
 ];
 
+/**
+ * Where a walking route should END for a building (a walkway node in campusGraph.json).
+ * Without this, the route stops at the walkway point nearest the building's map pin,
+ * which can be the wrong side of the building.
+ * Keys are building ids or abbreviations.
+ */
+export const BUILDING_ENTRANCES = {
+  library: 'LIB-REG:LIBRARY',   // University Library door (end of the real walkway)
+  LIB: 'LIB-REG:LIBRARY',
+};
+
+const entranceFor = (b) =>
+  b.entranceNodeId ?? BUILDING_ENTRANCES[b.id] ?? BUILDING_ENTRANCES[String(b.abbr || '').toUpperCase()] ?? null;
+
 export const transformedObjectBuilding = (buildings) => {
   const campBuildings = buildings.map((b) => ({
     id: b.id,
     abbr: b.abbr,
     name: b.name,
     position: [b.lat, b.lng],
-    entranceNodeId: b.entranceNodeId ?? null,
+    entranceNodeId: entranceFor(b),
   }));
   return campBuildings;
 }

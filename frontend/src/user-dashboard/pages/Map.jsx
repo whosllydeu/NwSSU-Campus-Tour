@@ -28,7 +28,7 @@ import {
   VIRTUAL_LOCATIONS,
 } from "../utils/map-leaflet";
 import { campusRouter, formatDistance } from "../../utils/campusRouting";
-import { Globe, LocateFixed, Navigation, Network, Road, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, Globe, LocateFixed, Navigation, Network, Road, RotateCcw } from "lucide-react";
 import { LiveFollower, routeProgress } from "../utils/liveTracking";
 import { Navbar } from "../components";
 import { useCampusData } from "../context/DataContext";
@@ -105,6 +105,7 @@ export default function Map() {
   });
   const [route, setRoute] = useState(EMPTY_ROUTE);
   const [tracking, setTracking] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [accuracy, setAccuracy] = useState(null);
   const lastReroute = useRef(0);
   const arrivedRef = useRef(false);
@@ -659,7 +660,26 @@ export default function Map() {
             </MapContainer>
           </div>
 
-          <figure className="map-action-card">
+          <figure className={`map-action-card${panelOpen ? '' : ' is-collapsed'}`}>
+            <button
+              type="button"
+              className="mac-toggle"
+              onClick={() => setPanelOpen((o) => !o)}
+              aria-expanded={panelOpen}
+              aria-label={panelOpen ? "Hide map controls" : "Show map controls"}
+            >
+              <span className="mac-grip" aria-hidden="true" />
+              {panelOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+              <span>
+                {panelOpen
+                  ? "Hide controls"
+                  : route.coordinates
+                    ? `Show controls · ${Math.round(progress ? progress.remaining : route.distance)} m`
+                    : "Show controls"}
+              </span>
+            </button>
+
+            <div className="mac-body" hidden={!panelOpen}>
             {alertMsg.message && (
               <div
                 className={`map-alert ${
@@ -752,7 +772,7 @@ export default function Map() {
                 )}
               </div>
             )}
-
+            </div>
           </figure>
         </section>
       </main>
