@@ -1,0 +1,43 @@
+/* Reports page: the full printable report (shown only when printing / Save as PDF) */
+.rp-print-only { display: none; }
+
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+
+  .rp-print-only { display: block; }
+  .rp-screen-only,
+  .ad-page-head,
+  .ad-sidebar-backdrop,
+  aside.ad-sidebar,
+  header.ad-topbar,
+  .announcement-bar { display: none !important; }
+
+  body.admin-modern, body.admin-modern .ad-shell, .ad-main, .ad-content {
+    background: #fff !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .rp-doc { color: #111; font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5pt; margin-bottom: 14px; }
+  .rp-head { display: flex; align-items: center; gap: 14px; padding-bottom: 10px; border-bottom: 3px solid #1e4d1a; }
+  .rp-head img { width: 62px; height: 62px; border-radius: 50%; object-fit: contain; }
+  .rp-uni { font-size: 13pt; font-weight: 700; color: #1e4d1a; }
+  .rp-sub { font-size: 9.5pt; color: #555; }
+  .rp-head h1 { margin: 4px 0 0; font-size: 17pt; color: #111; }
+  .rp-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; margin: 10px 0 6px; font-size: 9.5pt; }
+
+  .rp-doc h2 { font-size: 12.5pt; color: #1e4d1a; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 1px solid #c9d6c6; break-after: avoid; }
+  .rp-doc h3 { font-size: 11pt; margin: 10px 0 4px; break-after: avoid; }
+
+  .rp-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  .rp-table th, .rp-table td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; vertical-align: top; }
+  .rp-table thead th { background: #1e4d1a; color: #fff; }
+  .rp-table thead { display: table-header-group; } /* repeat header on each page */
+  .rp-table tr { break-inside: avoid; }
+  .rp-table tbody tr:nth-child(even) td { background: #f4f7f3; }
+  .rp-kv th { width: 26%; background: #eef3ec; color: #1e4d1a; }
+  .rp-dept { break-inside: avoid; }
+
+  .rp-charts-head { break-before: page; }
+  .ad-two-col { display: block !important; }
+  .ad-panel { break-inside: avoid; box-shadow: none !important; margin-bottom: 12px; }
+}
