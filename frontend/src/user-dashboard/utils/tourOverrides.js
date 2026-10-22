@@ -11,6 +11,7 @@ for (const node of TOUR_GRAPH.nodes) {
     yaw: node.data.yaw,
     links: node.links.map((l) => ({ ...l, position: { ...l.position }, data: { ...l.data } })),
     markers: (node.markers || []).map((m) => ({ ...m })),
+    office: node.data.office || null,
   };
 }
 
@@ -21,7 +22,16 @@ const snapshot = (node) => ({
   yaw: node.data.yaw,
   links: node.links.map((l) => ({ ...l, position: { ...l.position }, data: { ...l.data } })),
   markers: (node.markers || []).map((m) => ({ ...m })),
+  office: node.data.office || null,
 });
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Label pill; when opened, its description drops down right below it.
+const labelPinHtml = (name, text, open = false) =>
+  `<div class="tour-label${open ? ' is-open' : ''}">` +
+  `<span class="tour-label-pin"><span class="tour-label-i">i</span>${escapeHtml(name)}</span>` +
+  (open && text ? `<span class="tour-label-desc">${escapeHtml(text)}</span>` : '') +
+  '</div>';
 
 export function baseArrows(nodeId) {
   const node = byId[nodeId];
@@ -53,6 +63,7 @@ function restore(nodeId) {
   node.data.yaw = o.yaw;
   node.links = o.links.map((l) => ({ ...l, position: { ...l.position }, data: { ...l.data } }));
   node.markers = o.markers.map((m) => ({ ...m }));
+  node.data.office = o.office;
 }
 
 function applyOne(override) {
@@ -102,6 +113,24 @@ function applyOne(override) {
       data: { goto: l.nodeId },
     });
   }
+
+  // Place labels (offices / facilities the photo passes by)
+  const labels = override.labels || [];
+  labels.forEach((lb, i) => {
+    node.markers.push({
+      id: `label:${node.id}:${i}`,
+      position: { yaw: `${normDeg(Number(lb.yaw))}deg`, pitch: '9deg' },
+      html: labelPinHtml(lb.name, lb.text),
+      anchor: 'top center',
+      data: {
+        label: true,
+        htmlClosed: labelPinHtml(lb.name, lb.text),
+        htmlOpen: labelPinHtml(lb.name, lb.text, true),
+        hasText: Boolean(lb.text),
+      },
+    });
+  });
+  node.data.office = o.office || (labels[0] ? { name: labels[0].name, text: labels[0].text || '' } : null);
   return true;
 }
 

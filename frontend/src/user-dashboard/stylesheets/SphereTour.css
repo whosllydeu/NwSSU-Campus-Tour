@@ -123,3 +123,57 @@
   .tour-guide { top: 118px; font-size: 13px; border-radius: 16px; }
   .tour-enter-pin { font-size: 12px; }
 }
+/* Place labels added in Admin → 360° Tours (offices / facilities along a pathway) */
+.tour-label-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  background: rgba(26, 115, 232, 0.92);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.tour-label-i {
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #1a73e8;
+  font-size: 12px;
+  font-weight: 800;
+  font-style: italic;
+  font-family: Georgia, serif;
+}
+.tour-label { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tour-label-desc {
+  position: relative;
+  max-width: 260px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #1f2937;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: tour-label-in 0.18s ease;
+}
+.tour-label-desc::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top: 0;
+  border-bottom-color: rgba(255, 255, 255, 0.97);
+}
+.tour-label.is-open .tour-label-pin { background: #1558b0; }
+@keyframes tour-label-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }

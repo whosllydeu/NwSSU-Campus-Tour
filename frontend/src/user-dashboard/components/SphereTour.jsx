@@ -27,14 +27,14 @@ const cloneNodes = () => TOUR_NODES.map((n) => ({
   data: { ...n.data },
 }));
 
-export default function SphereTour({ startNodeId, destinationNode = null, apiRef, onNodeChange, onYaw, onPick }) {
+export default function SphereTour({ startNodeId, destinationNode = null, apiRef, onNodeChange, onYaw, onPick, onInfo }) {
   const mountRef = useRef(null);
   const viewerRef = useRef(null);
   const destRef = useRef(destinationNode);
   const hopCache = useRef({});
-  const cbRef = useRef({ onNodeChange, onYaw, onPick });
+  const cbRef = useRef({ onNodeChange, onYaw, onPick, onInfo });
 
-  useEffect(() => { cbRef.current = { onNodeChange, onYaw, onPick }; });
+  useEffect(() => { cbRef.current = { onNodeChange, onYaw, onPick, onInfo }; });
 
   const nextHop = (fromId) => {
     const dest = destRef.current;
@@ -123,12 +123,27 @@ export default function SphereTour({ startNodeId, destinationNode = null, apiRef
       return tour.setCurrentNode(nodeId, null, link);
     };
 
+    let openLabel = null;
     tour.addEventListener('node-changed', ({ node }) => {
+      openLabel = null;
       hopCache.current = {};
       cbRef.current.onNodeChange?.(node);
     });
 
     markers.addEventListener('select-marker', ({ marker }) => {
+      if (marker.data?.label) {
+        // Tap a label: its description opens right below it; tap again (or another label) to close.
+        if (!marker.data.hasText) return;
+        if (openLabel && openLabel !== marker.id) {
+          const prev = markers.getMarker(openLabel);
+          if (prev) markers.updateMarker({ id: openLabel, html: prev.data.htmlClosed });
+        }
+        const opening = openLabel !== marker.id;
+        markers.updateMarker({ id: marker.id, html: opening ? marker.data.htmlOpen : marker.data.htmlClosed });
+        openLabel = opening ? marker.id : null;
+        return;
+      }
+      if (marker.data?.info) { cbRef.current.onInfo?.(marker.data.info); return; }
       const goto = marker.data?.goto;
       if (goto) goVia(goto);
     });

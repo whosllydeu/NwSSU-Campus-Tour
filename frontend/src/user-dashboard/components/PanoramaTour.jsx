@@ -86,6 +86,7 @@ function TourScreen({ tour, closeTour }) {
           onNodeChange={handleNodeChange}
           onYaw={compass ? setYaw : undefined}
           onPick={compass ? handlePick : undefined}
+          onInfo={setCard}
         />
       </div>
 
