@@ -3,6 +3,7 @@ import { useUI } from '../context/UIContext';
 import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
 const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 const LINKS = [
+  { to: '/', label: '🏠 Home' },
   { to: '/map', label: '🗺️ Campus Map' },
   { to: '/buildings', label: '🏛️ Buildings' },
   { to: '/departments', label: '🎓 Departments' },

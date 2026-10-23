@@ -20,7 +20,7 @@ export default function Departments() {
       <section className="page active" id="page-departments">
         <div className="inner-page">
           <div className="page-header">
-            <h1>Academic Departments</h1>
+            <h1>Academic Colleges</h1>
             <p>Colleges, faculty members &amp; student organizations</p>
           </div>
 
@@ -28,7 +28,7 @@ export default function Departments() {
             <span className="page-search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Search departments…"
+              placeholder="Search Colleges…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />

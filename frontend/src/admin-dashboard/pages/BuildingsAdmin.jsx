@@ -47,7 +47,7 @@ const FIELDS = [
   },
   { key: 'desc', label: 'Description', type: 'textarea', wide: true },
   { key: 'offices', label: 'Offices Inside', type: 'list', wide: true },
-  { key: 'programs', label: 'Programs Offered', type: 'list', wide: true },
+  { key: 'programs', label: 'Programs Offered', type: 'list', wide: true, showWhen: (v) => v.type === 'academic' },
 ];
 
 function RowThumb({ row }) {

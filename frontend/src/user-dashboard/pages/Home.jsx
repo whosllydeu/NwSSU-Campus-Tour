@@ -1,12 +1,23 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { COLLEGES, QUICK } from "../static/campusData";
 import { useUI } from "../context/UIContext";
 import { Navbar } from "../components";
 import CampusMiniMap from "../components/CampusMiniMap";
+import { useCampusData } from "../context/DataContext";
 
 export default function Home() {
   const navigate = useNavigate();
   const { openBuilding, openDept } = useUI();
+  const { buildings, departments, isLoading } = useCampusData();
+
+  // Counts come from the database, so adding/deleting in the admin updates them
+  const overview = useMemo(() => ({
+    colleges: departments.length,
+    buildings: buildings.length,
+    facilities: buildings.filter((b) => b.type === "facility").length,
+  }), [buildings, departments]);
+  const show = (n) => (isLoading ? "–" : n);
 
   return (
     <>
@@ -34,11 +45,11 @@ export default function Home() {
                   <span className="hcard-live">● Live</span>
                 </div>
                 <div className="hcard-stats">
-                  <div className="hs-item"><b>7</b><span>Colleges</span></div>
+                  <div className="hs-item"><b>{show(overview.colleges)}</b><span>Colleges</span></div>
                   <div className="hs-div" />
-                  <div className="hs-item"><b>20+</b><span>Buildings</span></div>
+                  <div className="hs-item"><b>{show(overview.buildings)}</b><span>Buildings</span></div>
                   <div className="hs-div" />
-                  <div className="hs-item"><b>50+</b><span>Offices</span></div>
+                  <div className="hs-item"><b>{show(overview.facilities)}</b><span>Facilities</span></div>
                 </div>
                 <CampusMiniMap onOpen={() => navigate('/map')} />
               </div>

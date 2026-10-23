@@ -60,7 +60,7 @@ export default function DepartmentsAdmin() {
         columns={COLUMNS}
         rows={departments}
         onEdit={openEdit}
-        searchPlaceholder="Search departments…"
+        searchPlaceholder="Search Colleges…"
         emptyLabel="No departments yet. Add an academic building to create one."
       />
       <p className="ad-muted" style={{ marginTop: 10, fontSize: 12.5 }}>

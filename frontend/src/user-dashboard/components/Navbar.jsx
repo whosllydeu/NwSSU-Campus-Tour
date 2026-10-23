@@ -3,9 +3,10 @@ import { useUI } from '../context/UIContext';
 import nwssuLogo from "../../assets/images/nwssu-logo.jpg";
 const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", borderRadius: "50%", display: "block" };
 const LINKS = [
+  { to: '/', label: 'Home', end: true },
   { to: '/map', label: 'Map' },
   { to: '/buildings', label: 'Buildings' },
-  { to: '/departments', label: 'Departments' },
+  { to: '/departments', label: 'Colleges' },
   { to: '/about', label: 'About Us' },
 ];
 
@@ -49,7 +50,7 @@ export default function Navbar() {
             type="text"
             id="globalSearch"
             className="ns-input"
-            placeholder="Search campus…"
+            placeholder="Search..."
             autoComplete="off"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

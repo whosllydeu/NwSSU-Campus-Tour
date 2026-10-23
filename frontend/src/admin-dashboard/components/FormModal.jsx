@@ -70,6 +70,9 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
   });
 
   const [errors, setErrors] = useState({});
+
+  // A field with showWhen(values) is only shown (and validated/saved) while it returns true
+  const isShown = (field) => typeof field.showWhen !== 'function' || field.showWhen(values);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -203,6 +206,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
 
     fields.forEach((field) => {
       if (field.type === 'map') return;
+      if (!isShown(field)) return;
 
       if (field.type === 'image') {
         const v = values[field.key];
@@ -305,6 +309,11 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
 
       for (const field of fields) {
         if (field.type === 'map') continue;
+        if (!isShown(field)) {
+          // hidden fields are saved empty (e.g. no programs for admin/facility buildings)
+          out[field.key] = field.type === 'list' ? [] : '';
+          continue;
+        }
 
         if (field.type === 'image') {
           const v = values[field.key];
@@ -406,6 +415,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
 
         <div className="ad-form-grid">
           {fields.map((field) => {
+            if (!isShown(field)) return null;
             if (field.type === 'map') {
               return (
                 <div key={field.key} className={`ad-field wide${errors[field.key] ? ' has-error' : ''}`}>
