@@ -50,7 +50,7 @@ export default function Topbar({ onMenuClick }) {
           type="search"
           id="adminSearch"
           name="adminSearch"
-          placeholder="Search buildings or departments…"
+          placeholder="Search buildings or colleges…"
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
