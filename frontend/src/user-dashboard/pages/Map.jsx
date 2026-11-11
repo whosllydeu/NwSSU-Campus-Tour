@@ -16,6 +16,7 @@ import "leaflet/dist/leaflet.css";
 import {
   allLocationIcon,
   findBuildingAtLocation,
+  getDistanceInMeters,
   getWalkingRoute,
   RouteFitter,
   selectedLocationIcon,
@@ -36,6 +37,7 @@ import { planWalk, setWalkCorridor, WALK_ROUTES } from "../static/nwssuTour";
 import { useUI } from "../context/UIContext";
 import BuildingInfoModal from "../components/BuildingInfoModal";
 import { findBuildingTourId } from "../utils/panorama";
+import { buildingSubtitle } from "../utils/helpers";
 
 const TEST_LOCATION = (() => {
   const raw = import.meta.env.VITE_TEST_LOCATION;
@@ -143,6 +145,15 @@ export default function Map() {
     setAlertMsg({ success: false, message: "" });
   };
 
+  // Dashed link from where the walkway route ends to the destination building's pin.
+  const destinationLink = useMemo(() => {
+    const coords = route.coordinates;
+    if (!coords?.length || !selectedBuilding?.position) return null;
+    const end = coords[coords.length - 1];
+    if (getDistanceInMeters(end, selectedBuilding.position) < 3) return null;
+    return [end, selectedBuilding.position];
+  }, [route.coordinates, selectedBuilding]);
+
   const hasTripState = Boolean(route.coordinates || selectedBuilding || userLocation);
 
   const handleBuildingClick = (building) => {
@@ -151,7 +162,7 @@ export default function Map() {
       setUserLocation(building.position);
       setOriginBuildingId(building.id);
       setLocationSource('origin');
-      setAlertMsg({ success: true, message: `📍 Origin set to ${building.name}.` });
+      setAlertMsg({ success: true, message: `📍 Starting point set to ${building.name}.` });
     } else {
       setSelectedBuilding(building);
     }
@@ -434,14 +445,14 @@ export default function Map() {
                   className={pickMode === "destination" ? "destination-route-btn" : "get-location-btn"}
                   onClick={() => setPickMode("destination")}
                 >
-                  🎯 Pick Destination
+                  🎯 Set destination
                 </button>
                 <button
                   type="button"
                   className={pickMode === "origin" ? "destination-route-btn" : "get-location-btn"}
                   onClick={() => setPickMode("origin")}
                 >
-                  📍 Pick Origin
+                  📍 Set starting point
                 </button>
               </div>
 
@@ -514,7 +525,7 @@ export default function Map() {
 
                       <span className="building-info">
                         <strong>{building.name}</strong>
-                        <small>{String(building.position)}</small>
+                        <small>{buildingSubtitle(building) || "Campus location"}</small>
                       </span>
                     </button>
                   ))
@@ -653,6 +664,20 @@ export default function Map() {
                       opacity: 0.85,
                     }}
                   />
+
+                  {destinationLink && (
+                    <Polyline
+                      positions={destinationLink}
+                      interactive={false}
+                      pathOptions={{
+                        color: "#ffffff",
+                        weight: 4,
+                        opacity: 0.95,
+                        dashArray: "2 8",
+                        lineCap: "round",
+                      }}
+                    />
+                  )}
 
                   {!tracking && <RouteFitter route={route.coordinates}/>}
                 </>

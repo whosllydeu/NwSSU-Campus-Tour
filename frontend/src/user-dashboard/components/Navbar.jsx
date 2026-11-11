@@ -5,8 +5,7 @@ const LOGO_STYLE = { width: "100%", height: "100%", objectFit: "contain", border
 const LINKS = [
   { to: '/', label: 'Home', end: true },
   { to: '/map', label: 'Map' },
-  { to: '/buildings', label: 'Buildings' },
-  { to: '/departments', label: 'Colleges' },
+  { to: '/campus', label: 'Campus' },
   { to: '/about', label: 'About Us' },
 ];
 

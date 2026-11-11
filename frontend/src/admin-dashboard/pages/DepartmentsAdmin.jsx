@@ -54,7 +54,7 @@ export default function DepartmentsAdmin() {
   return (
     <div className="ad-panel">
       <div className="ad-panel-header">
-        <h2>All Departments</h2>
+        <h2>All Colleges</h2>
       </div>
       <DataTable
         columns={COLUMNS}
@@ -69,7 +69,7 @@ export default function DepartmentsAdmin() {
       <FormModal
         key={formSession}
         open={formOpen}
-        title={editing ? 'Edit Department' : 'Add Department'}
+        title={editing ? 'Edit College' : 'Add Colleges'}
         fields={FIELDS}
         initialValues={editing || {}}
         onSubmit={handleSubmit}

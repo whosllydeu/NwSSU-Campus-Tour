@@ -3,8 +3,7 @@ import { UIProvider } from "./user-dashboard/context/UIContext";
 
 import Home from "./user-dashboard/pages/Home";
 import Map from "./user-dashboard/pages/Map";
-import Buildings from "./user-dashboard/pages/Buildings";
-import Departments from "./user-dashboard/pages/Departments";
+import Campus from "./user-dashboard/pages/Campus";
 import About from "./user-dashboard/pages/About";
 
 import Login from "./admin-dashboard/pages/Login";
@@ -49,8 +48,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home/>}/>
           <Route path="/map" element={<Map/>}/>
-          <Route path="/buildings" element={<Buildings/>}/>
-          <Route path="/departments" element={<Departments/>}/>
+          <Route path="/campus" element={<Campus/>}/>
+          <Route path="/buildings" element={<Navigate to="/campus" replace />}/>
+          <Route path="/departments" element={<Navigate to="/campus" replace />}/>
           <Route path="/about" element={<About/>}/>
 
           <Route path="/admin/login" element={<Login/>}/>

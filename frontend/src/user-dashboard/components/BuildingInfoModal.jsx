@@ -9,6 +9,7 @@ import { useUI } from "../context/UIContext";
 import { useTour } from "../context/TourContext";
 import { useCampusData } from "../context/DataContext";
 import { resolveImage } from "../utils/assets";
+import { DESC_FALLBACK } from "../utils/helpers";
 import BuildingPanoramaViewer from "./BuildingPanoramaViewer";
 import { getBuildingPanoramas, findBuildingTourId } from "../utils/panorama";
 
@@ -99,12 +100,10 @@ const BuildingInfoModal = ({ building, onClose, navigateLoading }) => {
               />
             </div>
           )}
-          {building.desc && (
-            <div className="building-modal-section">
-              <h3>About</h3>
-              <p>{building.desc}</p>
-            </div>
-          )}
+          <div className="building-modal-section">
+            <h3>About</h3>
+            <p className={building.desc ? undefined : 'desc-empty'}>{building.desc || DESC_FALLBACK}</p>
+          </div>
           <div className="building-modal-info-grid">
             {building.location && (
               <div className="building-info-card">

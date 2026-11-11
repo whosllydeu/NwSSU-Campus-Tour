@@ -1534,3 +1534,8 @@ img, video, canvas { max-width: 100%; }
 @media (max-width: 560px) {
   .gsv-zoom { left: 10px; bottom: max(20px, calc(env(safe-area-inset-bottom) + 10px)); gap: 6px; }
 }
+/* Campus page + description fallback + college → building line */
+.campus-section { margin-bottom: 36px; }
+.campus-section-title { font-family: var(--ff-h); font-size: 22px; font-weight: 400; margin-bottom: 14px; }
+.dh-building { display: flex; align-items: center; gap: 4px; margin-top: 3px; font-size: 12px; color: var(--gold); }
+.desc-empty { font-style: italic; opacity: .6; }

@@ -496,7 +496,7 @@ const FormModal = ({ open, title, fields, initialValues, onSubmit, onClose, onUp
                   <textarea
                     rows={field.type === 'list' ? 4 : 3}
                     value={values[field.key] ?? ''}
-                    placeholder={field.type === 'list' ? 'One item per line' : ''}
+                    placeholder={field.placeholder || (field.type === 'list' ? 'One item per line' : '')}
                     disabled={submitting}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                   />

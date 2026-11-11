@@ -107,7 +107,11 @@ export function AdminProvider({ children }) {
     listActivity().then(setActivity).catch(() => {});
   }, [setters]);
 
-  const saveBuilding = useCallback(async (existingId, data) => {
+  const saveBuilding = useCallback(async (existingId, formData) => {
+    // faculty / officers / organizations belong to the department, not the buildings table
+    const { faculty, officers, organizations, ...data } = formData;
+    const asList = (v) => (Array.isArray(v) ? v : []);
+
     let saved = existingId
       ? await buildingsApi.updateBuilding(existingId, data)
       : await buildingsApi.createBuilding(data);
@@ -142,12 +146,23 @@ export function AdminProvider({ children }) {
           color: saved.color || '#2a6624',
           photo: '',
           programs: Array.isArray(saved.programs) ? saved.programs : [],
-          faculty: [],
-          officers: [],
-          organizations: [],
+          faculty: asList(faculty),
+          officers: asList(officers),
+          organizations: asList(organizations),
           offices: Array.isArray(saved.offices) ? saved.offices : [],
         });
         departmentCreated = true;
+      } else {
+        // Existing department: sync the three department-only fields from the building form
+        const patch = {};
+        if (Array.isArray(faculty) && JSON.stringify(faculty) !== JSON.stringify(department.faculty || [])) patch.faculty = faculty;
+        if (Array.isArray(officers) && JSON.stringify(officers) !== JSON.stringify(department.officers || [])) patch.officers = officers;
+        if (Array.isArray(organizations) && JSON.stringify(organizations) !== JSON.stringify(department.organizations || [])) patch.organizations = organizations;
+        if (Object.keys(patch).length) {
+          const updatedDept = await departmentsApi.updateDepartment(department.id, patch);
+          department = updatedDept;
+          setDepartments((prev) => prev.map((d) => (d.id === updatedDept.id ? updatedDept : d)));
+        }
       }
 
       if (saved.dept !== department.id) {

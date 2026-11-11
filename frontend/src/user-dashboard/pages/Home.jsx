@@ -35,7 +35,7 @@ export default function Home() {
               </p>
               <div className="hero-actions">
                 <button className="btn-primary" onClick={() => navigate('/map')}>🗺️ Open Campus Map</button>
-                <button className="btn-ghost" onClick={() => navigate('/buildings')}>🏛️ Explore Buildings →</button>
+                <button className="btn-ghost" onClick={() => navigate('/campus')}>🏛️ Explore Buildings →</button>
               </div>
             </div>
             <div className="hero-card-wrap">

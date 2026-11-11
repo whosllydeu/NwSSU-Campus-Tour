@@ -59,7 +59,7 @@ export default function Overview() {
 
   const cards = [
     { Icon: Landmark, value: stats.totalBuildings, label: 'Buildings', chip: `${stats.byType.academic || 0} academic` },
-    { Icon: GraduationCap, value: stats.totalDepartments, label: 'Departments', chip: `${stats.totalPrograms} programs` },
+    { Icon: GraduationCap, value: stats.totalDepartments, label: 'Colleges', chip: `${stats.totalPrograms} programs` },
     { Icon: Compass, value: tourCount, label: '360° Tours', chip: `${photoCount} photos` },
     { Icon: Images, value: stats.totalGalleryImages, label: 'Uploaded Images', chip: `${stats.buildingsWithPhoto} with cover` },
   ];

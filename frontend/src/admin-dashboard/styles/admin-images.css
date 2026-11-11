@@ -190,3 +190,9 @@
   color: #111827;
   background-color: #ffffff;
 }
+/* Missing-info indicator (Buildings table) */
+.ad-missing { display: inline-flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.ad-missing-list { font-size: 11px; opacity: .7; line-height: 1.3; max-width: 220px; }
+.ad-missing-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; font-size: 13px; opacity: .85; }
+.ad-chip.is-missing, body.admin-flat .ad-chip.is-missing { background: #fef3c7; color: #92400e; border: 1px solid #f5d98b; }
+.ad-chip.is-complete, body.admin-flat .ad-chip.is-complete { background: #dcfce7; color: #166534; border: 1px solid #b7ebc6; }

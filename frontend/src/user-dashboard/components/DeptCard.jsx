@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useUI } from '../context/UIContext';
 import { useCampusData } from '../context/DataContext';
 import { resolveImage } from '../utils/assets';
-import { ChevronRight, GraduationCap } from 'lucide-react';
+import { ChevronRight, GraduationCap, MapPin } from 'lucide-react';
 
 const count = (list) => (Array.isArray(list) ? list.length : 0);
 
@@ -35,6 +35,9 @@ export default function DeptCard({ d }) {
             {count(d.programs)} programs · {count(d.faculty)} faculty ·{' '}
             {orgs} org{orgs === 1 ? '' : 's'}
           </p>
+          {building && (
+            <p className="dh-building"><MapPin size={12} aria-hidden="true" /> {building.name}</p>
+          )}
         </div>
         <span className="dh-chevron">
           <ChevronRight size={30}/>

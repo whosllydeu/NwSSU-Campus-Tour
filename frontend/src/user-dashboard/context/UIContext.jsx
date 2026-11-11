@@ -36,7 +36,7 @@ export function UIProvider({ children }) {
       if (exists) {
         setDetail({ kind: 'dept', id });
       } else {
-        navigate('/departments');
+        navigate('/campus');
       }
     },
     [navigate, departments]

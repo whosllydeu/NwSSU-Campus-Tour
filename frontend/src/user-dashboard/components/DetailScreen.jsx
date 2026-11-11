@@ -1,6 +1,6 @@
 import { useUI } from '../context/UIContext';
 import { useCampusData } from '../context/DataContext';
-import { capitalize } from '../utils/helpers';
+import { capitalize, DESC_FALLBACK } from '../utils/helpers';
 import { hasTour } from '../static/nwssuTour';
 import { resolveImage } from '../utils/assets';
 import { findBuildingTourId } from '../utils/panorama';
@@ -139,7 +139,7 @@ function BuildingDetail({ id }) {
 
         <BuildingGallery building={b} />
 
-        {b.desc && <p className="ds-desc">{b.desc}</p>}
+        <p className={`ds-desc${b.desc ? '' : ' desc-empty'}`}>{b.desc || DESC_FALLBACK}</p>
 
         <div className="ds-sections">
           <Section title="🏢 Offices Inside" items={offices} />
@@ -226,7 +226,7 @@ function DeptDetail({ id }) {
 
         {building && <BuildingGallery building={building} />}
 
-        {building?.desc && <p className="ds-desc">{building.desc}</p>}
+        <p className={`ds-desc${building?.desc ? '' : ' desc-empty'}`}>{building?.desc || DESC_FALLBACK}</p>
 
         <div className="ds-sections">
           <Section title="🏢 Offices" items={offices} />

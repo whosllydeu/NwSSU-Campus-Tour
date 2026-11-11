@@ -104,7 +104,7 @@ const FEATURES = [
   },
   {
     icon: Building2,
-    title: "Buildings & Departments",
+    title: "Buildings & Colleges",
     text: "See each building’s offices, programs, and photos, and every college and department in one place.",
   },
 ];

@@ -7,7 +7,7 @@ import nwssuLogo from '../../assets/images/nwssu-logo.jpg';
 const LINKS = [
   { to: '/admin', label: 'Dashboard', Icon: LayoutDashboard, end: true },
   { to: '/admin/buildings', label: 'Buildings', Icon: Landmark },
-  { to: '/admin/departments', label: 'Departments', Icon: GraduationCap },
+  { to: '/admin/departments', label: 'Colleges', Icon: GraduationCap },
   { to: '/admin/tours', label: '360° Tours', Icon: Compass },
   { to: '/admin/users', label: 'Users', Icon: Users },
   { to: '/admin/reports', label: 'Reports', Icon: ChartColumn },

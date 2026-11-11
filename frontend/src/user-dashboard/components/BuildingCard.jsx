@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
-import { capitalize } from '../utils/helpers';
+import { capitalize, DESC_FALLBACK } from '../utils/helpers';
 import { resolveImage } from "../utils/assets";
 import { useUI } from "../context/UIContext";
 
@@ -43,7 +43,7 @@ export default function BuildingCard({ b }) {
       <Thumb b={b} />
       <div className="bldg-info">
         <h3>{b.name}</h3>
-        <p>{desc.length > 90 ? `${desc.slice(0, 90)}…` : desc}</p>
+        <p className={desc ? undefined : 'desc-empty'}>{desc ? (desc.length > 90 ? `${desc.slice(0, 90)}…` : desc) : DESC_FALLBACK}</p>
         <span className="bldg-tag">{capitalize(b.type)}{b.location ? ` · ${b.location}` : ''}</span>
       </div>
     </div>

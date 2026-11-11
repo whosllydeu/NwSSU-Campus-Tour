@@ -11,7 +11,7 @@ import '../styles/admin-modern.css';
 const TITLES = {
   '/admin': null, // the dashboard has its own welcome banner
   '/admin/buildings': { title: 'Buildings', subtitle: 'Manage campus building records' },
-  '/admin/departments': { title: 'Departments', subtitle: 'Manage college & department records' },
+  '/admin/departments': { title: 'Colleges', subtitle: 'Manage college & department records' },
   '/admin/tours': { title: '360° Tours', subtitle: 'Edit the arrows of the built-in 360° tours' },
   '/admin/users': { title: 'Users', subtitle: 'Manage accounts & admin access' },
   '/admin/reports': { title: 'Reports & Analytics', subtitle: 'Insights across the campus dataset' },

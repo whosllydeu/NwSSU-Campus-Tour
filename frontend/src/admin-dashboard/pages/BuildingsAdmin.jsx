@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAdmin } from '../context/AdminContext.jsx';
 import { useUI } from '../context/ToastContext.jsx';
 import DataTable from '../components/DataTable.jsx';
 import FormModal from '../components/FormModal.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { linkedDepartment } from '../utils/linkedDepartment.js';
+import { missingInfo } from '../utils/buildingCompleteness.js';
 import { BUILDING_TYPES } from '../data/adminData.js';
 import { resolveImage } from '../../user-dashboard/utils/assets';
 import {
@@ -15,7 +16,7 @@ import {
 import { slugify } from '../../lib/slugify';
 import '../styles/admin-images.css';
 
-const FIELDS = [
+const buildFields = (requireDesc) => [
   { key: 'name', label: 'Building Name', type: 'text', required: true, wide: true },
   { key: 'abbr', label: 'Abbreviation', type: 'text', required: true },
   {
@@ -45,9 +46,20 @@ const FIELDS = [
     wide: true,
     help: 'Optional. Connects this building’s 360° images to an outdoor pathway photo: a pin appears on that photo and “Walk there!” leads into the building.',
   },
-  { key: 'desc', label: 'Description', type: 'textarea', wide: true },
+  {
+    key: 'desc',
+    label: 'Description',
+    type: 'textarea',
+    wide: true,
+    required: requireDesc,
+    placeholder: 'e.g. Home of the College of Engineering, with lecture rooms, drafting studios and labs.',
+    help: 'One or two sentences: what this building is and what visitors will find inside.',
+  },
   { key: 'offices', label: 'Offices Inside', type: 'list', wide: true },
   { key: 'programs', label: 'Programs Offered', type: 'list', wide: true, showWhen: (v) => v.type === 'academic' },
+  { key: 'faculty', label: 'Faculty (one per line, "Name - Role")', type: 'list', wide: true, showWhen: (v) => v.type === 'academic' },
+  { key: 'officers', label: 'Student Council Officers', type: 'list', wide: true, showWhen: (v) => v.type === 'academic' },
+  { key: 'organizations', label: 'Affiliated Organizations', type: 'list', wide: true, showWhen: (v) => v.type === 'academic' },
 ];
 
 function RowThumb({ row }) {
@@ -74,6 +86,18 @@ const COLUMNS = [
   },
   { key: 'images', label: 'Images', sortable: false, render: (row) => (Array.isArray(row.images) ? row.images.length : 0) },
   { key: 'programs', label: 'Programs', sortable: false, render: (row) => row.programs?.length ?? 0 },
+  {
+    key: 'missingCount',
+    label: 'Info',
+    render: (row) => (row.missing.length === 0 ? (
+      <span className="ad-chip is-complete">✓ Complete</span>
+    ) : (
+      <span className="ad-missing" title={`Missing: ${row.missing.join(', ')}`}>
+        <span className="ad-chip is-missing">Missing info · {row.missing.length}</span>
+        <small className="ad-missing-list">{row.missing.join(', ')}</small>
+      </span>
+    )),
+  },
 ];
 
 function deleteMessage(building, departments, buildings) {
@@ -94,6 +118,35 @@ export default function BuildingsAdmin() {
   const [editing, setEditing] = useState(null);
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+
+  const rows = useMemo(
+    () => buildings.map((b) => {
+      const missing = missingInfo(b);
+      return { ...b, missing, missingCount: missing.length };
+    }),
+    [buildings]
+  );
+  const incompleteCount = rows.filter((r) => r.missingCount > 0).length;
+  const shownRows = onlyIncomplete ? rows.filter((r) => r.missingCount > 0) : rows;
+
+  // Description is required for new buildings (and can't be blanked on ones that already have one).
+  const fields = useMemo(
+    () => buildFields(!editing || Boolean(String(editing.desc || '').trim())),
+    [editing]
+  );
+
+  // Faculty / officers / organizations live on the linked department, so prefill them from there when editing.
+  const formInitialValues = useMemo(() => {
+    if (!editing) return {};
+    const dept = linkedDepartment(editing, departments, buildings);
+    return {
+      ...editing,
+      faculty: dept?.faculty || [],
+      officers: dept?.officers || [],
+      organizations: dept?.organizations || [],
+    };
+  }, [editing, departments, buildings]);
 
   const openCreate = useCallback(() => {
     setEditing(null);
@@ -102,10 +155,10 @@ export default function BuildingsAdmin() {
   }, []);
 
   const openEdit = useCallback((row) => {
-    setEditing(row);
+    setEditing(buildings.find((b) => b._id === row._id) || row);
     setFormSession((n) => n + 1);
     setFormOpen(true);
-  }, []);
+  }, [buildings]);
 
   const handleUpload = useCallback(
     (file, values) => uploadBuildingImage(file, editing?._id || slugify(values?.name || '') || 'new-building'),
@@ -168,9 +221,22 @@ export default function BuildingsAdmin() {
         </button>
       </div>
 
+      <div className="ad-missing-bar">
+        <span>
+          {incompleteCount === 0
+            ? 'All buildings have their key info filled in.'
+            : `${incompleteCount} of ${rows.length} building${rows.length === 1 ? '' : 's'} still need info.`}
+        </span>
+        {incompleteCount > 0 && (
+          <button type="button" className="btn-ghost" onClick={() => setOnlyIncomplete((v) => !v)}>
+            {onlyIncomplete ? 'Show all' : 'Show only missing info'}
+          </button>
+        )}
+      </div>
+
       <DataTable
         columns={COLUMNS}
-        rows={buildings}
+        rows={shownRows}
         onEdit={openEdit}
         onDelete={setToDelete}
         searchPlaceholder="Search buildings…"
@@ -181,8 +247,8 @@ export default function BuildingsAdmin() {
         key={formSession}
         open={formOpen}
         title={editing ? 'Edit Building' : 'Add Building'}
-        fields={FIELDS}
-        initialValues={editing || {}}
+        fields={fields}
+        initialValues={formInitialValues}
         onSubmit={handleSubmit}
         onUploadImage={handleUpload}
         onDiscardUploads={removeBuildingImages}

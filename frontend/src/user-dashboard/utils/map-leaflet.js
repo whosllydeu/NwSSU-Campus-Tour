@@ -18,6 +18,7 @@ export const VIRTUAL_LOCATIONS = [
     id: 'gate',
     abbr: 'GATE',
     name: 'Main Gate',
+    subtitle: 'Campus entrance',
     position: [12.070884, 124.596793],
     detectionRadius: 30,
     entranceNodeId: 'GATE-CEA:1',
@@ -44,6 +45,9 @@ export const transformedObjectBuilding = (buildings) => {
     abbr: b.abbr,
     name: b.name,
     position: [b.lat, b.lng],
+    type: b.type,
+    offices: b.offices,
+    programs: b.programs,
     entranceNodeId: entranceFor(b),
   }));
   return campBuildings;
@@ -98,7 +102,7 @@ export const findNearestPanorama = (userLocation, nodes) => {
   return nearest;
 };
 
-const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
+export const getDistanceInMeters = ([lat1, long1], [lat2, long2]) => {
   const EARTH_RADIUS = 6371000;
 
   const toRadians = (degrees) => (degrees * Math.PI) / 180;
